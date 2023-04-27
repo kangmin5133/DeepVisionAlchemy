@@ -1,0 +1,56 @@
+/* .sidebar {
+    width: 120px;
+    height: 100%;
+    background-color: white;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr); 
+    grid-gap: 10px;
+    color: #3f51b5;
+    position: fixed;
+    left: 0;
+    top: 0;
+    font-size: 1.5rem;
+  } */
+  .sidebar {
+    width: 120px;
+    height: calc(100% - 60px); /* Topbar 높이를 고려한 높이 계산 */
+    background-color: #f4f4f4;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    grid-gap: 10px;
+    color: #3f51b5;
+    position: fixed;
+    left: 0;
+    top: 60px; /* Topbar 높이와 같게 설정 */
+    font-size: 1.5rem;
+    padding-top: 20px;
+  }
+  
+  .sidebar nav ul {
+    list-style-type: "none";
+    padding: 20px 0;
+    margin-top: 30px;
+
+  }
+  
+  .sidebar nav ul li {
+    padding: 20px;
+    text-align: center;
+    position: relative;
+  }
+  
+  .sidebar nav ul li:not(:last-child)::after {
+    content: "";
+    position: absolute;
+    left: 3px;
+    right: 0;
+    bottom: 0;
+    height: 1px;
+    background-color: #8997e9;
+  }
+  
+  .active-link {
+    font-weight: bold;
+    color: #3f51b5;
+  }
+  
