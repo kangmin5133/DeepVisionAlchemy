@@ -5,6 +5,7 @@ export const useUpdateImage = (props) => {
   useEffect(() => {
         const updateImage = async () => {
         let maskData = null
+        props.setLoading(true);
         if (props.mouseX !== null && props.mouseY !== null && !props.bboxMode && (!props.plusMode && !props.minusMode) 
         && !props.delButtonActive && props.textPrompt == "") {
             const formData = new FormData();
@@ -158,7 +159,7 @@ export const useUpdateImage = (props) => {
 
             }
         }
-        else if (props.currentMask && props.textPrompt != ""){
+        else if (props.currentMask && props.textPrompt != "" && props.replaceButtonActive){
             console.log("replace anything mode")
             const formData = new FormData();
             formData.append("image", props.imageBlob);
@@ -177,17 +178,43 @@ export const useUpdateImage = (props) => {
                 const removedImageData = data.image;
                 console.log("removedImageData : ",removedImageData)
                 props.loadImageOntoCanvas("data:image/jpeg;base64," + removedImageData);
-                
+
                 props.setReplaceButtonActive(false)
                 props.setTextPrompt("")
                 props.setGoButtonActive(false)
             }
         }
+        else if (props.currentMask && props.textPrompt != "" && props.relocateButtonActive){
+            console.log("relocate anything mode")
+            const formData = new FormData();
+            formData.append("image", props.imageBlob);
+            formData.append("mask", JSON.stringify(props.currentMask));
+            formData.append("prompt", props.textPrompt);
+
+            const response = await fetch("http://210.113.122.196:8834/predict/relocate", {
+                method: "POST",
+                body: formData,
+            });
+            const data = await response.json();
+            if (props.imageRef.current) {
+                console.log("data : ",data)
+                const imageSize = data.size;
+                const [height, width] = imageSize;
+                const removedImageData = data.image;
+                props.loadImageOntoCanvas("data:image/jpeg;base64," + removedImageData);
+                props.setRelocateButtonActive(false)
+                props.setTextPrompt("")
+                props.setGoButtonActive(false)
+            }
+        }
+
         props.setCurrentMask(maskData)
+        props.setLoading(false);
     };
     if (props.imageUpdate) {
         updateImage();
         props.setImageUpdate(false);
+        
     }
     }, [props.imageUpdate, props.mouseX, props.mouseY,props.imageBlob]);
 };

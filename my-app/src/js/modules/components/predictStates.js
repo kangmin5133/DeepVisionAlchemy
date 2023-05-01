@@ -1,4 +1,5 @@
 import { useState, useRef } from "react";
+import { useDisclosure } from "@chakra-ui/react";
 
 export const usePredictStates = () => {
   // for original & masked image
@@ -26,12 +27,16 @@ export const usePredictStates = () => {
   const [mouseDown, setMouseDown] = useState(false);
 
   // button state management
+  const [sampleImageButtonActive, setSampleImageButtonActive] = useState(false);
+  const [generateImageButtonActive, setGenerateImageButtonActive] = useState(false);
+
   const [bboxButtonActive, setBboxButtonActive] = useState(false);
   const [pointButtonActive, setPointButtonActive] = useState(false);
   const [plusButtonActive, setPlusButtonActive] = useState(false);
   const [minusButtonActive, setMinusButtonActive] = useState(false);
   const [delButtonActive, setDelButtonActive] = useState(false);
   const [replaceButtonActive, setReplaceButtonActive] = useState(false);
+  const [relocateButtonActive, setRelocateButtonActive] = useState(false);
 
   // max image size
   const MAX_WIDTH = 1080; // 허용되는 최대 가로 크기
@@ -41,6 +46,7 @@ export const usePredictStates = () => {
   const [currentMask, setCurrentMask] = useState(null);
   const [textPrompt, setTextPrompt] = useState("");
   const [goButtonActive, setGoButtonActive] = useState(false);
+  
 
   // move tool box
   const [dragging, setDragging] = useState(false);
@@ -49,6 +55,12 @@ export const usePredictStates = () => {
   const startPos = useRef({ x: 0, y: 0 });
   const animationFrame = useRef(null);
 
+  //for loading animation
+  const [loading, setLoading] = useState(false);
+
+  //for image sidebar
+  const { isOpen, onToggle } = useDisclosure();
+
   return {
     image, setImage, imageRef, imageBlob, setImageBlob, maskedImage, setMaskedImage,
     keyStatus, setKeyStatus, imageUpdate, setImageUpdate, mouseX, setMouseX, mouseY, setMouseY, canvasRef,
@@ -56,8 +68,10 @@ export const usePredictStates = () => {
     rectStart, setRectStart, rectEnd, setRectEnd, mouseDown, setMouseDown,
     bboxButtonActive, setBboxButtonActive, pointButtonActive, setPointButtonActive, plusButtonActive, setPlusButtonActive,
     minusButtonActive, setMinusButtonActive, delButtonActive, setDelButtonActive, replaceButtonActive, setReplaceButtonActive,
-    MAX_WIDTH,MAX_HEIGHT,
+    relocateButtonActive, setRelocateButtonActive,MAX_WIDTH,MAX_HEIGHT,
     currentMask, setCurrentMask,textPrompt, setTextPrompt,goButtonActive, setGoButtonActive,
     dragging, setDragging, position, setPosition, toolBox, startPos, animationFrame,
+    loading, setLoading, isOpen, onToggle, 
+    sampleImageButtonActive, setSampleImageButtonActive,generateImageButtonActive, setGenerateImageButtonActive
   };
 };

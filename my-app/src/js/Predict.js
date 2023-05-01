@@ -9,6 +9,8 @@ import {
   Input,
   VStack,
   Button,
+  Spinner,
+  HStack
 } from "@chakra-ui/react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { 
@@ -17,7 +19,9 @@ import {
   faPlus, 
   faMinus, 
   faEraser, 
-  faExchangeAlt  
+  faExchangeAlt,
+  faRandom,
+  faGlobe 
 } from "@fortawesome/free-solid-svg-icons";
 import "../css/Predict.css";
 import "../css/Button.css";
@@ -28,8 +32,15 @@ import { usePredictStates } from "./modules/components/predictStates";
 import { useKeyboardControls } from "./modules/hooks/useKeyboardControls";
 import { useUpdateImage } from "./modules/hooks/useUpdateImage";
 import { useDraggingControls } from "./modules/hooks/useDraggingControls";
+import ImageSidebar from "./modules/components/imageSidebar";
 
 function Predict() {
+
+  // const [menuButton, setMenuButtonActive] = useState(true);
+  // const toggleMenu = () => {
+  //   setMenuButtonActive(!menuButton);
+  // };
+
   //states
   const {
     image, setImage, imageRef, imageBlob, setImageBlob, maskedImage, setMaskedImage,
@@ -38,9 +49,11 @@ function Predict() {
     rectStart, setRectStart, rectEnd, setRectEnd, mouseDown, setMouseDown,
     bboxButtonActive, setBboxButtonActive, pointButtonActive, setPointButtonActive, plusButtonActive, setPlusButtonActive,
     minusButtonActive, setMinusButtonActive, delButtonActive, setDelButtonActive, replaceButtonActive, setReplaceButtonActive,
-    MAX_WIDTH, MAX_HEIGHT,
+    relocateButtonActive, setRelocateButtonActive,MAX_WIDTH, MAX_HEIGHT,
     currentMask, setCurrentMask,textPrompt, setTextPrompt,goButtonActive, setGoButtonActive,
     dragging, setDragging, position, setPosition, toolBox, startPos, animationFrame,
+    loading, setLoading, isOpen, onToggle,
+    sampleImageButtonActive, setSampleImageButtonActive,generateImageButtonActive, setGenerateImageButtonActive
   } = usePredictStates();
 
   //functions
@@ -103,6 +116,7 @@ const loadImageOntoCanvas = (base64Image) => {
   };
 };
 const resizeImage = (imageFile, callback) => {
+  if (!imageFile) return;
   const img = new Image();
   img.src = URL.createObjectURL(imageFile);
   img.onload = () => {
@@ -162,14 +176,38 @@ const { getRootProps, getInputProps } = useDropzone({
   accept: "image/*",
   onDrop: (acceptedFiles) => {
     resetStates();
-    setImage(acceptedFiles[0]);
-    setPointButtonActive(true);
+    resizeImage(acceptedFiles[0], (resizedImage) => {
+      setImageBlob(resizedImage);
+      fileToDataURL(resizedImage, (dataURL) => {
+        setImage(dataURL);
+        setPointButtonActive(true);
+        setReplaceButtonActive(false)
+        setDelButtonActive(false)
+        // loadImageOntoCanvas(dataURL);
+      });
+    });
   },
   preventDropOnDocument: true, // 이 부분을 추가
   noClick: true, // 이 부분을 추가
 });
 
 //handlers
+const handleSampleImageButtonClick = () => {
+  if (generateImageButtonActive) return;
+  console.log("use sample image Button clicked");
+  setSampleImageButtonActive(!sampleImageButtonActive);
+  setGenerateImageButtonActive(false);
+  onToggle();
+};
+
+const handleGenerateImageButtonClick = () => {
+  if (sampleImageButtonActive) return;
+  console.log("generate image Button clicked");
+  setGenerateImageButtonActive(!generateImageButtonActive);
+  setSampleImageButtonActive(false);
+  onToggle();
+};
+
 const onClick = async (e) => {
   e.preventDefault();
   setMouseX(e.nativeEvent.offsetX);
@@ -221,6 +259,7 @@ const handleMouseMove = (e) => {
     drawRectangle(rectStart.x, rectStart.y, x, y);
   }
 };
+
 const handlePointButtonClick = () => {
   console.log("point Button clicked");
   setBboxMode(false);
@@ -274,6 +313,13 @@ const handleReplaceButtonClick = () => {
   setReplaceButtonActive(!replaceButtonActive);
   setTextPrompt("")
 };
+const handleRelocateButtonClick = () => {
+  console.log("relocate Button clicked");
+  setRelocateButtonActive(!relocateButtonActive);
+  setTextPrompt("")
+};
+
+
 const handleToolBoxMoveDown = (e) => {
   e.preventDefault();
   startPos.current = { x: e.clientX - parseFloat(position.x), y: e.clientY - parseFloat(position.y) };
@@ -310,7 +356,11 @@ const handleToolBoxMoveUp = (e) => {
   cancelAnimationFrame(animationFrame.current);
 };
 
-//props
+const handleSampleImageSelect = (image) => {
+  // 여기에서 이미지 선택 후에 수행할 작업 작성
+  console.log("샘플 이미지가 선택되었습니다:", image);
+};
+//props for hooks
 const propsUseUpdateImage = {
   delButtonActive,
   imageUpdate,
@@ -321,9 +371,12 @@ const propsUseUpdateImage = {
   setCurrentMask,
   textPrompt,
   setTextPrompt,
-  setReplaceButtonActive, 
-  setGoButtonActive,
+  replaceButtonActive,
+  setReplaceButtonActive,
+  relocateButtonActive,
+  setRelocateButtonActive, 
   goButtonActive,
+  setGoButtonActive,
   setMaskedImage,
   imageRef,
   loadImageOntoCanvas,
@@ -334,7 +387,9 @@ const propsUseUpdateImage = {
   rectStart, 
   rectEnd, 
   plusMode, 
-  minusMode
+  minusMode,
+  loading, 
+  setLoading
 };
 const propsUseKeyboardControls={
   setKeyStatus, 
@@ -354,8 +409,9 @@ useDraggingControls(propsUseDraggingControls);
 
 //useEffect - console
 useEffect(() => {
-  console.log("replaceButtonActive, textPrompt, goButtonActive : ",replaceButtonActive,textPrompt,goButtonActive)
-},[replaceButtonActive,textPrompt,goButtonActive]);
+  console.log("loading : ",loading)
+  console.log("isOpen : ",isOpen)
+},[loading,isOpen]);
 
   return (
     <Box className="predict" p={8} bgColor="gray.500" minH="100vh" w="100%">
@@ -408,19 +464,41 @@ useEffect(() => {
             className={`custom-button ${replaceButtonActive ? "custom-button-active" : ""}`}>
               <FontAwesomeIcon icon={faExchangeAlt} />
             </Button>
+            <Button onClick={handleRelocateButtonClick} colorScheme="blue"
+            className={`custom-button ${relocateButtonActive ? "custom-button-active" : ""}`}>
+              <FontAwesomeIcon icon={faRandom} />
+            </Button>
           </VStack>
           </Box>
         <VStack spacing={8} alignItems="center">
           <Heading as="h1" size="2xl" color="white" marginTop="10">
               Model Inference Demo Space!😉
-              </Heading>
-              <Button
+          </Heading>
+          <HStack spacing={10}>
+              <Button fontStyle="italic"
                 onClick={() => {
                   document.querySelector("input[type=file]").click();
                 }}
               >
                 Select Image
+                
               </Button>
+              <Text color="white" fontSize="xl" fontStyle="italic">OR</Text>
+              <Button fontStyle="italic"
+                onClick={handleSampleImageButtonClick}
+              >
+                Use Sample Image
+                
+              </Button>
+              <Text color="white" fontSize="xl" fontStyle="italic">OR</Text>
+              <Button fontStyle="italic"
+                onClick={handleGenerateImageButtonClick}
+              >
+                Generate Image
+                
+              </Button>
+          </HStack>
+              
               {/* 수정된 이미지 업로드 부분 */}
               <Box
                 {...getRootProps()}
@@ -438,7 +516,7 @@ useEffect(() => {
                 left="50%" // 수정된 속성: 좌측에서 50% 위치
                 transform="translate(-50%, -50%)" // 수정된 속성: 부모 요소의 중앙에 위치하도록 설정
                 style={{
-                  display: maskedImage ? "none" : "flex",
+                  display: maskedImage ? "none" : "flex", 
                   display : imageRef.current ? "none" : "flex"
                 }}
               >
@@ -501,7 +579,7 @@ useEffect(() => {
                 />
                 {maskedImage}
                 </Box>
-                {replaceButtonActive && (
+                {(replaceButtonActive || relocateButtonActive) &&  (
                    <Box
                    display="inline-block"
                    position="absolute"
@@ -531,14 +609,45 @@ useEffect(() => {
                       setImageUpdate(true);
                      }}
                    >
-                     Go
+                     🚀
                    </Button>
                  </Box>
+
                   )}
+                {loading && (
+                  <Box
+                  display="flex"
+                  position="absolute"
+                  justifyContent="center"
+                  alignItems="center"
+                  top="50%"
+                  left="50%"
+                  transform="translate(-50%, -50%)"
+                  zIndex={100}
+                  w="100%"
+                  h="100%"
+                  borderRadius="20px"
+                  bg="gray.400"
+                  opacity={0.8}             
+                >
+                  <Spinner
+                    thickness="4px"
+                    speed="0.65s"
+                    emptyColor="gray.200"
+                    color="blue.500"
+                    size="xl"
+                  />
+                  </Box>
+                )}
               </Box>
               )}
             </VStack>
             </Flex>
+            <ImageSidebar 
+            isOpen={isOpen} 
+            generateActive={generateImageButtonActive} 
+            sampleActive={sampleImageButtonActive} 
+            onImageSelect={handleSampleImageSelect} />
           </Center>
         </Box>
       );
