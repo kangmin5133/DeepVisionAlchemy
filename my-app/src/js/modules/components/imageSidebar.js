@@ -15,7 +15,7 @@ import {
     Stack
   } from "@chakra-ui/react";
 import { motion } from "framer-motion";
-import { useSampleImages } from "../hooks/useSampleImages";
+import { useSampleImages, useGeneratedImages } from "../hooks/useImages";
 
 const MotionBox = motion(Box);
 
@@ -25,9 +25,13 @@ const ImageSidebar = ({
     sampleActive,
     onImageSelect }) => {
   const { sampleImages, selectedImage,handleImageSelect } = useSampleImages(sampleActive,onImageSelect);
+  const fetchGeneratedImages = useGeneratedImages();
+
+  const [generatedImages, setGeneratedImages] = useState([]);
   const [textPrompt, setTextPrompt] = useState("");
   const [manualSeed, setManualSeed] = useState("");
   const [inputError, setInputError] = useState(false);
+  
 
   return (
       <MotionBox
@@ -113,19 +117,25 @@ const ImageSidebar = ({
                 value={manualSeed}
                 onChange={(e) => {
                     if (!/^[0-9]*$/.test(e.target.value)) {
-                      setInputError(true);
-                      return;
-                    }
-                    setInputError(false);
-                    setManualSeed(e.target.value);
+                        setInputError(true);
+                        return;
+                      }
+                    const intValue = parseInt(e.target.value, 10);
+                    // 입력값이 8 이하인지 확인
+                    if (!isNaN(intValue) && intValue > 8) {
+                        setInputError(true);
+                        return;
+                      }
+                      setInputError(false);
+                      setManualSeed(e.target.value);
                   }}
                 width="calc(500px * 0.8)"
                 height="100%"
                 left="5"
                 />
                 {inputError && (
-                    <Alert status="error" left="5" bg="none" color="red.500" fontWeight="bold">
-                      Please enter numbers only
+                    <Alert status="error" left="5" bg="none" fontSize="xl" color="red.500" fontWeight="bold">
+                      Please enter numbers only<br/>numbers must be x ⪳ 8 
                     </Alert>
                   )}
                   </Stack>
@@ -133,14 +143,37 @@ const ImageSidebar = ({
             <Button
                 mt={0}
                 colorScheme="blue"
-                onClick={() => {
-                // 여기에 실행 버튼 클릭시 실행할 함수를 작성하세요
-                console.log("Text Prompt:", textPrompt);
-                console.log("Manual Seed:", manualSeed);
-                }}
+                onClick={async () => {
+                    const images = await fetchGeneratedImages(textPrompt, manualSeed);
+                    setGeneratedImages(images);
+                    console.log("Text Prompt:", textPrompt);
+                    console.log("Manual Seed:", manualSeed);
+                  }}
             >
                 Generate!🚀
             </Button>
+            {/* 여기에 생성된 이미지들을 표시하는 코드를 추가합니다. */}
+            <VStack spacing={4} overflowY="auto" p={4} alignItems="center">
+            {generatedImages.map((image, index) => (
+                <Image
+                key={index}
+                src={image.url}
+                alt={image.name}
+                onClick={() => handleImageSelect(image)}
+                cursor="pointer"
+                borderRadius="20px"
+                boxSize="400px"
+                objectFit="cover"
+                _hover={{
+                    transform: "scale(1.05)",
+                    transition: "transform 0.3s ease-in-out",
+                }}
+                borderWidth={selectedImage === image ? "2px" : "0px"}
+                borderColor="blue"
+                />
+            ))}
+            </VStack>
+            {/* 생성된 이미지 표시 코드 끝 */}
             </Box>
         )}
         </VStack>

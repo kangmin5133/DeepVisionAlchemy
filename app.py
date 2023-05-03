@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
-from api import api_predict
+from api import api_predict, api_image
 # from config.logger import setup_logger
 
 app = FastAPI()
@@ -19,6 +19,7 @@ app.add_middleware(
 )
 
 app.include_router(api_predict.router)
+app.include_router(api_image.router)
 
 if __name__ == "__main__":
     # setup_logger()

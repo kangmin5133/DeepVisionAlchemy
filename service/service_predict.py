@@ -7,6 +7,7 @@ from utils import apply_mask_to_image, binary_mask_converter, dilate_mask, save_
 import numpy as np
 import cv2
 import base64
+
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
 coords,labels=[],[]
@@ -72,7 +73,6 @@ def segment_anything(image:np.ndarray,
 
     return json_data
 
-
 def remove_anything(image:np.ndarray,
                      mask:np.ndarray):
     
@@ -105,16 +105,15 @@ def fill_anything(image:np.ndarray,
     mask_dil = dilate_mask(mask)
 
     # torch.manual_seed(0)
-    img_replaced = fill_img_with_sd(
+    img_filled = fill_img_with_sd(
             image, mask_dil, prompt, device=device)
     
-    # convert color
-    result = cv2.cvtColor(img_replaced, cv2.COLOR_BGR2RGB)
-
     # save image
-    img_result_p = "result.jpg"
-
-    save_array_to_img(result, img_result_p)
+    # img_result_p = "result.jpg"
+    # save_array_to_img(img_filled, img_result_p)
+    
+    # convert color
+    result = cv2.cvtColor(img_filled, cv2.COLOR_BGR2RGB)
 
     retval, buffer_img = cv2.imencode(".jpg", result)
     base64_image = base64.b64encode(buffer_img).decode("utf-8")
@@ -131,12 +130,15 @@ def replace_anything(image:np.ndarray,
 
     mask_dil = dilate_mask(mask)
 
-    # torch.manual_seed(0)
     img_replaced = replace_img_with_sd(
             image, mask_dil, prompt, device=device)
     
+    # save image
+    # img_replaced_p = "result.jpg"
+    # save_array_to_img(img_replaced, img_replaced_p)
+
     # convert color
-    result = cv2.cvtColor(img_replaced, cv2.COLOR_BGR2RGB)
+    result = cv2.cvtColor(img_replaced.astype(np.uint8), cv2.COLOR_BGR2RGB)
 
     retval, buffer_img = cv2.imencode(".jpg", result)
     base64_image = base64.b64encode(buffer_img).decode("utf-8")
