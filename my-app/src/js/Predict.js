@@ -36,11 +36,6 @@ import ImageSidebar from "./modules/components/imageSidebar";
 
 function Predict() {
 
-  // const [menuButton, setMenuButtonActive] = useState(true);
-  // const toggleMenu = () => {
-  //   setMenuButtonActive(!menuButton);
-  // };
-
   //states
   const {
     image, setImage, imageRef, imageBlob, setImageBlob, maskedImage, setMaskedImage,
@@ -199,7 +194,6 @@ const handleSampleImageButtonClick = () => {
   setGenerateImageButtonActive(false);
   onToggle();
 };
-
 const handleGenerateImageButtonClick = () => {
   if (sampleImageButtonActive) return;
   console.log("generate image Button clicked");
@@ -259,6 +253,7 @@ const handleMouseMove = (e) => {
     drawRectangle(rectStart.x, rectStart.y, x, y);
   }
 };
+
 
 const handlePointButtonClick = () => {
   console.log("point Button clicked");
@@ -356,10 +351,26 @@ const handleToolBoxMoveUp = (e) => {
   cancelAnimationFrame(animationFrame.current);
 };
 
-const handleSampleImageSelect = (image) => {
-  // 여기에서 이미지 선택 후에 수행할 작업 작성
+const handleSampleImageSelect = async (image) => {
   console.log("샘플 이미지가 선택되었습니다:", image);
+
+  // 이미지 데이터를 가져옵니다.
+  const response = await fetch(image.url);
+  const imageBlob = await response.blob();
+
+  resetStates();
+
+  resizeImage(imageBlob, (resizedImage) => {
+    setImageBlob(resizedImage);
+    fileToDataURL(resizedImage, (dataURL) => {
+      setImage(dataURL);
+      setPointButtonActive(true);
+      setReplaceButtonActive(false);
+      setDelButtonActive(false);
+    });
+  });
 };
+
 //props for hooks
 const propsUseUpdateImage = {
   delButtonActive,
@@ -497,8 +508,7 @@ useEffect(() => {
                 Generate Image
                 
               </Button>
-          </HStack>
-              
+          </HStack>  
               {/* 수정된 이미지 업로드 부분 */}
               <Box
                 {...getRootProps()}

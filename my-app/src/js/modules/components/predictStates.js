@@ -39,8 +39,8 @@ export const usePredictStates = () => {
   const [relocateButtonActive, setRelocateButtonActive] = useState(false);
 
   // max image size
-  const MAX_WIDTH = 1080; // 허용되는 최대 가로 크기
-  const MAX_HEIGHT = 960; // 허용되는 최대 세로 크기
+  const MAX_WIDTH = window.innerWidth * 0.5; // 허용되는 최대 가로 크기
+  const MAX_HEIGHT = window.innerHeight * 0.6; // 허용되는 최대 세로 크기
 
   // remove anything & replace anything
   const [currentMask, setCurrentMask] = useState(null);

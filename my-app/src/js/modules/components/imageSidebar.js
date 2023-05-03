@@ -8,11 +8,11 @@ import {
     Flex,
     Input,
     Textarea,
-    FormControl,
+    SimpleGrid,
     FormLabel,
     Button,
     Alert,
-    Stack 
+    Stack
   } from "@chakra-ui/react";
 import { motion } from "framer-motion";
 import { useSampleImages } from "../hooks/useSampleImages";
@@ -24,7 +24,7 @@ const ImageSidebar = ({
     generateActive,
     sampleActive,
     onImageSelect }) => {
-  const { sampleImages, handleImageSelect } = useSampleImages();
+  const { sampleImages, selectedImage,handleImageSelect } = useSampleImages(sampleActive,onImageSelect);
   const [textPrompt, setTextPrompt] = useState("");
   const [manualSeed, setManualSeed] = useState("");
   const [inputError, setInputError] = useState(false);
@@ -47,25 +47,42 @@ const ImageSidebar = ({
         {sampleActive && (
           <Box>
             <Flex position="absolute" justifyContent="center" width="100%">
-            <Heading as="h1" size="xl" color="white" marginTop="5">
-              <Text>Select image you want</Text>
-            </Heading>
-            {sampleImages.map((image, index) => (
-              <Image
-                key={index}
-                src={image.url}
-                alt={image.name}
-                onClick={() => handleImageSelect(image)}
-                cursor="pointer"
-              />
-            ))}
+                <VStack>
+                <Heading as="h1" size="xl" color="white" marginTop="5">
+                    <Text>Select image you want</Text>
+                </Heading>
+                <Box height="5vh" />
+                <SimpleGrid columns={3} spacing={4}>
+                {sampleImages.map((image, index) => (
+                 <Box
+                    key={index}
+                    borderWidth={selectedImage === image ? "2px" : "0px"}
+                    borderColor="#3182ce"
+                    cursor="pointer"
+                    borderRadius="20px"
+                    _hover={{
+                    transform: "scale(1.1)",
+                    transition: "transform 0.3s ease-in-out",
+                    }}
+                    onClick={() => handleImageSelect(image)}
+                >
+                    <Image
+                    src={image.url}
+                    alt={image.name}
+                    boxSize="95px" // 이미지 크기를 조절
+                    objectFit="cover" // 이미지를 적절하게 조절
+                    borderRadius="20px"
+                    />
+                </Box>
+                ))}
+                </SimpleGrid>
+                </VStack>
             </Flex>
           </Box>
         )}
 
         {generateActive && (
           <Box color="white">
-            
             <Heading as="h1" size="xl" color="white" marginTop="5">
             <Flex position="absolute" justifyContent="center" width="100%">
             <Text>Generate image</Text>
