@@ -1,15 +1,5 @@
 import React,{ useState } from "react";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
-import {
-  Box,
-  Text,
-  Center,
-  Flex,
-  Heading,
-  Input,
-  VStack,
-  Button,
-} from "@chakra-ui/react";
 import Sidebar from "./js/Sidebar";
 import Topbar from "./js/Topbar";
 import Home from "./js/Home";
