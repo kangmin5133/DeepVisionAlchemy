@@ -12,7 +12,8 @@ import {
     FormLabel,
     Button,
     Alert,
-    Stack
+    Stack,
+    Spinner
   } from "@chakra-ui/react";
 import { motion } from "framer-motion";
 import { useSampleImages, useGeneratedImages } from "../hooks/useImages";
@@ -24,14 +25,15 @@ const ImageSidebar = ({
     generateActive,
     sampleActive,
     onImageSelect }) => {
-  const { sampleImages, selectedImage,handleImageSelect } = useSampleImages(sampleActive,onImageSelect);
-  const fetchGeneratedImages = useGeneratedImages();
-
+  
   const [generatedImages, setGeneratedImages] = useState([]);
   const [textPrompt, setTextPrompt] = useState("");
   const [manualSeed, setManualSeed] = useState("");
   const [inputError, setInputError] = useState(false);
-  
+  const [isLoading, setIsLoading] = useState(false);
+
+  const { sampleImages, selectedImage,handleImageSelect } = useSampleImages(sampleActive,onImageSelect,setIsLoading);
+  const fetchGeneratedImages = useGeneratedImages();
 
   return (
       <MotionBox
@@ -55,6 +57,25 @@ const ImageSidebar = ({
                 <Heading as="h1" size="xl" color="white" marginTop="5">
                     <Text>Select image you want</Text>
                 </Heading>
+                {isLoading && (
+                  <Box
+                  display="flex"
+                  position="absolute"
+                  justifyContent="center"
+                  alignItems="center"
+                  zIndex={100}
+                  w="100%"
+                  h="100%"             
+                >
+                  <Spinner
+                    thickness="4px"
+                    speed="0.65s"
+                    emptyColor="gray.200"
+                    color="blue.500"
+                    size="xl"
+                  />
+                  </Box>
+                )}
                 <Box height="5vh" />
                 <SimpleGrid columns={3} spacing={4}>
                 {sampleImages.map((image, index) => (
@@ -84,7 +105,6 @@ const ImageSidebar = ({
             </Flex>
           </Box>
         )}
-
         {generateActive && (
           <Box color="white">
             <Heading as="h1" size="xl" color="white" marginTop="5">
@@ -135,7 +155,7 @@ const ImageSidebar = ({
                 />
                 {inputError && (
                     <Alert status="error" left="5" bg="none" fontSize="xl" color="red.500" fontWeight="bold">
-                      Please enter numbers only<br/>numbers must be x ⪳ 8 
+                      Please enter numbers only<br/>numbers must be x ⪳ 8
                     </Alert>
                   )}
                   </Stack>
@@ -144,14 +164,33 @@ const ImageSidebar = ({
                 mt={0}
                 colorScheme="blue"
                 onClick={async () => {
+                    setIsLoading(true);
                     const images = await fetchGeneratedImages(textPrompt, manualSeed);
                     setGeneratedImages(images);
-                    console.log("Text Prompt:", textPrompt);
-                    console.log("Manual Seed:", manualSeed);
+                    setIsLoading(false);
                   }}
             >
                 Generate!🚀
             </Button>
+            {isLoading && (
+                  <Box
+                  display="flex"
+                  position="absolute"
+                  justifyContent="center"
+                  alignItems="center"
+                  zIndex={100}
+                  w="100%"
+                  h="100%"             
+                >
+                  <Spinner
+                    thickness="4px"
+                    speed="0.65s"
+                    emptyColor="gray.200"
+                    color="blue.500"
+                    size="xl"
+                  />
+                  </Box>
+                )}
             {/* 여기에 생성된 이미지들을 표시하는 코드를 추가합니다. */}
             <VStack spacing={4} overflowY="auto" p={4} alignItems="center">
             {generatedImages.map((image, index) => (
@@ -173,10 +212,11 @@ const ImageSidebar = ({
                 />
             ))}
             </VStack>
-            {/* 생성된 이미지 표시 코드 끝 */}
             </Box>
         )}
+        
         </VStack>
+        
       </MotionBox>
 
   );

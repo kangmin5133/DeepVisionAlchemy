@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 
-export const useSampleImages = (sampleActive, onImageSelect) => {
+export const useSampleImages = (sampleActive, onImageSelect,setIsLoading) => {
   const [sampleImages, setSampleImages] = useState([]);
   const [selectedImage, setSelectedImage] = useState(null);
 
@@ -8,8 +8,10 @@ export const useSampleImages = (sampleActive, onImageSelect) => {
     if (!sampleActive) return; // sampleActive가 false일 경우 로직을 실행하지 않음
     console.log("fetch images")
     const fetchImages = async () => {
+      setIsLoading(true);
       const images = await fetchSampleImages();
       setSampleImages(images);
+      setIsLoading(false);
     };
 
     fetchImages();
