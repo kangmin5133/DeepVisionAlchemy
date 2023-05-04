@@ -2,8 +2,7 @@ import logging
 from fastapi import APIRouter, File, UploadFile, Form
 from fastapi.responses import JSONResponse
 
-from service import segment_anything, remove_anything, replace_anything, fill_anything
-
+from service import service_predict
 import numpy as np
 from PIL import Image
 import json
@@ -24,7 +23,7 @@ async def predict_point(image: UploadFile = File(...),
         
     image_pil = Image.open(image.file)
     image_np = np.array(image_pil)
-    mask_data = segment_anything(image = image_np,
+    mask_data = service_predict.segment_anything(image = image_np,
                                  x=x,
                                  y=y,
                                  alt_key=alt_key,
@@ -49,7 +48,7 @@ async def predict_bbox(image: UploadFile = File(...),
 
     print(f"Received request for predict_bbox: {input_box}")
 
-    mask_data = segment_anything(image = image_np,
+    mask_data = service_predict.segment_anything(image = image_np,
                                  bbox = input_box)
     response = {"mask": mask_data}
     
@@ -77,7 +76,7 @@ async def remove_mask_area(image: UploadFile = File(...),
 
     print(f"Received request for remove mask area: {area}")
 
-    response = remove_anything(image=image_np,
+    response = service_predict.remove_anything(image=image_np,
                     mask=mask_array)
 
     return JSONResponse(content=response)
@@ -105,7 +104,7 @@ async def replace_mask_area(image: UploadFile = File(...),
 
     print(f"Received request for replace mask area: {area}, prompt : {prompt}")
 
-    response = fill_anything(image=image_np,
+    response = service_predict.fill_anything(image=image_np,
                     mask=mask_array,prompt=prompt)
 
     return JSONResponse(content=response)
@@ -133,7 +132,7 @@ async def relocate_mask_area(image: UploadFile = File(...),
 
     print(f"Received request for relocate mask area: {area}, prompt : {prompt}")
 
-    response = replace_anything(image=image_np,
+    response = service_predict.replace_anything(image=image_np,
                     mask=mask_array,prompt=prompt)
 
     return JSONResponse(content=response)
