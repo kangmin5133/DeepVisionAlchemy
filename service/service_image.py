@@ -38,6 +38,9 @@ def get_inputs(prompt,batch_size=1):
     return {"prompt": prompts, "generator": generator, "num_inference_steps": num_inference_steps}
 
 def get_generated_images(prompt:str,seed:int):
+
+    prompt+=",hard rim lighting photography--beta --ar 2:3  --beta --upbeta"
+
     json_data = {"images":[]}
     pipeline.enable_attention_slicing()
     images = pipeline(**get_inputs(prompt,batch_size=seed)).images
