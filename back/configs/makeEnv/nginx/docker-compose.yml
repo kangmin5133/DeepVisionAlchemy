@@ -1,0 +1,12 @@
+version: '3.7'
+
+services:
+  web:
+    image: nginx
+    volumes:
+      - ./conf.d.nginx:/etc/nginx/conf.d
+    ports:
+      - 8832:80
+    environment:
+      - NGINX_HOST=diva.lab
+      - NGINX_PORT=80

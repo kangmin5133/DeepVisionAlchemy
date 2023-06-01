@@ -1,0 +1,25 @@
+[mysqld]
+
+# replication - slave
+server-id=2
+log-bin=mysql-bin
+replicate-do-db='diva_db'
+max_allowed_packet=1000M
+sync_binlog = 1
+expire-logs-days= 7
+read_only = 1
+
+
+#
+character-set-server = utf8
+collation-server = utf8_unicode_ci
+init-connect='SET NAMES utf8'
+
+[client]
+default-character-set = utf8
+
+[mysql]
+default-character-set = utf8
+ 
+[mysqldump]
+default-character-set = utf8
