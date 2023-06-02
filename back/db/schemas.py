@@ -25,7 +25,7 @@ class MembershipBase(BaseModel):
     membership_name: str
 
 class UserBase(BaseModel):
-    user_id: int
+    # user_id: int
     user_type_id: int
     user_pw: Optional[str]
     social_id:Optional[str]

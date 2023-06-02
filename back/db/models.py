@@ -92,13 +92,8 @@ class Membership(Base):
 
 class User(Base):
     __tablename__ = "user"
-    __table_args__ = (
-        ForeignKeyConstraint(['user_type_id'], ['user_type.user_type_id']),
-        ForeignKeyConstraint(['provider'], ['social_platform_type.provider_id']),
-        ForeignKeyConstraint(['membership_id'], ['membership.membership_id']),
-    )
 
-    user_id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     user_type_id = Column(Integer, ForeignKey("user_type.user_type_id"), nullable=False)
     user_pw = Column(String(128))
     social_id = Column(String(45))
@@ -113,17 +108,14 @@ class User(Base):
     user_type = relationship("UserType", back_populates="users")
     membership = relationship("Membership", back_populates="users")
     social_platform = relationship("SocialPlatformType", back_populates="users")
-    
+    teams = relationship("Team", secondary="user_teams", back_populates="users")
     created_organizations = relationship("Organization", back_populates="creator")
     organizations = relationship("Organization", secondary=user_organization_association, back_populates="users")
 
 class Organization(Base):
     __tablename__ = "organization"
-    __table_args__ = (
-        ForeignKeyConstraint(['creator_id'], ['user.user_id']),
-    )
 
-    org_id = Column(Integer, primary_key=True, index=True)
+    org_id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     org_email = Column(String(128), nullable=False)
     org_name = Column(String(32), nullable=False)
     creator_id = Column(Integer, ForeignKey("user.user_id",ondelete='CASCADE',onupdate='CASCADE'),nullable=False)
@@ -136,16 +128,12 @@ class Organization(Base):
 
 class Workspace(Base):
     __tablename__ = "workspace"
-    __table_args__ = (
-        ForeignKeyConstraint(['creator_id'], ['user.user_id']),
-        ForeignKeyConstraint(['org_id'], ['organization.org_id']),
-    )
 
     workspace_id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     creator_id = Column(Integer, ForeignKey("user.user_id",ondelete='CASCADE',onupdate='CASCADE'))
     org_id = Column(Integer, ForeignKey("organization.org_id",ondelete='CASCADE',onupdate='CASCADE'))
     workspace_name = Column(String(32))
-    workspcae_info = Column(String(128))
+    workspace_info = Column(String(128))
     invitation_link = Column(String(128))
     created = Column(DateTime(timezone=True), server_default=func.now())
     updated = Column(DateTime(timezone=True), onupdate=func.now())
@@ -155,10 +143,6 @@ class Workspace(Base):
 
 class Project(Base):
     __tablename__ = "project"
-    __table_args__ = (
-        ForeignKeyConstraint(['project_type'], ['project_type.project_type_id']),
-        ForeignKeyConstraint(['data_type'], ['data_type.type_id']),
-    )
 
     project_id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     project_type = Column(Integer, ForeignKey("project_type.project_type_id"))
@@ -169,6 +153,7 @@ class Project(Base):
     updated = Column(DateTime(timezone=True), onupdate=func.now())
 
     teams = relationship("Team", secondary=team_projects_association, back_populates="projects")
+    user_roles = relationship("User",secondary=user_project_roles_association,backref="projects")
 
 
 class Team(Base):
