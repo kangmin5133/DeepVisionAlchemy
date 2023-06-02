@@ -61,7 +61,8 @@ const Dashboard: React.FC = () => {
   const cardLightColor = "linear-gradient(127.09deg, rgba(140, 140, 140, 0.94) 19.41%, rgba(200, 200, 200, 0.49) 76.65%)";
 
   return (
-    <Box p={8} pl={["8", "300px"]} pt="60px" bg={colorMode === "dark" ? "gray.700" : "gray.100"} height="100%"
+    <Box p={8} pl={["8", "300px"]} pt="60px" bg={colorMode === "dark" ? "gray.700" : "gray.100"} minH="100vh"
+    overflow="auto" height="100vh"
     backgroundImage={bgImage}
     backgroundPosition="center"
     backgroundSize="cover">

@@ -3,10 +3,12 @@ import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import Sidebar from "./js/pages/Sidebar";
 import Topbar from "./js/pages/Topbar";
 import Home from "./js/pages/Home";
-import SignUp from "./js/pages/SignUp";
+import Login from "./js/pages/Login";
+import Signin from "./js/pages/SignIn";
 import LoginLoading from "./js/pages/LoginLoading";
 import Workspace from "./js/pages/Workspace";
 import Project from "./js/pages/Project";
+import SelectUserType from "./js/pages/SelectUserType"
 
 import { useSelector } from "react-redux"; 
 
@@ -21,7 +23,7 @@ const App: React.FC = () => {
   };
 
   const isLoggedIn = useSelector((state: { auth: { isLoggedIn: boolean; }; }) => state.auth.isLoggedIn);
-
+  
   return (
     <Router>
       <div className="App">
@@ -31,7 +33,9 @@ const App: React.FC = () => {
         <div className="content">
           <Routes>
             <Route path="/" element={<Home />} />
-            <Route path="/signup" element={<SignUp />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/signin" element={<Signin />} />
+            <Route path="/userselect" element={<SelectUserType />} />
             {/* 추가하려는 다른 페이지에 대한 라우트를 이곳에 추가*/}
             <Route path="/loginLoading" element={<LoginLoading />} />
             <Route path="/dashboard" element={<Dashboard />} />

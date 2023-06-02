@@ -16,7 +16,7 @@ import bgImage from "../../assets/alchemistic.png";
 const Home: React.FC = () => {
   const navigate = useNavigate();
   const handleClick = () => {
-    navigate("/signup");
+    navigate("/login");
   };
   
   return (
