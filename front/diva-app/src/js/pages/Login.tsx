@@ -241,7 +241,8 @@ const Login: React.FC = () => {
                     maxW='350px'
                     h='45'
                     mb='20px'
-                    mt='20px'>
+                    mt='20px'
+                    _hover={{ bg: "blue.500" }}>
                     LOG IN
                   </Button>
                 </FormControl>
@@ -252,7 +253,7 @@ const Login: React.FC = () => {
                   maxW='100%'
                   mt='0px'>
                   <Text color={textColor} fontWeight='medium'>
-                    Already have an account?
+                    you don't have an account?
                     <Link
                       color={titleColor}
                       as='span'
