@@ -1,4 +1,4 @@
-import { LOGIN, LOGOUT, User, AuthActionTypes } from '../actions/authActions';
+import { LOGIN, LOGOUT, RESTORE_SESSION, User, AuthActionTypes } from '../actions/authActions';
 
 interface AuthState {
   isLoggedIn: boolean;
@@ -23,6 +23,13 @@ const authReducer = (state = initialState, action: AuthActionTypes): AuthState =
         ...state,
         isLoggedIn: false,
         user: null
+      };
+    case RESTORE_SESSION:
+      const user = JSON.parse(localStorage.getItem('user') || 'null');
+      return {
+        ...state,
+        isLoggedIn: user !== null,
+        user,
       };
     default:
       return state;

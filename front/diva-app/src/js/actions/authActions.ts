@@ -1,5 +1,6 @@
 export const LOGIN = "LOGIN";
 export const LOGOUT = "LOGOUT";
+export const RESTORE_SESSION = "RESTORE_SESSION";
 
 export interface User {
   email: string;
@@ -7,6 +8,10 @@ export interface User {
   social_id: string;
   user_id: string;
   provider: string;
+}
+
+interface RestoreSessionAction {
+  type: typeof RESTORE_SESSION;
 }
 
 interface LoginAction {
@@ -27,4 +32,8 @@ export const logout = (): LogoutAction => ({
   type: LOGOUT,
 });
 
-export type AuthActionTypes = LoginAction | LogoutAction;
+export const restoreSession = (): RestoreSessionAction => ({
+  type: RESTORE_SESSION,
+});
+
+export type AuthActionTypes = LoginAction | LogoutAction | RestoreSessionAction;

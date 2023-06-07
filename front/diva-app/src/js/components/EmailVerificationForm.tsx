@@ -5,16 +5,20 @@ import { Box, Button, FormControl, FormLabel, Input, HStack, Flex} from "@chakra
 import GradientBorder from "./GradientBorder"
 
 interface Inputs {
-  email: string;
+  userEmail: string;
   verificationCode: string;
 }
 
-export function EmailVerificationForm() {
+interface EmailVerificationFormProps {
+  register: (...args: any[]) => any;
+  handleSubmit: (...args: any[]) => any;
+}
+
+export function EmailVerificationForm({register, handleSubmit}: EmailVerificationFormProps) {
 
   const titleColor = "white";
   const textColor = "gray.400";
 
-  const { register, handleSubmit } = useForm<Inputs>();
   const [isSubmitted, setSubmitted] = useState(false);
 
   const onSubmit = async (data: Inputs) => {
@@ -59,7 +63,7 @@ export function EmailVerificationForm() {
               h='46px'
               type='email'
               placeholder='Your email address'
-              {...register("email", { required: true })}
+              {...register("userEmail", { required: true })}
             />
           </GradientBorder>
           <Button type="button" onClick={handleSubmit(onSubmit)}>
@@ -87,7 +91,6 @@ export function EmailVerificationForm() {
                   h='46px'
                   type='text'
                   placeholder='Enter your Verification Code'
-                  {...register("verificationCode", { required: true })}
                 />
               </GradientBorder>
             

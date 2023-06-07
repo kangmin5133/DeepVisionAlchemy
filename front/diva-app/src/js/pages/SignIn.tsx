@@ -33,11 +33,10 @@ import GradientBorder from "../components/GradientBorder"
 import EmailVerificationForm  from '../components/EmailVerificationForm';
 
 type Inputs = {
-  name: string;
-  email: string;
+  userName: string;
+  userEmail: string;
   password: string;
   passwordConfirm: string;
-  userType: "Personal" | "Organization";
   orgName?: string;
   orgEmail?: string;
 };
@@ -56,9 +55,16 @@ const Signin: React.FC = () => {
     navigate("/login");
   };
 
-  const onSubmit: SubmitHandler<Inputs> = (data) => {
+  const onSubmit: SubmitHandler<Inputs> = async (data) => {
     // process your form submission here
-    console.log(data);
+    console.log("onSubmit data : ",data);
+    const jsonData = data
+    try {
+      await axios.post(`${config.serverUrl}/rest/api/auth/register`, {jsonData});
+      navigate("/login");
+    } catch (error) {
+      console.error(error);
+    }
   };
 
   const handleSocialLogin = (platform: string) => {
@@ -198,6 +204,7 @@ const Signin: React.FC = () => {
                       h='46px'
                       type='text'
                       placeholder='Your name'
+                      {...register("userName")}
                     />
                   </GradientBorder>
                   <FormLabel
@@ -208,7 +215,7 @@ const Signin: React.FC = () => {
                     Email
                   </FormLabel>
                 
-                  <EmailVerificationForm />
+                  <EmailVerificationForm register={register} handleSubmit={handleSubmit}/>
 
                   <FormLabel
                     color={titleColor}
@@ -282,6 +289,7 @@ const Signin: React.FC = () => {
                   <HStack mb="24px">
                     <Button onClick={() => setRegisterAs('personal')} isActive={registerAs === 'personal'}>
                       Personal
+                      
                     </Button>
                     <Button onClick={() => setRegisterAs('organization')} isActive={registerAs === 'organization'}>
                       Organization

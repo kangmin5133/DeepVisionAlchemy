@@ -20,20 +20,9 @@ import {
 	CircularProgressLabel,
 	Flex,
 	Icon,
-	Progress,
 	SimpleGrid,
-	Spacer,
 	Stack,
-	Stat,
-	StatHelpText,
-	StatLabel,
-	StatNumber,
-	Table,
-	Tbody,
 	Text,
-	Th,
-	Thead,
-	Tr
 } from '@chakra-ui/react';
 
 import Card from "../components/Card/Card";
@@ -44,6 +33,8 @@ import { AiFillCheckCircle } from 'react-icons/ai';
 import { BiHappy } from 'react-icons/bi';
 import { IoCheckmarkDoneCircleSharp, IoEllipsisHorizontal } from 'react-icons/io5';
 // for testing
+
+import { useSelector } from "react-redux"; 
 
 import Breadcrumbs from "../components/Breadcrumbs";
 import MiniStaticCard from '../components/MiniStaticCard';
@@ -57,6 +48,9 @@ import bgImage from "../../assets/alchemistic.png";
 const Dashboard: React.FC = () => {
   const { colorMode, toggleColorMode } = useColorMode();
   const navigate = useNavigate();
+
+  const isLoggedIn = useSelector((state: { auth: { isLoggedIn: boolean; }; }) => state.auth.isLoggedIn);
+
   const cardDarkColor = "linear-gradient(127.09deg, rgba(6, 11, 40, 0.94) 19.41%, rgba(10, 14, 35, 0.49) 76.65%)";
   const cardLightColor = "linear-gradient(127.09deg, rgba(140, 140, 140, 0.94) 19.41%, rgba(200, 200, 200, 0.49) 76.65%)";
 

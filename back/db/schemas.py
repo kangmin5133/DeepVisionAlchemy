@@ -25,7 +25,7 @@ class MembershipBase(BaseModel):
     membership_name: str
 
 class UserBase(BaseModel):
-    # user_id: int
+    user_id: Optional[int]
     user_type_id: int
     user_pw: Optional[str]
     social_id:Optional[str]
@@ -175,6 +175,7 @@ class Workspace(WorkspaceBase):
     updated: datetime
     class Config:
         orm_mode = True
+        
 
 class Project(ProjectBase):
     project_id: int
@@ -182,6 +183,7 @@ class Project(ProjectBase):
     updated: datetime
     class Config:
         orm_mode = True
+        
 
 class Team(TeamBase):
     team_id: int
@@ -189,3 +191,4 @@ class Team(TeamBase):
     updated: datetime
     class Config:
         orm_mode = True
+        

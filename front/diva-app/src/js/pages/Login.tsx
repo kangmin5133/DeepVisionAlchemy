@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from "react-router-dom";
+import { SubmitHandler, useForm } from "react-hook-form";
+import axios from "axios";
 import { 
     Box, 
     Flex, 
@@ -27,10 +29,18 @@ import signUpImage from "../../assets/alchemyLab.png";
 
 import config from "../../conf/config";
 import GradientBorder from "../components/GradientBorder"
+import { useDispatch } from 'react-redux';
+import { login, User } from '../actions/authActions';
+
+type Inputs = {
+  userEmail: string;
+  userPassword: string;
+};
 
 const Login: React.FC = () => {
   const navigate = useNavigate();
-  const [emailLogin, setEmailLogin] = useState(false);
+  const dispatch = useDispatch();
+  const { register, handleSubmit, watch, formState: { errors } } = useForm<Inputs>();
 
   const titleColor = "white";
   const textColor = "gray.400";
@@ -43,7 +53,27 @@ const Login: React.FC = () => {
     navigate("/signin");
   };
 
-  const colorScheme = (color: string) => emailLogin ? 'blue' : color;
+  const onSubmit: SubmitHandler<Inputs> = async (data) => {
+    // process your form submission here
+    console.log("onSubmit data : ",data);
+    const jsonData = data
+    try {
+      const response = await axios.post(`${config.serverUrl}/rest/api/auth/login/email`, {jsonData});
+      const { access_token } = response.data;
+      localStorage.setItem('access_token', access_token);
+      
+
+      const user: User = response.data.user;  // get the user data from the server's response
+      dispatch(login(user));  // dispatch the login action
+
+      localStorage.setItem('user', JSON.stringify(user)); 
+      dispatch(login(user));
+
+      navigate("/dashboard");
+    } catch (error) {
+      console.error(error);
+    }
+  };
 
 
   const SocialLoginButtons = [
@@ -163,6 +193,7 @@ const Login: React.FC = () => {
                   mb='22px'>
                   or
                 </Text>
+                <Box as="form" onSubmit={handleSubmit(onSubmit)}>
                 <FormControl>
                   <FormLabel
                     color={titleColor}
@@ -190,6 +221,7 @@ const Login: React.FC = () => {
                       h='46px'
                       type='email'
                       placeholder='Your email address'
+                      {...register("userEmail")}
                     />
                   </GradientBorder>
                   <FormLabel
@@ -218,6 +250,7 @@ const Login: React.FC = () => {
                       h='46px'
                       type='password'
                       placeholder='Your password'
+                      {...register("userPassword")}
                     />
                   </GradientBorder>
                   <FormControl display='flex' alignItems='center' mb='24px'>
@@ -246,6 +279,7 @@ const Login: React.FC = () => {
                     LOG IN
                   </Button>
                 </FormControl>
+                </Box>
                 <Flex
                   flexDirection='column'
                   justifyContent='center'
