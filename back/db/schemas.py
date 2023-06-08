@@ -24,6 +24,15 @@ class RoleBase(BaseModel):
 class MembershipBase(BaseModel):
     membership_name: str
 
+# this schema only use in authentication func
+class AuthUser(BaseModel):
+    email: str
+    name: str
+    social_id: str
+    user_id: int
+    provider: str
+    access_token: str
+
 class UserBase(BaseModel):
     user_id: Optional[int]
     user_type_id: int

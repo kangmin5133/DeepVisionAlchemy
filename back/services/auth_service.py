@@ -94,11 +94,12 @@ async def createOrg(jsonData : dict ,
         org_in = schemas.OrganizationCreate(
                                     org_email=orgEmail, 
                                     org_name=orgName, 
-                                    creator_id=user_info.user_id
+                                    creator_id=user_info["user_id"]
                                     )
         crud.create_organization(db, org_in)
         org_info = crud.get_organizations(db)
-        org_dict = org_info.__dict__
+        print("org_info:",org_info[0].__dict__)
+        org_dict = org_info[0].__dict__
         if '_sa_instance_state' in org_dict:
             del org_dict['_sa_instance_state']
 
@@ -108,6 +109,8 @@ async def createOrg(jsonData : dict ,
 async def register(jsonData : dict ,
                       db: Session
                       ):
+    
+    print("jsonData :",jsonData)
     email = jsonData.get("userEmail")
     name = jsonData.get("userName")
     social_id = jsonData.get("social_id",None)
@@ -142,7 +145,7 @@ async def register(jsonData : dict ,
     if '_sa_instance_state' in user_dict:
         del user_dict['_sa_instance_state']
     print("[register query] : ",user_dict)
-    org_dict = createOrg(jsonData,user_dict,db)
+    org_dict = await createOrg(jsonData,user_dict,db)
 
     if org_dict is not None:
         return user_dict, org_dict

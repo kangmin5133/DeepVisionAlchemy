@@ -3,9 +3,9 @@ from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
 from db.database import get_db
 from fastapi.responses import JSONResponse
-import numpy as np
-from PIL import Image
-import json
+# import numpy as np
+# from PIL import Image
+# import json
 import bcrypt
 from configs.config import Config
 from configs.oauth import Oauth
@@ -18,8 +18,13 @@ from fastapi.security import OAuth2PasswordBearer
 from fastapi.security.oauth2 import OAuth2PasswordRequestForm
 from datetime import timedelta
 from datetime import datetime
+from db.schemas import *
+
+from starlette.requests import Request
+
 
 router = APIRouter(prefix="/rest/api/auth")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 def create_access_token(data: dict, expires_delta: timedelta = None):
     to_encode = data.copy()
@@ -31,6 +36,74 @@ def create_access_token(data: dict, expires_delta: timedelta = None):
     encoded_jwt = jwt.encode(to_encode, Config.JWT_SECRET_KEY, algorithm="HS256")
     return encoded_jwt
 
+def decode_token(token: str):
+    try:
+        # JWT 토큰 해독
+        decoded_data = jwt.decode(token, Config.JWT_SECRET_KEY, algorithms="HS256")
+
+        # 해독된 데이터로 User 객체 생성
+        auth_user = AuthUser(
+            email=decoded_data['email'],
+            name=decoded_data['name'],
+            social_id=decoded_data['social_id'],
+            user_id=decoded_data['user_id'],
+            provider=decoded_data['provider'],
+            access_token=decoded_data['access_token']
+        )
+        return auth_user
+
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Access token is expired",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    except jwt.PyJWTError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Could not validate credentials",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+def _parse_cookie(credentials: str) -> Optional[str]:
+    if not credentials:
+        return None
+    if "access_token=" not in credentials:
+        return None
+    cookies = credentials.split("; ")
+    for cookie in cookies:
+        if cookie.startswith("access_token="):
+            return cookie.replace("access_token=", "")
+    return None
+
+async def get_cookie_authorization(request: Request) -> Optional[str]:
+    cookie_authorization: str = request.headers.get("Cookie")
+    return _parse_cookie(cookie_authorization)
+
+async def get_token(credentials: Optional[str] = Depends(get_cookie_authorization)) -> Optional[str]:
+    if credentials is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Could not validate credentials",
+        )
+    return credentials
+
+async def get_current_user(token: str = Depends(get_token)):
+
+    print("\ntoken : ",token)
+
+    user = decode_token(token)
+    if user is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid authentication credentials",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    return user
+
+@router.get("/users/me/", response_model=AuthUser)
+async def read_users_me(current_user: AuthUser = Depends(get_current_user)):
+    return current_user
 
 @router.get('/login/social/naver')
 def naverSocialLogin():
@@ -162,22 +235,35 @@ async def googleSocialLoginCallback(code: str, db: Session = Depends(get_db)):
             "social_id": response.get("social_id"),
             "user_id": response.get("user_id"),
             "provider": response.get("provider"),
+            # "access_token" : response.get("access_token")
             }
             query_string = urlencode(query_data)
             redirect_url = f"{Config.DIVA_REDIRECT_URL}?{query_string}"
+            return RedirectResponse(url=redirect_url)
+            # jwt_token = jwt.encode(query_data, Config.JWT_SECRET_KEY)
+            # redirect_url = f"{Config.DIVA_REDIRECT_URL}?{jwt_token}"
+            # # redirect_url = Config.DIVA_REDIRECT_URL
+            # response = RedirectResponse(url=redirect_url)
+            # # response.set_cookie(
+            # #     "access_token",
+            # #     value=jwt_token,
+            # #     httponly=True,
+            # #     max_age=1800,
+            # #     expires=1800,
+            # # )
+            # return response
     else :
         query_data = {
-        "email": response.get("email"),
-        "name": response.get("name"),
-        "social_id": response.get("social_id"),
-        "user_id": response.get("user_id"),
-        "provider": response.get("provider"),
-        }
+            "email": response.get("email"),
+            "name": response.get("name"),
+            "social_id": response.get("social_id"),
+            "user_id": response.get("user_id"),
+            "provider": response.get("provider")
+            }
         query_string = urlencode(query_data)
         redirect_url = f"{Config.DIVA_REGISTER_REDIRECT_URL}?{query_string}"
-
-    return RedirectResponse(url=redirect_url)
-
+        return RedirectResponse(url=redirect_url)
+    
 @router.post('/login/email')
 async def emailLogin(request:dict, db: Session = Depends(get_db)):
     jsonData = request.get("jsonData")
@@ -198,9 +284,16 @@ async def emailLogin(request:dict, db: Session = Depends(get_db)):
     )
 
     user_dict = user.__dict__
-    user_dict.pop('user_pw')  # Remove user password from the response
 
-    return JSONResponse(content={"access_token": access_token, "token_type": "bearer", "user": str(user_dict)})
+    query_data = {
+            "email": user_dict.get("email"),
+            "name": user_dict.get("name"),
+            "social_id": user_dict.get("social_id"),
+            "user_id": user_dict.get("user_id"),
+            "provider": user_dict.get("provider"),
+            # "access_token" : response.get("access_token")
+            }
+    return JSONResponse(content={"access_token": access_token, "token_type": "bearer", "user": query_data})
 
 @router.post('/register')
 async def createUser(request:dict, db: Session = Depends(get_db)):
@@ -213,3 +306,7 @@ async def createUser(request:dict, db: Session = Depends(get_db)):
     response = {"user_info":user,"org_info":org}
 
     return JSONResponse(content=str(response))
+
+@router.post('/logout')
+async def logout(request:dict):
+    pass
