@@ -56,10 +56,10 @@ const SpaceCard: React.FC<SpaceCardProps> = ({ header,description,target }) => {
         <CardBody w='100%' h='100%'>
             <Flex flexDirection={{ sm: 'column', lg: 'row' }} w='100%' h='100%'>
             <Flex flexDirection='column' h='100%' p='22px' minW='60%' lineHeight='1.6'>
-                <Text fontSize='28px' color='#fff' fontWeight='bold' mb='18px'>
+                <Text fontSize='50px' color='#fff' fontWeight='bold'>
                 {header}
                 </Text>
-                <Text fontSize='md' color='gray.400' fontWeight='normal' mb='auto'>
+                <Text fontSize='20px' color='gray.400' fontWeight='normal' mb='auto'>
                 {description}
                 </Text>
                 <Spacer />

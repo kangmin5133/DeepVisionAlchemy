@@ -42,7 +42,6 @@ type Inputs = {
 };
 
 const Signin: React.FC = () => {
-  const [emailLogin, setEmailLogin] = useState(false);
   const navigate = useNavigate();
   const titleColor = "white";
   const textColor = "gray.400";
@@ -70,8 +69,6 @@ const Signin: React.FC = () => {
   const handleSocialLogin = (platform: string) => {
     window.location.href = `${config.serverUrl}/rest/api/auth/login/social/${platform}`;
   };
-
-  const colorScheme = (color: string) => emailLogin ? 'blue' : color;
 
   const SocialLoginButtons = [
     {

@@ -1,5 +1,5 @@
-import React, { ReactNode, useState, useRef, useEffect  } from "react";
-import { HamburgerIcon } from "@chakra-ui/icons";
+import React, { useState, useEffect  } from "react";
+
 // chakra imports
 import {
   Box,
@@ -8,13 +8,10 @@ import {
   Stack,
   Text,
   Switch,
-  Spacer,
   useColorMode,
 } from "@chakra-ui/react";
-import IconBox from "../components/IconBox";
 import { Link as RouterLink, useLocation } from 'react-router-dom';
 import Separator from "../components/Separator";
-import PropTypes from "prop-types";
 
 
 interface SidebarProps {
@@ -48,7 +45,7 @@ const Sidebar: React.FC<SidebarProps> =  ({ isVisible }) => {
         <Box
           bg='linear-gradient(97.89deg, #FFFFFF 70.67%, rgba(117, 122, 140, 0) 108.55%)'
           bgClip='text'>
-          <Text fontSize='xl' letterSpacing='3px' mt='3px' color={colorMode === "dark" ? "transparent" : "black"}>
+          <Text align="center" fontSize='xl' letterSpacing='3px' mt='3px' color={colorMode === "dark" ? "transparent" : "black"}>
             {/* {logoText} */}
             Deep Vision Alchemy
           </Text>

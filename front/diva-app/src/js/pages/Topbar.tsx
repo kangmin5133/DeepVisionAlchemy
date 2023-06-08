@@ -16,6 +16,8 @@ import { faBars } from "@fortawesome/free-solid-svg-icons";
 import { ChevronDownIcon } from "@chakra-ui/icons";
 import { useSelector } from "react-redux";
 import { RootState } from '../store/index'; // Assuming index.tsx is the store file
+import axios from 'axios';
+import config from "../../conf/config";
 
 interface TopbarProps {
   onMenuClick: () => void;
@@ -25,7 +27,15 @@ interface TopbarProps {
 const Topbar: React.FC<TopbarProps> = ({ onMenuClick }) => {
   const isLoggedIn = useSelector((state: RootState) => state.auth.isLoggedIn);
   const user = useSelector((state: RootState) => state.auth.user);
-
+  const logout = async () => {
+    try {
+      await axios.get(`${config.serverUrl}/rest/api/auth/logout`);
+      localStorage.removeItem('access_token'); // If you are using JWT tokens and storing them in local storage
+      // Update your global state to reflect that the user is logged out
+    } catch (error) {
+      console.error('Error during logout:', error);
+    }
+  };
   return (
     <Box
       position="fixed"
@@ -82,7 +92,7 @@ const Topbar: React.FC<TopbarProps> = ({ onMenuClick }) => {
                 <MenuItem bg="gray.700">프로필 설정</MenuItem>
                 <MenuItem bg="gray.700">정보 관리</MenuItem>
                 <MenuItem bg="gray.700">멤버십 설정</MenuItem>
-                <MenuItem bg="gray.700">로그아웃</MenuItem>
+                <MenuItem bg="gray.700" onClick={logout}>로그아웃</MenuItem>
               </MenuList>
             </Menu>
           </Box>

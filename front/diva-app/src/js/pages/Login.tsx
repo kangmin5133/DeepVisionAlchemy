@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, Dispatch } from 'react';
 import { useNavigate } from "react-router-dom";
 import { SubmitHandler, useForm } from "react-hook-form";
 import axios from "axios";
@@ -31,6 +31,7 @@ import config from "../../conf/config";
 import GradientBorder from "../components/GradientBorder"
 import { useDispatch } from 'react-redux';
 import { login, User } from '../actions/authActions';
+import { AnyAction } from 'redux';
 
 type Inputs = {
   userEmail: string;
@@ -39,7 +40,7 @@ type Inputs = {
 
 const Login: React.FC = () => {
   const navigate = useNavigate();
-  const dispatch = useDispatch();
+  const dispatch: Dispatch<AnyAction> = useDispatch();
   const { register, handleSubmit, watch, formState: { errors } } = useForm<Inputs>();
 
   const titleColor = "white";
@@ -55,16 +56,13 @@ const Login: React.FC = () => {
 
   const onSubmit: SubmitHandler<Inputs> = async (data) => {
     // process your form submission here
-    console.log("onSubmit data : ",data);
+
     const jsonData = data
     try {
       const response = await axios.post(`${config.serverUrl}/rest/api/auth/login/email`, {jsonData});
-      const { access_token } = response.data;
+      const { access_token, user} = response.data;
       localStorage.setItem('access_token', access_token);
-      
-
-      const user: User = response.data.user;  // get the user data from the server's response
-      dispatch(login(user));  // dispatch the login action
+      console.log("user from email login : ",response.data.user)   
 
       localStorage.setItem('user', JSON.stringify(user)); 
       dispatch(login(user));

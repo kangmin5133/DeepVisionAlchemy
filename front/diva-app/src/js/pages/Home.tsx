@@ -30,7 +30,7 @@ const Home: React.FC = () => {
           <Heading as="h1" size="3xl" color="white">
             Welcome to DIVA!
           </Heading>
-          <Text fontSize="2xl" color="white">
+          <Text fontSize="2xl" color="white" align="center">
             This is an application for Data Labeling using the latest Vision AI Tech.
             <br />
             <br />
