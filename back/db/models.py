@@ -29,6 +29,12 @@ team_projects_association = Table(
     Column('project_id', Integer, ForeignKey('project.project_id',ondelete='CASCADE',onupdate='CASCADE'))
 )
 
+dataset_projects_association = Table(
+    'dataset_projects', Base.metadata,
+    Column('dataset_id', Integer, ForeignKey('dataset.dataset_id',ondelete='CASCADE',onupdate='CASCADE')),
+    Column('project_id', Integer, ForeignKey('project.project_id',ondelete='CASCADE',onupdate='CASCADE'))
+)
+
 user_project_roles_association = Table(
     'user_project_roles', Base.metadata,
     Column('user_id', Integer, ForeignKey('user.user_id',ondelete='CASCADE',onupdate='CASCADE')),
@@ -111,6 +117,7 @@ class User(Base):
     teams = relationship("Team", secondary="user_teams", back_populates="users")
     created_organizations = relationship("Organization", back_populates="creator")
     organizations = relationship("Organization", secondary=user_organization_association, back_populates="users")
+    datasets = relationship("User", secondary=team_projects_association, back_populates="users")
 
 class Organization(Base):
     __tablename__ = "organization"
@@ -147,13 +154,13 @@ class Project(Base):
     project_id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     project_type = Column(Integer, ForeignKey("project_type.project_type_id"))
     project_name = Column(String(32))
-    data_type = Column(Integer, ForeignKey("data_type.type_id"))
     desc = Column(Text)
     created = Column(DateTime(timezone=True), server_default=func.now())
     updated = Column(DateTime(timezone=True), onupdate=func.now())
 
     teams = relationship("Team", secondary=team_projects_association, back_populates="projects")
     user_roles = relationship("User",secondary=user_project_roles_association,backref="projects")
+    datasets = relationship("Dataset",secondary=user_project_roles_association,backref="projects")
 
 
 class Team(Base):
@@ -168,3 +175,18 @@ class Team(Base):
     users = relationship("User", secondary=user_teams_association, back_populates="teams")
     projects = relationship("Project", secondary=team_projects_association, back_populates="teams")
     workspaces = relationship("Workspace", secondary=workspace_teams_association, back_populates="teams")
+
+class Dataset(Base):
+    __tablename__ = "dataset"
+
+    dataset_id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    creator_id = Column(Integer, ForeignKey("user.user_id",ondelete='CASCADE',onupdate='CASCADE'),nullable=False)
+    dataset_name = Column(String(32))
+    dataset_type = Column(Integer,ForeignKey("data_type.type_id"))
+    created = Column(DateTime(timezone=True), server_default=func.now())
+    updated = Column(DateTime(timezone=True), onupdate=func.now())
+
+   
+    users = relationship("User", secondary=team_projects_association, back_populates="datasets")
+    projects = relationship("Project", secondary=team_projects_association, back_populates="datasets")
+    workspaces = relationship("Workspace", secondary=workspace_teams_association, back_populates="datasets")

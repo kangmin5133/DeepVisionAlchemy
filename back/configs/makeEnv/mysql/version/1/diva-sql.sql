@@ -120,13 +120,12 @@ CREATE TABLE `project` (
   `project_id` int NOT NULL AUTO_INCREMENT,
   `project_type` int NOT NULL,
   `project_name` varchar(32) NOT NULL,
-  `data_type` int NOT NULL,
   `desc` TEXT NULL DEFAULT NULL,
   `created` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`project_id`),
-  CONSTRAINT `project_project_type_FK` FOREIGN KEY (`project_type`) REFERENCES `project_type` (`project_type_id`) ,
-  CONSTRAINT `project_data_type_FK` FOREIGN KEY (`data_type`) REFERENCES `data_type` (`type_id`)
+  CONSTRAINT `project_project_type_FK` FOREIGN KEY (`project_type`) REFERENCES `project_type` (`project_type_id`)
+  
 ) ;
 
 
@@ -140,6 +139,29 @@ CREATE TABLE `team` (
   `updated` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
   PRIMARY KEY (`team_id`)
+) ;
+
+# dataset table
+DROP TABLE if  exists `dataset`;
+CREATE TABLE `dataset` (
+  `dataset_id` int NOT NULL AUTO_INCREMENT,
+  `dataset_name` varchar(32) NOT NULL,
+  `dataset_type` varchar(32) NULL,
+  `created` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+  PRIMARY KEY (`dataset_id`),
+  CONSTRAINT `dataset_data_type_FK` FOREIGN KEY (`data_type`) REFERENCES `data_type` (`type_id`)
+) ;
+
+# dataset_project table
+DROP TABLE if  exists `dataset_project`;
+CREATE TABLE `dataset_project` (
+  `project_id` int NOT NULL,
+  `dataset_id` int NOT NULL,
+  PRIMARY KEY (`project_id`,`dataset_id`),
+  CONSTRAINT `dataset_project_project_id_FK` FOREIGN KEY (`project_id`) REFERENCES `project` (`project_id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `dataset_project_dataset_id_FK` FOREIGN KEY (`dataset_id`) REFERENCES `dataset` (`dataset_id`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ;
 
 # workspace_teams table

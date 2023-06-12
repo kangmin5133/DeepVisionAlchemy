@@ -121,3 +121,30 @@ def delete_team(db: Session, team_id: int):
     db.query(models.Team).filter(models.Team.team_id == team_id).delete()
     db.commit()
     return True
+
+# CRUD - dataset
+def get_dataset_by_dataset_id(db: Session, dataset_id: int):
+    return db.query(models.Dataset).filter(models.Dataset.dataset_id == dataset_id).first()
+
+def get_datasets_by_creator_id(db: Session, creator_id: int):
+    return db.query(models.Dataset).filter(models.Dataset.creator_id == creator_id).all()
+
+def get_datasets(db: Session, skip: int = 0, limit: int = 100):
+    return db.query(models.Dataset).offset(skip).limit(limit).all()
+
+def create_dataset(db: Session, dataset: schemas.DatasetCreate):
+    db_dataset = models.Dataset(**dataset.dict())
+    db.add(db_dataset)
+    db.commit()
+    db.refresh(db_dataset)
+    return db_dataset
+
+def update_dataset(db: Session, dataset: schemas.DatasetUpdate, dataset_id: int):
+    db.query(models.Dataset).filter(models.Dataset.dataset_id == dataset_id).update(dataset.dict())
+    db.commit()
+    return db.query(models.Dataset).filter(models.Dataset.dataset_id == dataset_id).first()
+
+def delete_dataset(db: Session, dataset_id: int):
+    db.query(models.Dataset).filter(models.Dataset.dataset_id == dataset_id).delete()
+    db.commit()
+    return True

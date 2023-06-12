@@ -62,15 +62,6 @@ async def socialLogin(loginFrom : str,
                      "access_token":access_token,
                      "refresh_token":refresh_token,
                      "is_user": True}
-        # user_in = schemas.UserCreate(
-        #                              email=email, 
-        #                              name=name, 
-        #                              social_id=social_id, 
-        #                              provider=provider_id, 
-        #                              user_type_id=UserType.default().value,
-        #                              membership_id=Membership.default().value
-        #                              )
-        # user = crud.create_user(db, user_in)
     
     print("response_data : ",response_data)
 
@@ -79,11 +70,6 @@ async def socialLogin(loginFrom : str,
 async def getUser(email:str,db: Session):
     user = crud.get_user(db, email)
     return user
-
-async def emailLogin(jsonData : dict ,
-                      db: Session
-                      ):
-    pass
 
 async def createOrg(jsonData : dict ,
                     user_info : dict,
@@ -110,7 +96,6 @@ async def register(jsonData : dict ,
                       db: Session
                       ):
     
-    print("jsonData :",jsonData)
     email = jsonData.get("userEmail")
     name = jsonData.get("userName")
     social_id = jsonData.get("social_id",None)
@@ -139,6 +124,7 @@ async def register(jsonData : dict ,
                                     user_type_id=user_type_id,
                                     membership_id=Membership.default().value
                                     )
+                                    
     crud.create_user(db, user_in)
     user_info = crud.get_user(db,email)
     user_dict = user_info.__dict__

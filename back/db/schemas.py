@@ -58,8 +58,12 @@ class WorkspaceBase(BaseModel):
 class ProjectBase(BaseModel):
     project_type: int
     project_name: str
-    data_type: int
     desc: Optional[str] = None
+
+class DatasetBase(BaseModel):
+    dataset_name: str
+    dataset_type: int
+    creator_id: int
 
 class TeamBase(BaseModel):
     team_name: str
@@ -67,6 +71,9 @@ class TeamBase(BaseModel):
 
 # Create classes
 class UserTypeCreate(UserTypeBase):
+    pass
+
+class DatasetCreate(DatasetBase):
     pass
 
 class DataTypeCreate(DataTypeBase):
@@ -124,8 +131,10 @@ class WorkspaceUpdate(WorkspaceBase):
 
 class ProjectUpdate(ProjectBase):
     project_name: Optional[str]
-    data_type: Optional[int]
     desc: Optional[str]
+
+class DatasetUpdate(DatasetBase):
+    dataset_name: Optional[str]
 
 class TeamUpdate(TeamBase):
     team_name: Optional[str]
@@ -188,6 +197,13 @@ class Workspace(WorkspaceBase):
 
 class Project(ProjectBase):
     project_id: int
+    created: datetime
+    updated: datetime
+    class Config:
+        orm_mode = True
+
+class Dataset(DatasetBase):
+    dataset_id: int
     created: datetime
     updated: datetime
     class Config:

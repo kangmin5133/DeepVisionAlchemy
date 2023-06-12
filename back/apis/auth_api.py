@@ -307,6 +307,6 @@ async def createUser(request:dict, db: Session = Depends(get_db)):
 
     return JSONResponse(content=str(response))
 
-@router.post('/logout')
-async def logout(request:dict):
-    pass
+@router.get('/logout')
+async def logout():
+    return {"detail": "Successfully logged out"}
