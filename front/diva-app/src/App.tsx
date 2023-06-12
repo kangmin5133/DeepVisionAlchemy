@@ -9,7 +9,7 @@ import LoginLoading from "./js/pages/LoginLoading";
 import Workspace from "./js/pages/Workspace";
 import Project from "./js/pages/Project";
 import SelectUserType from "./js/pages/SelectUserType"
-
+import Dataset from "./js/pages/Dataset";
 import { useSelector, useDispatch } from "react-redux"; 
 import { restoreSession } from './js/actions/authActions';
 
@@ -48,6 +48,7 @@ const App: React.FC = () => {
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/dashboard/workspace" element={<Workspace />} />
             <Route path="/dashboard/workspace/project" element={<Project />} />
+            <Route path="/dataset" element={<Dataset />} />
           </Routes>
         </div>
       </div>

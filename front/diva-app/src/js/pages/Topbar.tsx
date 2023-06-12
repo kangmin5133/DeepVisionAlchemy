@@ -1,5 +1,5 @@
-import React from "react";
-import { Link } from "react-router-dom";
+import React,{Dispatch} from "react";
+import { Link, useNavigate } from "react-router-dom";
 import {
   Avatar,
   Box,
@@ -17,7 +17,11 @@ import { ChevronDownIcon } from "@chakra-ui/icons";
 import { useSelector } from "react-redux";
 import { RootState } from '../store/index'; // Assuming index.tsx is the store file
 import axios from 'axios';
+import { useDispatch } from 'react-redux';
 import config from "../../conf/config";
+import { AnyAction } from 'redux';
+import { logout, User } from '../actions/authActions';
+
 
 interface TopbarProps {
   onMenuClick: () => void;
@@ -25,13 +29,23 @@ interface TopbarProps {
 }
 
 const Topbar: React.FC<TopbarProps> = ({ onMenuClick }) => {
+  const navigate = useNavigate(); 
   const isLoggedIn = useSelector((state: RootState) => state.auth.isLoggedIn);
   const user = useSelector((state: RootState) => state.auth.user);
-  const logout = async () => {
+  const dispatch: Dispatch<AnyAction> = useDispatch();
+
+
+  const logoutfunc = async () => {
     try {
       await axios.get(`${config.serverUrl}/rest/api/auth/logout`);
-      localStorage.removeItem('access_token'); // If you are using JWT tokens and storing them in local storage
+      // If you are using JWT tokens and storing them in local storage
+      localStorage.removeItem('access_token'); 
+      // Remove user data from local storage
+      localStorage.removeItem('user'); 
+  
       // Update your global state to reflect that the user is logged out
+      dispatch(logout()); // Assuming you have a 'logout' action defined in your Redux setup
+      navigate("/");
     } catch (error) {
       console.error('Error during logout:', error);
     }
@@ -92,7 +106,7 @@ const Topbar: React.FC<TopbarProps> = ({ onMenuClick }) => {
                 <MenuItem bg="gray.700">프로필 설정</MenuItem>
                 <MenuItem bg="gray.700">정보 관리</MenuItem>
                 <MenuItem bg="gray.700">멤버십 설정</MenuItem>
-                <MenuItem bg="gray.700" onClick={logout}>로그아웃</MenuItem>
+                <MenuItem bg="gray.700" onClick={logoutfunc}>로그아웃</MenuItem>
               </MenuList>
             </Menu>
           </Box>

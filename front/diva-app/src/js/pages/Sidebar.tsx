@@ -75,6 +75,7 @@ const Sidebar: React.FC<SidebarProps> =  ({ isVisible }) => {
           as={RouterLink} 
           to={to}
           fontWeight="bold"
+          fontSize="18px"
           p={2}
           borderRadius="md"
           bg={location.pathname === to ? 'gray.700' : ''}
@@ -117,9 +118,10 @@ const Sidebar: React.FC<SidebarProps> =  ({ isVisible }) => {
             {/* Links */}
             <LinkItem to="/dashboard" children="Dashboard" />
             <LinkItem to="/dashboard/workspace" children="Workspace" />
+            <LinkItem to="/dataset" children="DataSet" />
 
           </Stack>
-          <Box height="60vh"/> 
+          <Box height="50vh"/> 
         <Flex justify="center" align="center" p="2">
           <Text mr={2}>{colorMode === "light" ? "Light" : "Dark"}</Text>
           <Switch colorScheme="teal" size="md" isChecked={colorMode === "dark"} onChange={toggleColorMode} />
