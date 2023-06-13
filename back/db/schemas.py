@@ -64,6 +64,10 @@ class DatasetBase(BaseModel):
     dataset_name: str
     dataset_type: int
     creator_id: int
+    org_id :  Optional[int]
+    dataset_desc : Optional[str]
+    dataset_credential : Optional[str]
+    dataset_count: Optional[int]
 
 class TeamBase(BaseModel):
     team_name: str
@@ -135,6 +139,7 @@ class ProjectUpdate(ProjectBase):
 
 class DatasetUpdate(DatasetBase):
     dataset_name: Optional[str]
+    dataset_desc: Optional[str]
 
 class TeamUpdate(TeamBase):
     team_name: Optional[str]
