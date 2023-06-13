@@ -1,6 +1,6 @@
 import { LOGIN, LOGOUT, RESTORE_SESSION, User, AuthActionTypes } from '../actions/authActions';
 
-interface AuthState {
+export interface AuthState {
   isLoggedIn: boolean;
   user: User | null;
 }

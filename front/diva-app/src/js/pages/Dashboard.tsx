@@ -42,10 +42,16 @@ import WorkListView from "../components/WorkListView";
 import WorkHistoryView from "../components/WorkHistoryView";
 import SpaceCard from "../components/SpaceCard";
 
-
 import bgImage from "../../assets/alchemistic.png";
 
-const Dashboard: React.FC = () => {
+
+interface DashboardProps {
+  sideBarVisible : boolean;
+}
+
+const Dashboard: React.FC<DashboardProps> = ({sideBarVisible}) => {
+  const paddingLeft = sideBarVisible ? '300px' : '8';
+
   const { colorMode, toggleColorMode } = useColorMode();
   const navigate = useNavigate();
 
@@ -55,7 +61,7 @@ const Dashboard: React.FC = () => {
   const cardLightColor = "linear-gradient(127.09deg, rgba(140, 140, 140, 0.94) 19.41%, rgba(200, 200, 200, 0.49) 76.65%)";
 
   return (
-    <Box p={8} pl={["8", "300px"]} pt="60px" bg={colorMode === "dark" ? "gray.700" : "gray.100"} minH="100vh"
+    <Box p={8} pl={paddingLeft} transition="all 0.5s ease-in-out" pt="60px" bg={colorMode === "dark" ? "gray.700" : "gray.100"} minH="100vh"
     overflow="auto" height="100vh"
     backgroundImage={bgImage}
     backgroundPosition="center"

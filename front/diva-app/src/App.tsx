@@ -45,10 +45,10 @@ const App: React.FC = () => {
             <Route path="/usertype" element={<SelectUserType />} />
             {/* 추가하려는 다른 페이지에 대한 라우트를 이곳에 추가*/}
             <Route path="/loginLoading" element={<LoginLoading />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/dashboard/workspace" element={<Workspace />} />
-            <Route path="/dashboard/workspace/project" element={<Project />} />
-            <Route path="/dataset" element={<Dataset />} />
+            <Route path="/dashboard" element={<Dashboard sideBarVisible={menuButton}/>} />
+            <Route path="/dashboard/workspace" element={<Workspace sideBarVisible={menuButton}/>} />
+            <Route path="/dashboard/workspace/project" element={<Project sideBarVisible={menuButton}/>} />
+            <Route path="/dataset" element={<Dataset sideBarVisible={menuButton}/>} />
           </Routes>
         </div>
       </div>

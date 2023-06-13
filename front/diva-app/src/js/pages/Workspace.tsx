@@ -12,10 +12,16 @@ import Breadcrumbs from "../components/Breadcrumbs";
 import bgImage from "../../assets/alchemistic.png";
 import SpaceCard from "../components/SpaceCard";
 
-const Workspace: React.FC = () => {
+interface WorkspaceProps {
+  sideBarVisible : boolean;
+}
+
+const Workspace: React.FC<WorkspaceProps> = ({sideBarVisible}) => {
+  const paddingLeft = sideBarVisible ? '300px' : '8';
   const navigate = useNavigate();
+
   return (
-    <Box p={8} pl={["8", "300px"]} pt="60px"  height="100vh"
+    <Box p={8} pl={paddingLeft} transition="all 0.5s ease-in-out" pt="60px"  height="100vh"
     backgroundImage={bgImage}
     backgroundPosition="center"
     backgroundSize="cover">
