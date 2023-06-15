@@ -195,9 +195,11 @@ class Dataset(Base):
     dataset_desc = Column(String(1024),nullable=True)
 
     dataset_type = Column(Integer,ForeignKey("data_type.type_id"),nullable=False)
-    dataset_credential = Column(String(128),nullable=True)
+    dataset_credential = Column(Text,nullable=True)
 
     dataset_count = Column(Integer,nullable=True)
+    dataset_bucket_name = Column(String(128),nullable=True)
+    dataset_prefix = Column(String(128),nullable=True)
 
     created = Column(DateTime(timezone=True), server_default=func.now())
     updated = Column(DateTime(timezone=True), onupdate=func.now())

@@ -30,6 +30,9 @@ def delete_user(db: Session, user_id: int):
 def get_organization(db: Session, org_id: int):
     return db.query(models.Organization).filter(models.Organization.org_id == org_id).first()
 
+def get_organization_by_creator_id(db: Session, creator_id: int):
+    return db.query(models.Organization).filter(models.Organization.creator_id == creator_id).first()
+
 def get_organizations(db: Session, skip: int = 0, limit: int = 100):
     return db.query(models.Organization).offset(skip).limit(limit).all()
 

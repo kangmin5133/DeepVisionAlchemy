@@ -68,6 +68,8 @@ class DatasetBase(BaseModel):
     dataset_desc : Optional[str]
     dataset_credential : Optional[str]
     dataset_count: Optional[int]
+    dataset_bucket_name : Optional[str]
+    dataset_prefix : Optional[str]
 
 class TeamBase(BaseModel):
     team_name: str
