@@ -43,25 +43,30 @@ async def socialLogin(loginFrom : str,
 
     user = crud.get_user(db, email)
     if user is None:
-        response_data = {"email":email,
-                     "name":name,
-                     "social_id" : social_id,
-                     "provider":provider_id,
-                     "user_type_id" : UserType.default().value,
-                     "membership_id" : Membership.default().value,
-                     "access_token":access_token,
-                     "refresh_token":refresh_token,
-                     "is_user": False}
+        response_data = {
+            "email":email,
+            "name":name,
+            "social_id" : social_id,
+            "provider":provider_id,
+            "user_type_id" : UserType.default().value,
+            "membership_id" : Membership.default().value,
+            "access_token":access_token,
+            "refresh_token":refresh_token,
+            "is_user": False
+            }
     else:
-        response_data = {"email":email,
-                     "name":name,
-                     "social_id" : social_id,
-                     "provider":provider_id,
-                     "user_type_id" : UserType.default().value,
-                     "membership_id" : Membership.default().value,
-                     "access_token":access_token,
-                     "refresh_token":refresh_token,
-                     "is_user": True}
+        response_data = {
+            "user_id":user.user_id,
+            "email":email,
+            "name":name,
+            "social_id" : social_id,
+            "provider":provider_id,
+            "user_type_id" : UserType.default().value,
+            "membership_id" : Membership.default().value,
+            "access_token":access_token,
+            "refresh_token":refresh_token,
+            "is_user": True
+            }
     
     print("response_data : ",response_data)
 
