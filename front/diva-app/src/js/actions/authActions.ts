@@ -6,7 +6,7 @@ export interface User {
   email: string;
   name: string;
   social_id: string;
-  user_id: string;
+  user_id: number;
   provider: string;
 }
 

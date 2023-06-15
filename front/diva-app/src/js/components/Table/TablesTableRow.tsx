@@ -1,3 +1,4 @@
+import React from "react";
 import {
     Avatar,
     Badge,
@@ -8,29 +9,29 @@ import {
     Tr,
     useColorModeValue,
   } from "@chakra-ui/react";
-  import React from "react";
-  
+
+
   // Define a type for props
   interface TablesTableRowProps {
-    logo: string;
-    name: string;
-    email: string;
-    subdomain: string;
-    domain: string;
-    status: string;
-    date: string;
+    setSelectedDatasetId : React.Dispatch<React.SetStateAction<number>>;
+    setDetailViewActive: React.Dispatch<React.SetStateAction<boolean>>;
+    dataset_id:number;
+    dataset_name: string;
+    dataset_type: number;
+    dataset_count: number;
+    created : string;
     lastItem: boolean;
   }
   
   const TablesTableRow: React.FC<TablesTableRowProps> = ({
-    logo,
-    name,
-    email,
-    subdomain,
-    domain,
-    status,
-    date,
+    dataset_id,
+    dataset_name,
+    dataset_type,
+    dataset_count,
+    created,
     lastItem,
+    setDetailViewActive,
+    setSelectedDatasetId
   }) => {
     const textColor = useColorModeValue("gray.700", "white");
     const bgStatus = useColorModeValue("gray.400", "#1a202c");
@@ -44,23 +45,13 @@ import {
         border={lastItem ? "none" : undefined}
         borderBottomColor='#56577A'>
         <Flex align='center' py='.8rem' minWidth='100%' flexWrap='nowrap'>
-          <Avatar
-            src={logo}
-            w='50px'
-            borderRadius='12px'
-            me='18px'
-            border='none'
-          />
           <Flex direction='column'>
             <Text
               fontSize='sm'
               color='#fff'
               fontWeight='normal'
               minWidth='100%'>
-              {name}
-            </Text>
-            <Text fontSize='sm' color='gray.400' fontWeight='normal'>
-              {email}
+              {dataset_name}
             </Text>
           </Flex>
         </Flex>
@@ -72,38 +63,35 @@ import {
         minW='150px'>
         <Flex direction='column'>
           <Text fontSize='sm' color='#fff' fontWeight='normal'>
-            {domain}
+            {dataset_type}
           </Text>
-          <Text fontSize='sm' color='gray.400' fontWeight='normal'>
+          {/* <Text fontSize='sm' color='gray.400' fontWeight='normal'>
             {subdomain}
-          </Text>
+          </Text> */}
         </Flex>
       </Td>
       <Td border={lastItem ? "none" : undefined} borderBottomColor='#56577A'>
-        <Badge
-          bg={status === "Online" ? "green.400" : "transparent"}
-          color={status === "Online" ? "white" : colorStatus}
-          fontSize='sm'
-          p='3px 10px'
-          borderRadius='8px'
-          border={status === "Online" ? "none" : "1px solid #fff"}
-          fontWeight='normal'>
-          {status}
-        </Badge>
-      </Td>
-      <Td border={lastItem ? "none" : undefined} borderBottomColor='#56577A'>
         <Text fontSize='sm' color='#fff' fontWeight='normal'>
-          {date}
+            {dataset_count}
         </Text>
       </Td>
       <Td border={lastItem ? "none" : undefined} borderBottomColor='#56577A'>
-        <Button p='0px' bg='transparent' variant='no-hover'>
+        <Text fontSize='sm' color='#fff' fontWeight='normal'>
+          {created}
+        </Text>
+      </Td>
+      <Td border={lastItem ? "none" : undefined} borderBottomColor='#56577A'>
+        <Button p='0px' bg='transparent' variant='no-hover' 
+        onClick={() => {
+          setSelectedDatasetId(dataset_id);
+          setDetailViewActive(true);
+          }}>
           <Text
             fontSize='sm'
             color='gray.400'
             fontWeight='bold'
             cursor='pointer'>
-            Edit
+            Show More
           </Text>
         </Button>
       </Td>

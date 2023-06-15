@@ -10,12 +10,14 @@ import {
   MenuItem,
   MenuList,
   Text,
+  HStack
 } from "@chakra-ui/react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faBars } from "@fortawesome/free-solid-svg-icons";
 import { ChevronDownIcon } from "@chakra-ui/icons";
-import { useSelector } from "react-redux";
-import { RootState } from '../store/index'; // Assuming index.tsx is the store file
+// import { useSelector } from "react-redux";
+// import { RootState } from '../store/index'; // Assuming index.tsx is the store file
+import UserAuthState from "../states/userAuthState"
 import axios from 'axios';
 import { useDispatch } from 'react-redux';
 import config from "../../conf/config";
@@ -30,8 +32,9 @@ interface TopbarProps {
 
 const Topbar: React.FC<TopbarProps> = ({ onMenuClick }) => {
   const navigate = useNavigate(); 
-  const isLoggedIn = useSelector((state: RootState) => state.auth.isLoggedIn);
-  const user = useSelector((state: RootState) => state.auth.user);
+  const { isLoggedIn, user} = UserAuthState();
+  // const isLoggedIn = useSelector((state: RootState) => state.auth.isLoggedIn);
+  // const user = useSelector((state: RootState) => state.auth.user);
   const dispatch: Dispatch<AnyAction> = useDispatch();
 
 
@@ -83,7 +86,19 @@ const Topbar: React.FC<TopbarProps> = ({ onMenuClick }) => {
         </Button>
         <Box position="absolute" left="50%" transform="translateX(-50%)" textAlign="center">
           <Link to="/dashboard">
-            <Text>Deep Vision Alchemy Lab 🧪</Text>
+            <HStack>
+              <Text
+                textAlign='center'
+                color='transparent'
+                letterSpacing='4px'
+                fontSize='36px'
+                fontWeight='bold'
+                bgClip='text !important'
+                bg='linear-gradient(94.56deg, #FFFFFF 19.99%, #21242F 152.65%)'>
+                Deep Vision Alchemy Lab 
+              </Text>
+            <Text>🧪</Text>
+            </HStack>
           </Link>
         </Box>
         {isLoggedIn && user && (
