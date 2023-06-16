@@ -5,11 +5,12 @@ import {
   Flex,
   Table,
   Tbody,
-  Icon,
+  Button,
   Text,
   Th,
   Thead,
   Tr,
+  HStack
 } from "@chakra-ui/react";
 
 // Custom components
@@ -32,14 +33,20 @@ interface DatasetData {
 
 interface DatasetTableRowProps {
   datasetData : DatasetData[];
+  showUDButtons : boolean;
   setDetailViewActive: React.Dispatch<React.SetStateAction<boolean>>;
   setSelectedDatasetId : React.Dispatch<React.SetStateAction<number>>;
+  selectedDatasetId : number;
+  setShowUDButtons : React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 const DatasetTableRow: React.FC<DatasetTableRowProps> = ({
   datasetData, 
   setDetailViewActive,
-  setSelectedDatasetId
+  setSelectedDatasetId,
+  selectedDatasetId,
+  setShowUDButtons,
+  showUDButtons
 }) => { 
   
   return (
@@ -85,7 +92,10 @@ const DatasetTableRow: React.FC<DatasetTableRowProps> = ({
             {datasetData.map((row, index, arr) => {
               return (
                 <TablesTableRow
+                  showUDButtons = {showUDButtons}
+                  setShowUDButtons = {setShowUDButtons}
                   setSelectedDatasetId = {setSelectedDatasetId}
+                  selectedDatasetId = {selectedDatasetId}
                   setDetailViewActive = {setDetailViewActive}
                   dataset_id ={row.dataset_id}
                   dataset_name={row.dataset_name}

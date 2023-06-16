@@ -1,7 +1,6 @@
 import React from "react";
 import {
-    Avatar,
-    Badge,
+    HStack,
     Button,
     Flex,
     Td,
@@ -13,7 +12,10 @@ import {
 
   // Define a type for props
   interface TablesTableRowProps {
+    setShowUDButtons : React.Dispatch<React.SetStateAction<boolean>>;
+    showUDButtons : boolean;
     setSelectedDatasetId : React.Dispatch<React.SetStateAction<number>>;
+    selectedDatasetId : number;
     setDetailViewActive: React.Dispatch<React.SetStateAction<boolean>>;
     dataset_id:number;
     dataset_name: string;
@@ -31,14 +33,26 @@ import {
     created,
     lastItem,
     setDetailViewActive,
-    setSelectedDatasetId
+    setSelectedDatasetId,
+    selectedDatasetId,
+    setShowUDButtons,
+    showUDButtons
   }) => {
     const textColor = useColorModeValue("gray.700", "white");
     const bgStatus = useColorModeValue("gray.400", "#1a202c");
     const colorStatus = useColorModeValue("white", "gray.400");
 
     return (
-    <Tr>
+    <Tr 
+    _hover={{ 
+      backgroundColor: 'rgba(0, 0, 0, 0.7)',
+      transition: 'background-color 0.2s',
+    }}
+    onClick={() => {
+      setSelectedDatasetId(dataset_id);
+      setShowUDButtons(!showUDButtons);
+      }}
+    >
       <Td
         minWidth={{ sm: "250px" }}
         ps='0px'
@@ -46,13 +60,21 @@ import {
         borderBottomColor='#56577A'>
         <Flex align='center' py='.8rem' minWidth='100%' flexWrap='nowrap'>
           <Flex direction='column'>
+            <HStack>
             <Text
               fontSize='sm'
               color='#fff'
               fontWeight='normal'
-              minWidth='100%'>
+              >
               {dataset_name}
             </Text>
+            {showUDButtons && dataset_id === selectedDatasetId && (
+              <Flex>
+                <Button colorScheme="blue" mr={3}>Update</Button>
+                <Button colorScheme="red">Delete</Button>
+              </Flex>
+            )}
+            </HStack>
           </Flex>
         </Flex>
       </Td>
@@ -86,7 +108,8 @@ import {
           backgroundColor: 'rgba(0, 0, 255, 0.3)',
           transition: 'background-color 0.2s',
         }}
-        onClick={() => {
+        onClick={(e) => {
+          e.stopPropagation();
           setSelectedDatasetId(dataset_id);
           setDetailViewActive(true);
           }}>

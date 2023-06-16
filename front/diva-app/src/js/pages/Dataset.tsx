@@ -111,6 +111,8 @@ const Dataset: React.FC<DatasetProps> = ({sideBarVisible}) => {
   const [imageData, setImageData] = useState<any>(null);
 
   const [currentSlide, setCurrentSlide] = useState(0);
+  
+  const [showUDButtons, setShowUDButtons] = useState(false);
 
   //funcs
   const fetchImageData = async (datasetId: number, startIndex: number, endIndex: number, maxResult: number) => {
@@ -139,7 +141,6 @@ const Dataset: React.FC<DatasetProps> = ({sideBarVisible}) => {
           borderStyle="dashed"
           borderWidth="2px"
           borderColor="gray.400"
-          cursor="pointer"
           mb={4}
           _hover={{ 
             backgroundColor: 'rgba(0, 0, 0, 0.7)',
@@ -556,8 +557,11 @@ const Dataset: React.FC<DatasetProps> = ({sideBarVisible}) => {
         {/*Dataset list table*/}
         <DatasetTableRow 
         datasetData = {datasetData}
+        selectedDatasetId = {selectedDatasetId}
         setSelectedDatasetId={setSelectedDatasetId} 
-        setDetailViewActive={setDetailViewActive}/>
+        setDetailViewActive={setDetailViewActive}
+        setShowUDButtons = {setShowUDButtons}
+        showUDButtons = {showUDButtons}/>
         </VStack>
         {datasetDetailView()}
       </HStack>
