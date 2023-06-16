@@ -46,6 +46,9 @@ import axios from "axios";
 import UserAuthState from "../states/userAuthState"
 import { User } from '../actions/authActions';
 
+import { Carousel } from 'react-responsive-carousel';
+import "react-responsive-carousel/lib/styles/carousel.min.css"; 
+
 // interface
 interface DatasetProps {
   sideBarVisible : boolean;
@@ -107,6 +110,8 @@ const Dataset: React.FC<DatasetProps> = ({sideBarVisible}) => {
   const selectedDataset : DatasetData | undefined = datasetData.find(dataset => dataset.dataset_id === selectedDatasetId);
   const [imageData, setImageData] = useState<any>(null);
 
+  const [currentSlide, setCurrentSlide] = useState(0);
+
   //funcs
   const fetchImageData = async (datasetId: number, startIndex: number, endIndex: number, maxResult: number) => {
     const response = await axios.get(`${config.serverUrl}/rest/api/dataset/get/images`, {
@@ -117,18 +122,11 @@ const Dataset: React.FC<DatasetProps> = ({sideBarVisible}) => {
             maxResult: maxResult
         }
     });
-
     return response.data;
   }
 
-
   //components
   const datasetDetailView = () => {
-    
-    
-
-    
-
     if (!detailViewActive || selectedDatasetId === 0) {
       return (
         <Card
@@ -171,10 +169,8 @@ const Dataset: React.FC<DatasetProps> = ({sideBarVisible}) => {
           bgColor="gray.700"
           p='16px'
           h = "100%"
-          borderStyle="dashed"
           borderWidth="2px"
           borderColor="gray.400"
-          cursor="pointer"
           mb={4}
           _hover={{ 
             backgroundColor: 'rgba(0, 0, 0, 0.7)',
@@ -192,15 +188,37 @@ const Dataset: React.FC<DatasetProps> = ({sideBarVisible}) => {
                 align="center">
                   {selectedDataset && (
                     <Box>
-                 <Text>Name: {selectedDataset.dataset_name}</Text>
-                 <Text>Description: {selectedDataset.dataset_desc || 'No description provided'}</Text>
-                 {imageData && imageData.images.map((image: any, index: number) => (
-                      <img key={index} src={`data:image/jpeg;base64,${image.image}`} alt={image.file_name} />
-                  ))}
-                 {/* Add more fields as needed */}
-                 </Box>
-                )
-                }
+                      <Box h='100%' w='100%'>
+                        <Text fontSize="xl" align="center" justifyContent="center">
+                          Dataset Preview
+                        </Text>
+                        <Carousel 
+                          showThumbs={false} 
+                          showStatus={false} 
+                          onChange={handleSlideChange}
+                          selectedItem={currentSlide}
+                        >
+                          {imageData && imageData.images.map((image: any, index: number) => (
+                            <Box 
+                            key={index}
+                            h="400px" 
+                            w="100%"
+                            >
+                              <Image 
+                              src={`data:image/jpeg;base64,${image.image}`} 
+                              objectFit="contain" 
+                              maxWidth="100%" 
+                              maxHeight="100%" 
+                              borderRadius="16px"/>
+                            </Box>
+                          ))}
+                        </Carousel>
+                      </Box>
+                      <Text fontSize="xl">Name: {selectedDataset.dataset_name}</Text>
+                      <Text fontSize="xl">Description: {selectedDataset.dataset_desc || 'No description provided'}</Text>
+                      {/* Add more fields as needed */}
+                    </Box>
+                  )}
               </Flex>
             </CardBody>
         </Card>
@@ -260,8 +278,8 @@ const Dataset: React.FC<DatasetProps> = ({sideBarVisible}) => {
   }, [user]);
 
   useEffect(() => {
-    if (selectedDataset) {
-        fetchImageData(selectedDataset.dataset_id, 0, 4, 5)
+    if (selectedDatasetId) {
+        fetchImageData(selectedDatasetId, 0, 5, 5)
         .then((data) => {
             setImageData(data);
         })
@@ -269,7 +287,7 @@ const Dataset: React.FC<DatasetProps> = ({sideBarVisible}) => {
             console.error("Error fetching image data:", error);
         });
     }
-  }, [selectedDataset]);
+  }, [selectedDatasetId]);
 
   useEffect(() => {
     console.log("selectedDatasetId : ",selectedDatasetId)
@@ -335,6 +353,9 @@ const Dataset: React.FC<DatasetProps> = ({sideBarVisible}) => {
   };
   const handleDataSrcClick = (boxName: string) => {
     setSelectedBox(boxName);
+  };
+  const handleSlideChange = (currentIndex: number) => {
+    setCurrentSlide(currentIndex);
   };
 
   return (

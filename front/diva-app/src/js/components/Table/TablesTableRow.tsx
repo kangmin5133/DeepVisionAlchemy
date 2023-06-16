@@ -81,14 +81,18 @@ import {
         </Text>
       </Td>
       <Td border={lastItem ? "none" : undefined} borderBottomColor='#56577A'>
-        <Button p='0px' bg='transparent' variant='no-hover' 
+        <Button p='0px' backgroundColor='blue.700' 
+        _hover={{ 
+          backgroundColor: 'rgba(0, 0, 255, 0.3)',
+          transition: 'background-color 0.2s',
+        }}
         onClick={() => {
           setSelectedDatasetId(dataset_id);
           setDetailViewActive(true);
           }}>
           <Text
             fontSize='sm'
-            color='gray.400'
+            color='white'
             fontWeight='bold'
             cursor='pointer'>
             Show More
