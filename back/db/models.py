@@ -73,6 +73,11 @@ class UserType(Base):
 
     users = relationship("User", back_populates="user_type")
 
+class WorkspaceType(Base):
+    __tablename__ = "workspace_type"
+    workspace_type_id = Column(Integer, primary_key=True, index=True)
+    type_name = Column(String(32))
+
 class SocialPlatformType(Base):
     __tablename__ = "social_platform_type"
 
@@ -146,6 +151,7 @@ class Workspace(Base):
     __tablename__ = "workspace"
 
     workspace_id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    workspace_type_id = Column(Integer, ForeignKey("workspace_type.workspace_type_id"))
     creator_id = Column(Integer, ForeignKey("user.user_id",ondelete='CASCADE',onupdate='CASCADE'))
     org_id = Column(Integer, ForeignKey("organization.org_id",ondelete='CASCADE',onupdate='CASCADE'))
     workspace_name = Column(String(32))

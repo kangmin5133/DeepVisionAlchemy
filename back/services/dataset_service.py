@@ -40,7 +40,7 @@ def get_files_in_s3(bucket_name, prefix, access_key_id, secret_access_key):
                       )
     
     response = s3.list_objects(Bucket=bucket_name, Prefix=prefix)
-    return [content['Key'] for content in response.get('Contents', [])]
+    return [content['Key'] for content in response.get('Contents', [])][1:]
 
 
 def get_files_in_gcs(bucket_name:str, prefix:str, json_key:json):    
@@ -52,7 +52,7 @@ def get_files_in_gcs(bucket_name:str, prefix:str, json_key:json):
     
     blobs = storage_client.list_blobs(bucket_name, prefix=prefix)
 
-    return [blob.name for blob in blobs]
+    return [blob.name for blob in blobs][1:]
 
 def read_image_in_gcs(bucket_name:str, blob_name:str, json_key : json):
 
@@ -130,7 +130,7 @@ def read_all_images_in_s3(bucket_name, prefix, access_key_id, secret_access_key)
     return data
 
 
-async def createDataset(request : dict, db:Session):
+async def create_dataset(request : dict, db:Session):
     """
     create dataset data into (mySQL , MongoDB)
     return type : Dataset
@@ -215,7 +215,7 @@ async def createDataset(request : dict, db:Session):
 
     return dataset_info
     
-async def getDatasetList(user_id : int, db:Session):
+async def get_dataset_list(user_id : int, db:Session):
     """
     return dataset list by creator_id 
     return type : Dataset[]
@@ -237,7 +237,7 @@ async def getDatasetList(user_id : int, db:Session):
         result_list.append(dict_form)
     return result_list
 
-async def getDatasetImagesRange(dataset_id : int, 
+async def get_dataset_images_range(dataset_id : int, 
                                 startIndex:int, 
                                 endIndex:int, 
                                 maxResult:int,
@@ -285,7 +285,7 @@ async def getDatasetImagesRange(dataset_id : int,
     response = {"dataset_id": dataset_id, 
                  "images" : image_info_list}
     
-    print("response from getDatasetImagesRange : ", response)
+    print(f"dataset_id : {dataset_id} images count : {len(image_info_list)}")
     return response
     
 

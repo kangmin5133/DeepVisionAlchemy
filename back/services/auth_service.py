@@ -9,7 +9,7 @@ from db import crud, schemas
 import asyncio
 from configs.enums import *
 
-async def socialLogin(loginFrom : str,
+async def social_login(loginFrom : str,
                       profile_data : dict,
                       token_data : dict,
                       db: Session
@@ -72,11 +72,11 @@ async def socialLogin(loginFrom : str,
 
     return response_data
 
-async def getUser(email:str,db: Session):
+async def get_user(email:str,db: Session):
     user = crud.get_user(db, email)
     return user
 
-async def createOrg(jsonData : dict ,
+async def create_org(jsonData : dict ,
                     user_info : dict,
                       db: Session):
     if jsonData.get("orgName") and jsonData.get("orgEmail") is not None:
@@ -136,12 +136,12 @@ async def register(jsonData : dict ,
     if '_sa_instance_state' in user_dict:
         del user_dict['_sa_instance_state']
     print("[register query] : ",user_dict)
-    org_dict = await createOrg(jsonData,user_dict,db)
+    org_dict = await create_org(jsonData,user_dict,db)
 
     if org_dict is not None:
         return user_dict, org_dict
     else:
-        return user_dict
+        return user_dict, None
 
 
 

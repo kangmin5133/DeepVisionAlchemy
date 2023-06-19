@@ -16,7 +16,7 @@ async def getDatasetByUserId(user_id: int = None, db: Session = Depends(get_db))
     if user_id is None:
         raise HTTPException(status_code=404,detail="user id must required!")
     
-    response = await dataset_service.getDatasetList(user_id = user_id,db = db)
+    response = await dataset_service.get_dataset_list(user_id = user_id,db = db)
     return JSONResponse(content=response)
 
 @router.get("/get/images")
@@ -28,7 +28,7 @@ async def getImageDataRange(dataset_id: int = None,
     if dataset_id is None:
         raise HTTPException(status_code=404,detail="dataset_id must required!")
     
-    response = await dataset_service.getDatasetImagesRange(dataset_id = dataset_id,
+    response = await dataset_service.get_dataset_images_range(dataset_id = dataset_id,
                                                      startIndex = startIndex,
                                                      endIndex = endIndex,
                                                      maxResult = maxResult,
@@ -40,7 +40,7 @@ async def getImageData(dataset_id: int = None, db: Session = Depends(get_db)):
     if dataset_id is None:
         raise HTTPException(status_code=404,detail="dataset_id must required!")
     
-    response = await dataset_service.getDatasetImagesRange(dataset_id = dataset_id, db = db)
+    response = await dataset_service.get_dataset_images_range(dataset_id = dataset_id, db = db)
     return JSONResponse(content=response)
 
 @router.post("/create")
@@ -55,7 +55,7 @@ async def createDataset(request:dict, db: Session = Depends(get_db)):
     if prefix is None:
         raise HTTPException(status_code=401,detail="must require prefix")
     
-    response = await dataset_service.createDataset(request = request , db = db)
+    response = await dataset_service.create_dataset(request = request , db = db)
 
     return JSONResponse(content=str(response))
 

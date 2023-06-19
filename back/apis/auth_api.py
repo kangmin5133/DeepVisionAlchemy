@@ -120,7 +120,7 @@ async def naverSocialLoginCallback(code: str, db: Session = Depends(get_db)):
         profile_request = await client.get("https://openapi.naver.com/v1/nid/me", headers={"Authorization" : f"Bearer {access_token}"},)
         profile_data = profile_request.json()
     
-        response = await auth_service.socialLogin(loginFrom="naver",profile_data = profile_data,token_data = token_json, db=db)
+        response = await auth_service.social_login(loginFrom="naver",profile_data = profile_data,token_data = token_json, db=db)
         if response.get("is_user") == True:
             query_data = {
             "email": response.get("email"),
@@ -158,7 +158,7 @@ async def kakaoSocialLoginCallback(code: str,db: Session = Depends(get_db)):
     profile_data = await oauth.userinfo("Bearer " + auth_info['access_token'])
 
     
-    response = await auth_service.socialLogin(loginFrom="kakao",profile_data = profile_data,token_data = auth_info, db=db)
+    response = await auth_service.social_login(loginFrom="kakao",profile_data = profile_data,token_data = auth_info, db=db)
     if response.get("access_token") is None:
         return Response("Invalid Access") 
     else:
@@ -224,7 +224,7 @@ async def googleSocialLoginCallback(code: str, db: Session = Depends(get_db)):
         'image': user_info.get('picture', None),
         'path': "google",
     }
-    response = await auth_service.socialLogin(loginFrom="google",profile_data = profile_data,token_data = token_data, db=db)
+    response = await auth_service.social_login(loginFrom="google",profile_data = profile_data,token_data = token_data, db=db)
     if response.get("access_token") is None:
         return Response("Invalid Access") 
 
@@ -269,7 +269,7 @@ async def emailLogin(request:dict, db: Session = Depends(get_db)):
     jsonData = request.get("jsonData")
 
     print("jsonData : ",jsonData)
-    user = await auth_service.getUser(jsonData.get("userEmail"),db)
+    user = await auth_service.get_user(jsonData.get("userEmail"),db)
     if user is None:
         raise HTTPException(status_code=404,detail="user no exist")
     

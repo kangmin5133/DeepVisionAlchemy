@@ -57,6 +57,15 @@ def delete_organization(db: Session, org_id: int):
 def get_workspace(db: Session, workspace_id: int):
     return db.query(models.Workspace).filter(models.Workspace.workspace_id == workspace_id).first()
 
+def get_workspace_by_invitation_link(db: Session, invitation_link: str):
+    return db.query(models.Workspace).filter(models.Workspace.invitation_link == invitation_link).first()
+
+def get_workspaces_by_creator_id(db: Session, creator_id: int):
+    return db.query(models.Workspace).filter(models.Workspace.creator_id == creator_id).all()
+
+def get_workspaces_by_workspace_type_id(db: Session, workspace_type_id: int):
+    return db.query(models.Workspace).filter(models.Workspace.workspace_type_id == workspace_type_id).all()
+
 def get_workspaces(db: Session, skip: int = 0, limit: int = 100):
     return db.query(models.Workspace).offset(skip).limit(limit).all()
 

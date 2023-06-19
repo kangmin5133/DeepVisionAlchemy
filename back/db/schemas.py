@@ -7,6 +7,9 @@ from datetime import datetime
 class UserTypeBase(BaseModel):
     type_name: str
 
+class WorkspaceTypeBase(BaseModel):
+    type_name: str
+
 class DataTypeBase(BaseModel):
     type_name: str
 
@@ -50,6 +53,7 @@ class OrganizationBase(BaseModel):
 
 class WorkspaceBase(BaseModel):
     creator_id: int
+    workspace_type_id : int
     workspace_name: str
     workspcae_info: Optional[str] = None
     invitation_link: str
@@ -77,6 +81,9 @@ class TeamBase(BaseModel):
 
 # Create classes
 class UserTypeCreate(UserTypeBase):
+    pass
+
+class WorkspaceTypeCreate(WorkspaceTypeBase):
     pass
 
 class DatasetCreate(DatasetBase):
@@ -122,7 +129,6 @@ class UserUpdate(UserBase):
     name: Optional[str]
     membership_id: Optional[int]
 
-
 class OrganizationUpdate(OrganizationBase):
     org_email: Optional[str]
     org_name:Optional[str]
@@ -151,6 +157,12 @@ class TeamUpdate(TeamBase):
 # DB class
 class UserType(UserTypeBase):
     user_type_id: int
+
+    class Config:
+        orm_mode = True
+
+class WorkspaceType(WorkspaceTypeBase):
+    workspace_type_id : int
 
     class Config:
         orm_mode = True
