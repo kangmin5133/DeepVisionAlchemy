@@ -105,7 +105,7 @@ const Dashboard: React.FC<DashboardProps> = ({sideBarVisible}) => {
           {/* graphs & static */}
           <Grid templateColumns={{ sm: '1fr', md: '1fr 1fr', '2xl': '2fr 1.2fr 1.5fr' }} my='26px' gap='18px'>
               {/* Workspace Card */}
-              <SpaceCard header={"Workspace"} description={"Glad to see you again!"} target="/dashboard/workspace"/>
+              <SpaceCard header={"Create Workspace"} description={"Create your Workspace here"} target="/select/workspace"/>
               {/* Satisfaction Rate */}
               <Card gridArea={{ md: '2 / 1 / 3 / 2', '2xl': 'auto' }} bg={colorMode === "dark" ? cardDarkColor : cardLightColor}>
                 <CardHeader mb='24px'>

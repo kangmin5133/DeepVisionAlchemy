@@ -9,6 +9,7 @@ import LoginLoading from "./js/pages/LoginLoading";
 import Workspace from "./js/pages/Workspace";
 import Project from "./js/pages/Project";
 import SelectUserType from "./js/pages/SelectUserType"
+import SelectWorkspaceType from "./js/pages/SelectWorkspaceType"
 import Dataset from "./js/pages/Dataset";
 import { useSelector, useDispatch } from "react-redux"; 
 import { restoreSession } from './js/actions/authActions';
@@ -42,7 +43,8 @@ const App: React.FC = () => {
             <Route path="/" element={<Home />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signin" element={<Signin />} />
-            <Route path="/usertype" element={<SelectUserType />} />
+            <Route path="/select/account" element={<SelectUserType />} />
+            <Route path="/select/workspace" element={<SelectWorkspaceType />} />
             {/* 추가하려는 다른 페이지에 대한 라우트를 이곳에 추가*/}
             <Route path="/loginLoading" element={<LoginLoading />} />
             <Route path="/dashboard" element={<Dashboard sideBarVisible={menuButton}/>} />

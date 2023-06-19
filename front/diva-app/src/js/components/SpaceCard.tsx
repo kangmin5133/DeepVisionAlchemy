@@ -78,20 +78,7 @@ const SpaceCard: React.FC<SpaceCardProps> = ({ header,description,target }) => {
                     my={{ sm: '1.5rem', lg: '0px' }}
                     _hover={{ me: '4px' }}
                     onClick={() => navigate(urlTarget)}>
-                    Go to {lastPart}
                     </Text>
-                    <Icon
-                    as={BsArrowRight}
-                    w='20px'
-                    h='20px'
-                    color='#fff'
-                    fontSize='2xl'
-                    transition='all .3s ease'
-                    mx='.3rem'
-                    cursor='pointer'
-                    pt='4px'
-                    _hover={{ transform: 'translateX(20%)' }}
-                    />
                 </Button>
                 </Flex>
             </Flex>

@@ -57,9 +57,9 @@ const SelectUserType: React.FC = () => {
       userName: userData.name,
       ...userData,
     };
-    console.log("onSubmitOrg : ",jsonData)
+    console.log("onSubmitPer : ",jsonData)
     try {
-      await axios.post(`${config.serverUrl}/rest/api/auth/register`, { ...jsonData});
+      await axios.post(`${config.serverUrl}/rest/api/auth/register`, {jsonData});
       navigate("/login");
     } catch (error) {
       console.error(error);
