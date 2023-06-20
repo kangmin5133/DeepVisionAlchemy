@@ -19,7 +19,7 @@ async def create_workspace(request:dict, db:Session):
     invitation_link: str
     org_id: Optional[int] = None
     """
-    user_id = request.get("user_id")
+    user_id = request.get("creator_id")
     workspace_type_id = request.get("workspace_type_id")
     if workspace_type_id not in [WorkspaceType.Labeling.value,WorkspaceType.Generation.value,WorkspaceType.Restoration.value]:
         raise HTTPException(status_code=404,detail="your workspace_type_id is must have only one of {1,2,3}")
@@ -33,7 +33,8 @@ async def create_workspace(request:dict, db:Session):
     unique_id = uuid.uuid4()
 
     invitation_link = Config.DIVA_HOME_URL+f"/{unique_id}"
-    workspace = schemas.WorkspaceCreate(creator_id=user_id,
+    workspace = schemas.WorkspaceCreate(
+                          creator_id=user_id,
                           workspace_type_id = workspace_type_id,
                           workspace_name=workspace_name,
                           workspcae_info = workspcae_info,

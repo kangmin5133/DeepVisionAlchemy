@@ -55,7 +55,7 @@ class WorkspaceBase(BaseModel):
     creator_id: int
     workspace_type_id : int
     workspace_name: str
-    workspcae_info: Optional[str] = None
+    workspace_info: Optional[str] = None
     invitation_link: str
     org_id: Optional[int] = None
 
@@ -136,7 +136,7 @@ class OrganizationUpdate(OrganizationBase):
 class WorkspaceUpdate(WorkspaceBase):
     user_type_id: Optional[int]
     workspace_name: Optional[str]
-    workspcae_info: Optional[str]
+    workspace_info: Optional[str]
     invitation_link: Optional[str]
     org_id: Optional[int]
 

@@ -17,22 +17,22 @@ async def createWorkSpace(request: dict = None, db: Session = Depends(get_db)):
     if request is None:
         raise HTTPException(status_code=404,detail="request is none")
     
-    if request.get("user_id") is None:
-        raise HTTPException(status_code=404,detail="user_id required")
+    jsonData = request.get("jsonData")
     
-    if request.get("workspace_type_id") is None:
+    if jsonData.get("creator_id") is None:
+        raise HTTPException(status_code=404,detail="creator_id required")
+    
+    if jsonData.get("workspace_type_id") is None:
         raise HTTPException(status_code=404,detail="workspace_type_id required")
     
-    response = await workspace_service.create_workspace(request = request,db = db)
+    response = await workspace_service.create_workspace(request = jsonData ,db = db)
     return JSONResponse(content=response)
 
 @router.get("/get")
-async def getWorkSpaceByUserId(request: dict = None, db: Session = Depends(get_db)):
-    if request is None:
-        raise HTTPException(status_code=404,detail="request is none")
+async def getWorkSpaceByUserId(creator_id: int = None, db: Session = Depends(get_db)):
+    print("getWorkSpaceByUserId in")
+    if creator_id is None:
+        raise HTTPException(status_code=404,detail="creator_id required")
     
-    if request.get("user_id") is None:
-        raise HTTPException(status_code=404,detail="user_id required")
-    
-    response = await workspace_service.get_workspaces_by_creator_id(creator_id = request.get("user_id"),db = db)
+    response = await workspace_service.get_workspaces_by_creator_id(creator_id = creator_id,db = db)
     return JSONResponse(content=response)
