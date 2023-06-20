@@ -1,4 +1,4 @@
-import React from "react";
+import React,{useEffect,useState} from "react";
 import { useNavigate } from "react-router-dom";
 // import {
 //   Box,
@@ -34,7 +34,11 @@ import { BiHappy } from 'react-icons/bi';
 import { IoCheckmarkDoneCircleSharp, IoEllipsisHorizontal } from 'react-icons/io5';
 // for testing
 
-import { useSelector } from "react-redux"; 
+// import { useSelector } from "react-redux"; 
+import UserAuthState from "../states/userAuthState"
+import { User } from '../actions/authActions';
+import axios from "axios"; 
+import config from "../../conf/config";
 
 import Breadcrumbs from "../components/Breadcrumbs";
 import MiniStaticCard from '../components/MiniStaticCard';
@@ -49,16 +53,53 @@ interface DashboardProps {
   sideBarVisible : boolean;
 }
 
+// interface WorkListViewProps {
+//   colorMode : string;
+//   cardDarkColor : string;
+//   cardLightColor : string;    
+// }
+
+interface WorkSpace {
+  workspace_id : number;
+  workspace_name : string;
+  workspace_type_id : number;
+  creator_id : number; 
+  workspace_info : string ;
+  created : string;
+}
+
 const Dashboard: React.FC<DashboardProps> = ({sideBarVisible}) => {
+  //states
+  const { isLoggedIn, user} = UserAuthState();
   const paddingLeft = sideBarVisible ? '300px' : '8';
 
   const { colorMode, toggleColorMode } = useColorMode();
   const navigate = useNavigate();
 
-  const isLoggedIn = useSelector((state: { auth: { isLoggedIn: boolean; }; }) => state.auth.isLoggedIn);
-
   const cardDarkColor = "linear-gradient(127.09deg, rgba(6, 11, 40, 0.94) 19.41%, rgba(10, 14, 35, 0.49) 76.65%)";
   const cardLightColor = "linear-gradient(127.09deg, rgba(140, 140, 140, 0.94) 19.41%, rgba(200, 200, 200, 0.49) 76.65%)";
+
+  const [workspaceData, setWorkspaceData] = useState<WorkSpace[]>([]);
+  // const [workListViewData, setWorkListViewData] = useState<WorkListViewProps>();
+  // setWorkListViewData({"colorMode":colorMode,"cardDarkColor":cardDarkColor,"cardLightColor":cardLightColor})
+
+  //hooks
+  useEffect(() => {
+    if (user) {
+        const fetchData = async () => {
+            const response = await axios.get(`${config.serverUrl}/rest/api/workspace/get`, {
+                params: {
+                  creator_id: user.user_id
+                }
+            });
+            console.log("response.data : ",response.data)
+            // 데이터를 상태에 저장
+            setWorkspaceData(response.data);
+        }
+      // fetchData 함수를 호출하여 데이터 불러오기 시작
+        fetchData();
+    }
+  }, [user]);
 
   return (
     <Box p={8} pl={paddingLeft} transition="all 0.5s ease-in-out" pt="60px" bg={colorMode === "dark" ? "gray.700" : "gray.100"} minH="100vh"
@@ -101,7 +142,6 @@ const Dashboard: React.FC<DashboardProps> = ({sideBarVisible}) => {
               description={" problems left in your projects"}
               value={8}/>
           </SimpleGrid>
-
           {/* graphs & static */}
           <Grid templateColumns={{ sm: '1fr', md: '1fr 1fr', '2xl': '2fr 1.2fr 1.5fr' }} my='26px' gap='18px'>
               {/* Workspace Card */}

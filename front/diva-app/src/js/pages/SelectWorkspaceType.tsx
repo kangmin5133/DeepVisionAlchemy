@@ -17,6 +17,7 @@ import bgImage from "../../assets/alchemistic.png";
 import axios from "axios";
 import config from "../../conf/config";
 import Card from "../components/Card/Card";
+// import CardBgImage from "../../assets/back-ground-image-of-pages.png"
 
 interface Inputs {
   // creator_id: number;

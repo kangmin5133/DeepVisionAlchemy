@@ -24,6 +24,21 @@ interface WorkListViewProps {
     cardLightColor : string;    
 }
 
+interface WorkSpace {
+  workspace_id : number;
+  workspace_name : string;
+  workspace_type_id : number;
+  creator_id : number; 
+  workspace_info : string ;
+  created : string;
+}
+
+interface WorkSpaceData {
+  WorkListViewProps : WorkListViewProps;
+  workspaceData : WorkSpace[];
+
+}
+
 export const WorkListView : React.FC<WorkListViewProps> = ({colorMode,cardDarkColor,cardLightColor}) => {
 
     return (
