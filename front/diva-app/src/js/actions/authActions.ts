@@ -8,6 +8,7 @@ export interface User {
   social_id: string;
   user_id: number;
   provider: string;
+  profile_image? : string;
 }
 
 interface RestoreSessionAction {

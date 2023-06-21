@@ -26,10 +26,12 @@ interface WorkListViewProps {
 
 interface WorkSpace {
   workspace_id : number;
-  workspace_name : string;
-  workspace_type_id : number;
+  org_id? : number;
   creator_id : number; 
-  workspace_info : string ;
+  workspace_type_id : number;
+  workspace_name : string;
+  workspace_info? : string;
+  invitation_link : string;
   created : string;
 }
 
@@ -39,13 +41,13 @@ interface WorkSpaceData {
 
 }
 
-export const WorkListView : React.FC<WorkListViewProps> = ({colorMode,cardDarkColor,cardLightColor}) => {
+export const WorkListView : React.FC<WorkSpaceData> = ({WorkListViewProps, workspaceData}) => {
 
     return (
         <Card 
             p='16px' 
             overflowX={{ sm: 'scroll', xl: 'hidden' }} 
-            bg={colorMode === "dark" ? cardDarkColor : cardLightColor}>
+            bg={WorkListViewProps.colorMode === "dark" ? WorkListViewProps.cardDarkColor : WorkListViewProps.cardLightColor}>
               <CardHeader p='12px 0px 28px 0px'>
                 <Flex direction='column'>
                   <Text fontSize='lg' color='#fff' fontWeight='bold' pb='8px' align='left'>
@@ -75,6 +77,7 @@ export const WorkListView : React.FC<WorkListViewProps> = ({colorMode,cardDarkCo
                   </Tr>
                 </Thead>
                 <Tbody>
+                  {/* dashboardTableData -> workspaceData 로 바꿔야함 */}
                   {dashboardTableData.map((row, index, arr) => {
                     return (
                       <DashboardTableRow

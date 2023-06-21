@@ -112,7 +112,7 @@ const Topbar: React.FC<TopbarProps> = ({ onMenuClick }) => {
                 _focus={{ boxShadow: "none" }}
                 rightIcon={<ChevronDownIcon />}
               >
-                <Avatar name={user.name} size="sm" /> {/* imageUrl property does not exist in user object */}
+                <Avatar src={`data:image/jpeg;base64,${user.profile_image}`} name={user.name} size="sm" /> {/* imageUrl property does not exist in user object */}
                 <Text ml="2" display="inline" fontWeight="bold">
                   {user.name}
                 </Text>

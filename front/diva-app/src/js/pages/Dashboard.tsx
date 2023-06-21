@@ -53,18 +53,20 @@ interface DashboardProps {
   sideBarVisible : boolean;
 }
 
-// interface WorkListViewProps {
-//   colorMode : string;
-//   cardDarkColor : string;
-//   cardLightColor : string;    
-// }
+interface WorkListViewProps {
+  colorMode : string;
+  cardDarkColor : string;
+  cardLightColor : string;    
+}
 
 interface WorkSpace {
   workspace_id : number;
-  workspace_name : string;
-  workspace_type_id : number;
+  org_id? : number;
   creator_id : number; 
-  workspace_info : string ;
+  workspace_type_id : number;
+  workspace_name : string;
+  workspace_info? : string;
+  invitation_link : string;
   created : string;
 }
 
@@ -82,6 +84,7 @@ const Dashboard: React.FC<DashboardProps> = ({sideBarVisible}) => {
   const [workspaceData, setWorkspaceData] = useState<WorkSpace[]>([]);
   // const [workListViewData, setWorkListViewData] = useState<WorkListViewProps>();
   // setWorkListViewData({"colorMode":colorMode,"cardDarkColor":cardDarkColor,"cardLightColor":cardLightColor})
+  
 
   //hooks
   useEffect(() => {
@@ -276,10 +279,14 @@ const Dashboard: React.FC<DashboardProps> = ({sideBarVisible}) => {
 
           <Grid templateColumns={{ sm: '1fr', md: '1fr 1fr', lg: '2fr 1fr' }} gap='24px'>
             {/* workspace list */}
-            <WorkListView 
+            {/* <WorkListView 
             colorMode={colorMode}
             cardDarkColor={cardDarkColor}
-            cardLightColor={cardLightColor} />
+            cardLightColor={cardLightColor} /> */}
+            <WorkListView 
+            WorkListViewProps={{"colorMode":colorMode,"cardDarkColor":cardDarkColor,"cardLightColor":cardLightColor}}
+            workspaceData={workspaceData}
+            />
             {/* working history overview */}
             <WorkHistoryView 
             colorMode={colorMode}
