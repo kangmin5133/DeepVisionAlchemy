@@ -5,9 +5,10 @@ import bcrypt
 from fastapi import Depends
 from sqlalchemy.orm import Session
 from db.database import get_db
-from db import crud, schemas
+from db import crud, schemas, models
 import asyncio
 from configs.enums import *
+from utils.image_util import image_encode_base64
 
 async def social_login(loginFrom : str,
                       profile_data : dict,
@@ -50,6 +51,7 @@ async def social_login(loginFrom : str,
             "provider":provider_id,
             "user_type_id" : UserType.default().value,
             "membership_id" : Membership.default().value,
+            "profile_image" : image_encode_base64(user.profile_image),
             "access_token":access_token,
             "refresh_token":refresh_token,
             "is_user": False
@@ -63,6 +65,7 @@ async def social_login(loginFrom : str,
             "provider":provider_id,
             "user_type_id" : UserType.default().value,
             "membership_id" : Membership.default().value,
+            "profile_image": image_encode_base64(user.profile_image),
             "access_token":access_token,
             "refresh_token":refresh_token,
             "is_user": True
@@ -74,7 +77,10 @@ async def social_login(loginFrom : str,
 
 async def get_user(email:str,db: Session):
     user = crud.get_user(db, email)
+    if user is not None:
+        user.profile_image = image_encode_base64(user.profile_image)
     return user
+
 
 async def create_org(jsonData : dict ,
                     user_info : dict,
@@ -87,7 +93,8 @@ async def create_org(jsonData : dict ,
                                     org_name=orgName, 
                                     creator_id=user_info["user_id"]
                                     )
-        crud.create_organization(db, org_in)
+        
+        result = crud.create_organization(db, org_in)
         org_info = crud.get_organizations(db)
         print("org_info:",org_info[0].__dict__)
         org_dict = org_info[0].__dict__
@@ -95,8 +102,8 @@ async def create_org(jsonData : dict ,
             del org_dict['_sa_instance_state']
 
         print("[createOrg query] : ",org_dict)
-        return org_dict
-
+        return org_dict, org_in, result.org_id 
+    
 async def register(jsonData : dict ,
                       db: Session
                       ):
@@ -110,7 +117,7 @@ async def register(jsonData : dict ,
         user_type_id = UserType.Enterprise.value
     else:
         user_type_id = UserType.Personal.value
-
+    
     if social_id is None:
         user_in = schemas.UserCreate(
                                     email=email, 
@@ -118,7 +125,8 @@ async def register(jsonData : dict ,
                                     user_pw=bcrypt.hashpw(user_pw.encode('utf-8'),bcrypt.gensalt()).decode(),
                                     provider=provider_id,
                                     user_type_id=user_type_id,
-                                    membership_id=Membership.default().value
+                                    membership_id=Membership.default().value,
+                                    profile_image=Config.DEFAULT_PROFILE_IMAGE
                                     )
     else:
         user_in = schemas.UserCreate(
@@ -127,18 +135,17 @@ async def register(jsonData : dict ,
                                     social_id=social_id,
                                     provider=provider_id,
                                     user_type_id=user_type_id,
-                                    membership_id=Membership.default().value
+                                    membership_id=Membership.default().value,
+                                    profile_image=Config.DEFAULT_PROFILE_IMAGE
                                     )
                                     
-    crud.create_user(db, user_in)
+    result = crud.create_user(db, user_in)
     user_info = crud.get_user(db,email)
+    user_id = user_info.user_id
     user_dict = user_info.__dict__
-    if '_sa_instance_state' in user_dict:
-        del user_dict['_sa_instance_state']
-    print("[register query] : ",user_dict)
-    org_dict = await create_org(jsonData,user_dict,db)
-
-    if org_dict is not None:
+    if user_type_id == UserType.Enterprise.value:
+        org_dict, org_in, org_id = await create_org(jsonData,user_dict,db)
+        result = crud.create_user_and_organization(user_id = user_id, org_id = org_id, db=db)
         return user_dict, org_dict
     else:
         return user_dict, None

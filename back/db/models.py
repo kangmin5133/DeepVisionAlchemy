@@ -119,6 +119,7 @@ class User(Base):
     provider = Column(Integer, ForeignKey("social_platform_type.provider_id"))
     name = Column(String(32))
     membership_id = Column(Integer, ForeignKey("membership.membership_id"), nullable=False)
+    profile_image = Column(String(32))
     created = Column(DateTime(timezone=True), server_default=func.now())
     updated = Column(DateTime(timezone=True), onupdate=func.now())
 

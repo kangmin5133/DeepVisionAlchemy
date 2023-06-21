@@ -17,3 +17,4 @@ def verify_google_token(idt):
     except ValueError:
         # Invalid token
         return None
+    

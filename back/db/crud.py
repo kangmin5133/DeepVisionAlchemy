@@ -160,3 +160,27 @@ def delete_dataset(db: Session, dataset_id: int):
     db.query(models.Dataset).filter(models.Dataset.dataset_id == dataset_id).delete()
     db.commit()
     return True
+
+#CRUD - associate tables
+def create_user_and_organization(db: Session, user_id: int, org_id: int):
+    # 이 함수는 User와 Organization 간의 관계를 설정합니다.
+    
+    # 사용자와 조직의 정보를 데이터베이스에서 가져옵니다.
+    user = db.query(models.User).filter(models.User.user_id == user_id).first()
+    organization = db.query(models.Organization).filter(models.Organization.org_id == org_id).first()
+
+    if user is None or organization is None:
+        # 만약 사용자나 조직이 데이터베이스에서 찾아지지 않는다면, 에러를 반환합니다.
+        return None
+
+    # 사용자가 생성한 조직을 설정하고,
+    user.created_organizations.append(organization)
+
+    # 사용자가 조직의 일원이라는 것을 설정합니다.
+    user.organizations.append(organization)
+
+    # 데이터베이스에 변경사항을 저장하고 변화를 커밋합니다.
+    db.commit()
+    db.refresh(user)
+    
+    return user

@@ -42,13 +42,28 @@ async def create_workspace(request:dict, db:Session):
                           invitation_link = invitation_link
                          )
     result = crud.create_workspace(db= db, workspace = workspace)
-    print("create_workspace result :",result)
+    del result["_sa_instance_state"]
+    return result
 
 async def get_workspace_by_invitation_link(invitation_link:str, db:Session):
     pass
 
 async def get_workspaces_by_creator_id(creator_id:int, db:Session):
-    pass
+    results = crud.get_workspaces_by_creator_id(db= db,creator_id=creator_id)
+    result_list = []
+    # todo - add team members profile image, projects count
+    for result in results:
+        dict_form ={}
+        dict_form["workspace_id"] = result.workspace_id
+        dict_form["org_id"] = result.org_id
+        dict_form["creator_id"] = result.creator_id
+        dict_form["workspace_type_id"] = result.workspace_type_id
+        dict_form["workspace_name"] = result.workspace_name
+        dict_form["workspace_info"] = result.workspace_info
+        dict_form["invitation_link"] = result.invitation_link
+        dict_form["created"] = str(result.created).split(" ")[0].replace("-","/")
+        result_list.append(dict_form)
+    return result_list
         
     
     

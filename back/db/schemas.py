@@ -45,6 +45,7 @@ class UserBase(BaseModel):
     provider: Optional[int]
     name: Optional[str]
     membership_id: int
+    profile_image: str
 
 class OrganizationBase(BaseModel):
     org_email: str

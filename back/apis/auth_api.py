@@ -138,6 +138,7 @@ async def naverSocialLoginCallback(code: str, db: Session = Depends(get_db)):
             "social_id": response.get("social_id"),
             "user_id": response.get("user_id"),
             "provider": response.get("provider"),
+            "profile_image" : response.get("profile_image"),
             }
             query_string = urlencode(query_data)
             redirect_url = f"{Config.DIVA_REGISTER_REDIRECT_URL}?{query_string}"
@@ -169,6 +170,7 @@ async def kakaoSocialLoginCallback(code: str,db: Session = Depends(get_db)):
             "social_id": response.get("social_id"),
             "user_id": response.get("user_id"),
             "provider": response.get("provider"),
+            "profile_image" : response.get("profile_image"),
             }
             query_string = urlencode(query_data)
             redirect_url = f"{Config.DIVA_REDIRECT_URL}?{query_string}"
@@ -235,6 +237,7 @@ async def googleSocialLoginCallback(code: str, db: Session = Depends(get_db)):
             "social_id": response.get("social_id"),
             "user_id": response.get("user_id"),
             "provider": response.get("provider"),
+            "profile_image" : response.get("profile_image"),
             # "access_token" : response.get("access_token")
             }
             query_string = urlencode(query_data)
@@ -291,6 +294,7 @@ async def emailLogin(request:dict, db: Session = Depends(get_db)):
             "social_id": user_dict.get("social_id"),
             "user_id": user_dict.get("user_id"),
             "provider": user_dict.get("provider"),
+            "profile_image" : user_dict.get("profile_image"),
             # "access_token" : response.get("access_token")
             }
     return JSONResponse(content={"access_token": access_token, "token_type": "bearer", "user": query_data})
@@ -298,7 +302,7 @@ async def emailLogin(request:dict, db: Session = Depends(get_db)):
 @router.post('/register')
 async def createUser(request:dict, db: Session = Depends(get_db)):
     jsonData = request.get("jsonData")
-    user = await auth_service.getUser(jsonData.get("userEmail"),db)
+    user = await auth_service.get_user(jsonData.get("userEmail"),db)
     if user:
         raise HTTPException(status_code=404,detail="user already exist")
     
