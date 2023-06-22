@@ -47,7 +47,7 @@ const Sidebar: React.FC<SidebarProps> =  ({ isVisible }) => {
           bgClip='text'>
           <Text align="center" fontSize='xl' letterSpacing='3px' mt='3px' color={colorMode === "dark" ? "transparent" : "black"}>
             {/* {logoText} */}
-            Deep Vision Alchemy
+            DVA
           </Text>
         </Box>
       </Link>
@@ -117,8 +117,8 @@ const Sidebar: React.FC<SidebarProps> =  ({ isVisible }) => {
           <Stack direction='column' mb='40px'>
             {/* Links */}
             <LinkItem to="/dashboard" children="Dashboard" />
-            <LinkItem to="/dashboard/workspace" children="Workspace" />
-            <LinkItem to="/dataset" children="DataSet" />
+            {/* <LinkItem to="/dashboard/workspace" children="Workspace" />
+            <LinkItem to="/dataset" children="DataSet" /> */}
 
           </Stack>
           <Box height="50vh"/> 

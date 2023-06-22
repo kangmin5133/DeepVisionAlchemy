@@ -47,17 +47,17 @@ import WorkHistoryView from "../components/WorkHistoryView";
 import SpaceCard from "../components/SpaceCard";
 
 import bgImage from "../../assets/alchemistic.png";
-
+import bgCardImg from '../../assets/back-ground-image.png';
 
 interface DashboardProps {
   sideBarVisible : boolean;
 }
 
-interface WorkListViewProps {
-  colorMode : string;
-  cardDarkColor : string;
-  cardLightColor : string;    
-}
+// interface WorkListViewProps {
+//   colorMode : string;
+//   cardDarkColor : string;
+//   cardLightColor : string;    
+// }
 
 interface WorkSpace {
   workspace_id : number;
@@ -65,7 +65,7 @@ interface WorkSpace {
   creator_id : number; 
   workspace_type_id : number;
   workspace_name : string;
-  workspace_info? : string;
+  workspace_info : string;
   invitation_link : string;
   created : string;
 }
@@ -82,8 +82,11 @@ const Dashboard: React.FC<DashboardProps> = ({sideBarVisible}) => {
   const cardLightColor = "linear-gradient(127.09deg, rgba(140, 140, 140, 0.94) 19.41%, rgba(200, 200, 200, 0.49) 76.65%)";
 
   const [workspaceData, setWorkspaceData] = useState<WorkSpace[]>([]);
-  // const [workListViewData, setWorkListViewData] = useState<WorkListViewProps>();
-  // setWorkListViewData({"colorMode":colorMode,"cardDarkColor":cardDarkColor,"cardLightColor":cardLightColor})
+  const [showUDButtons, setShowUDButtons] = useState(false);
+  const [selectedWorkspaceId, setSelectedWorkspaceId] = useState<number>(0);
+
+  const selectedWorkSpace : WorkSpace | undefined = workspaceData.find(dataset => dataset.workspace_id === selectedWorkspaceId);
+  
   
 
   //hooks
@@ -103,6 +106,13 @@ const Dashboard: React.FC<DashboardProps> = ({sideBarVisible}) => {
         fetchData();
     }
   }, [user]);
+
+  useEffect(() => {
+    console.log("selectedWorkspaceId : ",selectedWorkspaceId)
+  }, [selectedWorkspaceId]);
+
+  //handlers
+
 
   return (
     <Box p={8} pl={paddingLeft} transition="all 0.5s ease-in-out" pt="60px" bg={colorMode === "dark" ? "gray.700" : "gray.100"} minH="100vh"
@@ -148,9 +158,9 @@ const Dashboard: React.FC<DashboardProps> = ({sideBarVisible}) => {
           {/* graphs & static */}
           <Grid templateColumns={{ sm: '1fr', md: '1fr 1fr', '2xl': '2fr 1.2fr 1.5fr' }} my='26px' gap='18px'>
               {/* Workspace Card */}
-              <SpaceCard header={"Create Workspace"} description={"Create your Workspace here"} target="/select/workspace"/>
+              <SpaceCard header={"Create Workspace"} bgImage={bgCardImg} description={"Create your Workspace here"} target="/select/workspace"/>
               {/* Satisfaction Rate */}
-              <Card gridArea={{ md: '2 / 1 / 3 / 2', '2xl': 'auto' }} bg={colorMode === "dark" ? cardDarkColor : cardLightColor}>
+              {/* <Card gridArea={{ md: '2 / 1 / 3 / 2', '2xl': 'auto' }} bg={colorMode === "dark" ? cardDarkColor : cardLightColor}>
                 <CardHeader mb='24px'>
                   <Flex direction='column'>
                     <Text color='#fff' fontSize='lg' fontWeight='bold' mb='4px'>
@@ -203,7 +213,9 @@ const Dashboard: React.FC<DashboardProps> = ({sideBarVisible}) => {
                     </Text>
                   </Stack>
                 </Flex>
-              </Card>
+              </Card> */}
+              {/* Dataset */}
+              <SpaceCard header={"Dataset Management"} bgImage={bgCardImg} description={"regist yout own dataset here"} target="/dataset"/>
               {/* Referral Tracking */}
               <Card gridArea={{ md: '2 / 2 / 3 / 3', '2xl': 'auto' }} bg={colorMode === "dark" ? cardDarkColor : cardLightColor}>
                 <Flex direction='column'>
@@ -284,6 +296,10 @@ const Dashboard: React.FC<DashboardProps> = ({sideBarVisible}) => {
             cardDarkColor={cardDarkColor}
             cardLightColor={cardLightColor} /> */}
             <WorkListView 
+            setSelectedWorkspaceId = {setSelectedWorkspaceId}
+            selectedWorkspaceId = {selectedWorkspaceId}
+            setShowUDButtons ={setShowUDButtons}
+            showUDButtons = {showUDButtons}
             WorkListViewProps={{"colorMode":colorMode,"cardDarkColor":cardDarkColor,"cardLightColor":cardLightColor}}
             workspaceData={workspaceData}
             />

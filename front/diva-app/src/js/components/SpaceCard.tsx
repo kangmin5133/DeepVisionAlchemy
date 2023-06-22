@@ -29,16 +29,17 @@ import Card from "../components/Card/Card";
 import CardBody from "../components/Card/CardBody";
 import CardHeader from "../components/Card/CardHeader"
 
-import bgCardImg from '../../assets/back-ground-image.png';
+// import bgCardImg from '../../assets/back-ground-image.png';
 import { BsArrowRight } from 'react-icons/bs';
 
 interface SpaceCardProps {
     header: string;
     description : string;
     target : string;
+    bgImage : string;
   }
   
-const SpaceCard: React.FC<SpaceCardProps> = ({ header,description,target }) => {
+const SpaceCard: React.FC<SpaceCardProps> = ({ header,description,target,bgImage}) => {
     const navigate = useNavigate();
     const urlTarget = target
     const parts = urlTarget.split("/");
@@ -47,7 +48,7 @@ const SpaceCard: React.FC<SpaceCardProps> = ({ header,description,target }) => {
         <Card
         p='0px'
         gridArea={{ md: '1 / 1 / 2 / 3', '2xl': 'auto' }}
-        bgImage={bgCardImg}
+        bgImage={bgImage}
         bgSize='cover'
         bgPosition='50%'
         cursor="pointer"

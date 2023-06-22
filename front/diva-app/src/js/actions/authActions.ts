@@ -7,6 +7,7 @@ export interface User {
   name: string;
   social_id: string;
   user_id: number;
+  org_id?: number;
   provider: string;
   profile_image? : string;
 }
