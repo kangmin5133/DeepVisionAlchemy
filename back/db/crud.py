@@ -1,6 +1,14 @@
 from sqlalchemy.orm import Session
-
+import sqlalchemy
 from . import models, schemas
+
+def object_as_dict(obj):
+    if isinstance(obj, list):
+        return [object_as_dict(item) for item in obj]
+    return {c.key: getattr(obj, c.key)
+        for c in sqlalchemy.inspect(obj).mapper.column_attrs}
+    
+
 
 # CRUD - user 
 def get_user(db: Session, email: str):
@@ -184,3 +192,19 @@ def create_user_and_organization(db: Session, user_id: int, org_id: int):
     db.refresh(user)
     
     return user
+
+def get_user_organizations(db: Session, user_id: int):
+    # 이 함수는 특정 User와 관련된 모든 Organization을 반환합니다.
+
+    user = db.query(models.User).filter(models.User.user_id == user_id).first()
+    
+    if user is None:
+        # 만약 사용자가 데이터베이스에서 찾아지지 않는다면, 에러를 반환합니다.
+        return None
+
+    # 사용자가 속한 모든 조직을 가져옵니다.
+    organizations = db.query(models.Organization).join(
+        models.user_organization_association).filter(
+        models.user_organization_association.c.user_id == user.user_id).all()
+
+    return organizations

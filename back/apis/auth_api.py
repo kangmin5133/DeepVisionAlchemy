@@ -127,7 +127,9 @@ async def naverSocialLoginCallback(code: str, db: Session = Depends(get_db)):
             "name": response.get("name"),
             "social_id": response.get("social_id"),
             "user_id": response.get("user_id"),
+            "org_id":response.get("org_id"),
             "provider": response.get("provider"),
+            "profile_image" : response.get("profile_image"),
             }
             query_string = urlencode(query_data)
             redirect_url = f"{Config.DIVA_REDIRECT_URL}?{query_string}"
@@ -137,6 +139,7 @@ async def naverSocialLoginCallback(code: str, db: Session = Depends(get_db)):
             "name": response.get("name"),
             "social_id": response.get("social_id"),
             "user_id": response.get("user_id"),
+            "org_id":response.get("org_id"),
             "provider": response.get("provider"),
             "profile_image" : response.get("profile_image"),
             }
@@ -169,6 +172,7 @@ async def kakaoSocialLoginCallback(code: str,db: Session = Depends(get_db)):
             "name": response.get("name"),
             "social_id": response.get("social_id"),
             "user_id": response.get("user_id"),
+            "org_id":response.get("org_id"),
             "provider": response.get("provider"),
             "profile_image" : response.get("profile_image"),
             }
@@ -180,6 +184,7 @@ async def kakaoSocialLoginCallback(code: str,db: Session = Depends(get_db)):
             "name": response.get("name"),
             "social_id": response.get("social_id"),
             "user_id": response.get("user_id"),
+            "org_id":response.get("org_id"),
             "provider": response.get("provider"),
             }
             query_string = urlencode(query_data)
@@ -236,6 +241,7 @@ async def googleSocialLoginCallback(code: str, db: Session = Depends(get_db)):
             "name": response.get("name"),
             "social_id": response.get("social_id"),
             "user_id": response.get("user_id"),
+            "org_id":response.get("org_id"),
             "provider": response.get("provider"),
             "profile_image" : response.get("profile_image"),
             # "access_token" : response.get("access_token")
@@ -261,6 +267,7 @@ async def googleSocialLoginCallback(code: str, db: Session = Depends(get_db)):
             "name": response.get("name"),
             "social_id": response.get("social_id"),
             "user_id": response.get("user_id"),
+            "org_id":response.get("org_id"),
             "provider": response.get("provider")
             }
         query_string = urlencode(query_data)
@@ -287,12 +294,17 @@ async def emailLogin(request:dict, db: Session = Depends(get_db)):
     )
 
     user_dict = user.__dict__
-
+    org_info = await auth_service.get_orgnization_by_user(user_id = user_dict.get("user_id"),db=db)
+    if org_info and len(org_info) > 0:
+        org_id = org_info[0].get("org_id")
+    else:
+        org_id = None
     query_data = {
             "email": user_dict.get("email"),
             "name": user_dict.get("name"),
             "social_id": user_dict.get("social_id"),
             "user_id": user_dict.get("user_id"),
+            "org_id":org_id,
             "provider": user_dict.get("provider"),
             "profile_image" : user_dict.get("profile_image"),
             # "access_token" : response.get("access_token")

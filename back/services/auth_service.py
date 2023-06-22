@@ -57,8 +57,16 @@ async def social_login(loginFrom : str,
             "is_user": False
             }
     else:
+        org_info = crud.object_as_dict(crud.get_user_organizations(db=db,user_id=user.user_id))
+        print("org_info :",org_info)
+        if org_info and len(org_info) > 0:
+            org_id = org_info[0].get("org_id")
+        else:
+            org_id = None
+    
         response_data = {
             "user_id":user.user_id,
+            "org_id":org_id,
             "email":email,
             "name":name,
             "social_id" : social_id,
@@ -80,6 +88,11 @@ async def get_user(email:str,db: Session):
     if user is not None:
         user.profile_image = image_encode_base64(user.profile_image)
     return user
+
+async def get_orgnization_by_user(user_id:str,db: Session):
+    org_info = crud.object_as_dict(crud.get_user_organizations(db=db,user_id=user_id))
+    return org_info
+
 
 
 async def create_org(jsonData : dict ,
