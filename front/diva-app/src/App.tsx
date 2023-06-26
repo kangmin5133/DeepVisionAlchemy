@@ -52,12 +52,12 @@ const App: React.FC = () => {
             {/* 추가하려는 다른 페이지에 대한 라우트를 이곳에 추가*/}
             <Route path="/loginLoading" element={<LoginLoading />} />
             <Route path="/dashboard" element={<Dashboard sideBarVisible={menuButton}/>} />
-            <Route path="/dashboard/workspace/labeling" element={<LabelingWorkspace sideBarVisible={menuButton}/>} />
-            <Route path="/dashboard/workspace/generation" element={<GenerationWorkspace sideBarVisible={menuButton}/>} />
-            <Route path="/dashboard/workspace/restoration" element={<RestorationWorkspace sideBarVisible={menuButton}/>} />
-            <Route path="/dashboard/workspace/labeling/project" element={<Project sideBarVisible={menuButton}/>} />
-            <Route path="/dashboard/workspace/generation/project" element={<Project sideBarVisible={menuButton}/>} />
-            <Route path="/dashboard/workspace/restoration/project" element={<Project sideBarVisible={menuButton}/>} />
+            <Route path="/dashboard/workspace-labeling" element={<LabelingWorkspace sideBarVisible={menuButton}/>} />
+            <Route path="/dashboard/workspace-generation" element={<GenerationWorkspace sideBarVisible={menuButton}/>} />
+            <Route path="/dashboard/workspace-restoration" element={<RestorationWorkspace sideBarVisible={menuButton}/>} />
+            <Route path="/dashboard/workspace-labeling/project" element={<Project sideBarVisible={menuButton}/>} />
+            <Route path="/dashboard/workspace-generation/project" element={<Project sideBarVisible={menuButton}/>} />
+            <Route path="/dashboard/workspace-restoration/project" element={<Project sideBarVisible={menuButton}/>} />
             <Route path="/dataset" element={<Dataset sideBarVisible={menuButton}/>} />
           </Routes>
         </div>

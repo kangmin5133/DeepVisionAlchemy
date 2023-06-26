@@ -45,7 +45,7 @@ import {
       else if (workspace_type_id === 3){
         pathName = "restoration"
       }
-      navigate(`/dashboard/workspace/${pathName}`)
+      navigate(`/dashboard/workspace-${pathName}`)
     }
     
 

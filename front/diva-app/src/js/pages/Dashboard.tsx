@@ -23,6 +23,22 @@ import {
 	SimpleGrid,
 	Stack,
 	Text,
+  useDisclosure,
+  Menu, 
+  MenuButton, 
+  MenuList, 
+  MenuItem,
+  Input,
+  List,
+  ListItem, 
+  Modal, 
+  ModalOverlay, 
+  ModalContent, 
+  ModalHeader, 
+  ModalCloseButton, 
+  ModalBody, 
+  ModalFooter, 
+  Tabs, TabList, TabPanels, Tab, TabPanel
 } from '@chakra-ui/react';
 
 import Card from "../components/Card/Card";
@@ -87,7 +103,14 @@ const Dashboard: React.FC<DashboardProps> = ({sideBarVisible}) => {
 
   const selectedWorkSpace : WorkSpace | undefined = workspaceData.find(dataset => dataset.workspace_id === selectedWorkspaceId);
   
-  
+  // const [selectedTab, setSelectedTab] = useState('members');
+  const { isOpen, onOpen, onClose } = useDisclosure();
+
+  //funcs
+  const handleCopyInviteCode = () => {
+    // Here you can implement the copying invite code functionality
+    onOpen();
+  };
 
   //hooks
   useEffect(() => {
@@ -156,137 +179,74 @@ const Dashboard: React.FC<DashboardProps> = ({sideBarVisible}) => {
               value={8}/>
           </SimpleGrid>
           {/* graphs & static */}
-          <Grid templateColumns={{ sm: '1fr', md: '1fr 1fr', '2xl': '2fr 1.2fr 1.5fr' }} my='26px' gap='18px'>
+          <Grid templateColumns={{ sm: '1fr', md: '1fr 1fr', '2xl': '1.2fr 1.2fr 2fr' }} my='26px' gap='18px'>
               {/* Workspace Card */}
               <SpaceCard header={"Create Workspace"} bgImage={bgCardImg} description={"Create your Workspace here"} target="/select/workspace"/>
-              {/* Satisfaction Rate */}
-              {/* <Card gridArea={{ md: '2 / 1 / 3 / 2', '2xl': 'auto' }} bg={colorMode === "dark" ? cardDarkColor : cardLightColor}>
-                <CardHeader mb='24px'>
-                  <Flex direction='column'>
-                    <Text color='#fff' fontSize='lg' fontWeight='bold' mb='4px'>
-                      Satisfaction Rate
-                    </Text>
-                    <Text color='gray.400' fontSize='sm'>
-                      From all projects
-                    </Text>
-                  </Flex>
-                </CardHeader>
-                <Flex direction='column' justify='center' align='center'>
-                  <Box zIndex='-1'>
-                    <CircularProgress
-                      size={200}
-                      value={80}
-                      thickness={6}
-                      color='#582CFF'
-                      rounded="full">
-                      <CircularProgressLabel>
-                        <IconBox mb='20px' mx='auto' bg='brand.200' borderRadius='50%' w='48px' h='48px'>
-                          <Icon as={BiHappy} color='#fff' w='30px' h='30px' />
-                        </IconBox>
-                      </CircularProgressLabel>
-                    </CircularProgress>
-                  </Box>
-                  <Stack
-                    direction='row'
-                    spacing={{ sm: '42px', md: '68px' }}
-                    justify='center'
-                    maxW={{ sm: '270px', md: '300px', lg: '100%' }}
-                    mx={{ sm: 'auto', md: '0px' }}
-                    p='18px 22px'
-                    bg='linear-gradient(126.97deg, rgb(6, 11, 40) 28.26%, rgba(10, 14, 35) 91.2%)'
-                    borderRadius='20px'
-                    position='absolute'
-                    bottom='5%'>
-                    <Text fontSize='xs' color='gray.400'>
-                      0%
-                    </Text>
-                    <Flex direction='column' align='center' minW='80px'>
-                      <Text color='#fff' fontSize='28px' fontWeight='bold'>
-                        95%
-                      </Text>
-                      <Text fontSize='xs' color='gray.400'>
-                        Based on likes
-                      </Text>
-                    </Flex>
-                    <Text fontSize='xs' color='gray.400'>
-                      100%
-                    </Text>
-                  </Stack>
-                </Flex>
-              </Card> */}
               {/* Dataset */}
               <SpaceCard header={"Dataset Management"} bgImage={bgCardImg} description={"regist yout own dataset here"} target="/dataset"/>
-              {/* Referral Tracking */}
+              {/* invited list */}
               <Card gridArea={{ md: '2 / 2 / 3 / 3', '2xl': 'auto' }} bg={colorMode === "dark" ? cardDarkColor : cardLightColor}>
                 <Flex direction='column'>
-                  <Flex justify='space-between' align='center' mb='40px'>
-                    <Text color='#fff' fontSize='lg' fontWeight='bold'>
-                      Referral Tracking
-                    </Text>
-                    <Button borderRadius='12px' w='38px' h='38px' bg='#22234B' _hover={{}} _active={{}}>
-                      <Icon as={IoEllipsisHorizontal} color='#7551FF' />
-                    </Button>
-                  </Flex>
-                  <Flex direction={{ sm: 'column', md: 'row' }}>
-                    <Flex direction='column' me={{ md: '6px', lg: '52px' }} mb={{ sm: '16px', md: '0px' }}>
-                      <Flex
-                        direction='column'
-                        p='22px'
-                        pe={{ sm: '22e', md: '8px', lg: '22px' }}
-                        minW={{ sm: '220px', md: '140px', lg: '220px' }}
-                        bg='linear-gradient(126.97deg, #060C29 28.26%, rgba(4, 12, 48, 0.5) 91.2%)'
-                        borderRadius='20px'
-                        mb='20px'>
-                        <Text color='gray.400' fontSize='sm' mb='4px'>
-                          Invited
-                        </Text>
+                    <Flex justify='space-between' align='center' mb='8px'>
                         <Text color='#fff' fontSize='lg' fontWeight='bold'>
-                          145 people
+                            Invited List
                         </Text>
-                      </Flex>
-                      <Flex
-                        direction='column'
-                        p='22px'
-                        pe={{ sm: '22px', md: '8px', lg: '22px' }}
-                        minW={{ sm: '170px', md: '140px', lg: '170px' }}
-                        bg='linear-gradient(126.97deg, #060C29 28.26%, rgba(4, 12, 48, 0.5) 91.2%)'
-                        borderRadius='20px'>
-                        <Text color='gray.400' fontSize='sm' mb='4px'>
-                          Bonus
-                        </Text>
-                        <Text color='#fff' fontSize='lg' fontWeight='bold'>
-                          1,465
-                        </Text>
-                      </Flex>
+                        <Menu>
+                            <MenuButton as={Button}>
+                                <Icon as={IoEllipsisHorizontal} color='#7551FF' />
+                            </MenuButton>
+                            <MenuList>
+                                <MenuItem onClick={handleCopyInviteCode}>Add Member</MenuItem>
+                                <MenuItem>Delete</MenuItem>
+                            </MenuList>
+                        </Menu>
                     </Flex>
-                    <Box mx={{ sm: 'auto', md: '0px' }}>
-                      <CircularProgress
-                        size={window.innerWidth >= 1024 ? 200 : window.innerWidth >= 768 ? 170 : 200}
-                        value={70}
-                        thickness={6}
-                        color='#05CD99'>
-                        <CircularProgressLabel>
-                          <Flex direction='column' justify='center' align='center'>
-                            <Text color='gray.400' fontSize='sm'>
-                              Safety
-                            </Text>
-                            <Text
-                              color='#fff'
-                              fontSize={{ md: '36px', lg: '50px' }}
-                              fontWeight='bold'
-                              mb='4px'>
-                              9.3
-                            </Text>
-                            <Text color='gray.400' fontSize='sm'>
-                              Total Score
-                            </Text>
-                          </Flex>
-                        </CircularProgressLabel>
-                      </CircularProgress>
-                    </Box>
-                  </Flex>
+
+                    <Tabs variant="enclosed" colorScheme="blue" isLazy>
+                      <TabList>
+                        <Tab>Members</Tab>
+                        <Tab>Waiting</Tab>
+                      </TabList>
+
+                      <TabPanels>
+                        <TabPanel>
+                          <Box pt={0}>
+                            <Input placeholder="Search..." mb="4px"/>
+
+                            <List mt={0}>
+                              {['Member1', 'Member2', 'Member3'].map(member => <ListItem key={member}>{member}</ListItem>)}
+                            </List>
+                          </Box>
+                        </TabPanel>
+
+                        <TabPanel>
+                          <Box pt={0}>
+                            <Input placeholder="Search..." mb="4px"/>
+
+                            <List mt={0}>
+                              {['Waiting1', 'Waiting2', 'Waiting3'].map(waiting => <ListItem key={waiting}>{waiting}</ListItem>)}
+                            </List>
+                          </Box>
+                        </TabPanel>
+                      </TabPanels>
+                    </Tabs>
+
+                    <Modal isOpen={isOpen} onClose={onClose} isCentered>
+                        <ModalOverlay />
+                        <ModalContent>
+                            <ModalHeader>Copy Invite Code</ModalHeader>
+                            <ModalCloseButton />
+                            <ModalBody>
+                                {/* Display invite code here */}
+                            </ModalBody>
+
+                            <ModalFooter>
+                                <Button onClick={onClose}>Close</Button>
+                            </ModalFooter>
+                        </ModalContent>
+                    </Modal>
                 </Flex>
-              </Card>
+            </Card>
           </Grid>
 
           <Grid templateColumns={{ sm: '1fr', md: '1fr 1fr', lg: '2fr 1fr' }} gap='24px'>
