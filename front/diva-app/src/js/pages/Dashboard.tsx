@@ -15,30 +15,8 @@ import {
   Heading,
   useColorMode,
   Grid,
-	Button,
-	CircularProgress,
-	CircularProgressLabel,
-	Flex,
-	Icon,
 	SimpleGrid,
 	Stack,
-	Text,
-  useDisclosure,
-  Menu, 
-  MenuButton, 
-  MenuList, 
-  MenuItem,
-  Input,
-  List,
-  ListItem, 
-  Modal, 
-  ModalOverlay, 
-  ModalContent, 
-  ModalHeader, 
-  ModalCloseButton, 
-  ModalBody, 
-  ModalFooter, 
-  Tabs, TabList, TabPanels, Tab, TabPanel
 } from '@chakra-ui/react';
 
 import Card from "../components/Card/Card";
@@ -64,6 +42,8 @@ import SpaceCard from "../components/SpaceCard";
 
 import bgImage from "../../assets/alchemistic.png";
 import bgCardImg from '../../assets/back-ground-image.png';
+import bgCardImg2 from '../../assets/back-ground-image-card.png';
+import bgCardImg3 from '../../assets/back-ground-image-of-card2.png';
 
 interface DashboardProps {
   sideBarVisible : boolean;
@@ -103,14 +83,7 @@ const Dashboard: React.FC<DashboardProps> = ({sideBarVisible}) => {
 
   const selectedWorkSpace : WorkSpace | undefined = workspaceData.find(dataset => dataset.workspace_id === selectedWorkspaceId);
   
-  // const [selectedTab, setSelectedTab] = useState('members');
-  const { isOpen, onOpen, onClose } = useDisclosure();
-
-  //funcs
-  const handleCopyInviteCode = () => {
-    // Here you can implement the copying invite code functionality
-    onOpen();
-  };
+  
 
   //hooks
   useEffect(() => {
@@ -179,74 +152,14 @@ const Dashboard: React.FC<DashboardProps> = ({sideBarVisible}) => {
               value={8}/>
           </SimpleGrid>
           {/* graphs & static */}
-          <Grid templateColumns={{ sm: '1fr', md: '1fr 1fr', '2xl': '1.2fr 1.2fr 2fr' }} my='26px' gap='18px'>
+          <Grid templateColumns={{ sm: '1fr', md: '1fr 1fr', '2xl': '1.5fr 1.5fr 1.5fr' }} my='26px' gap='18px'>
               {/* Workspace Card */}
               <SpaceCard header={"Create Workspace"} bgImage={bgCardImg} description={"Create your Workspace here"} target="/select/workspace"/>
               {/* Dataset */}
-              <SpaceCard header={"Dataset Management"} bgImage={bgCardImg} description={"regist yout own dataset here"} target="/dataset"/>
-              {/* invited list */}
-              <Card gridArea={{ md: '2 / 2 / 3 / 3', '2xl': 'auto' }} bg={colorMode === "dark" ? cardDarkColor : cardLightColor}>
-                <Flex direction='column'>
-                    <Flex justify='space-between' align='center' mb='8px'>
-                        <Text color='#fff' fontSize='lg' fontWeight='bold'>
-                            Invited List
-                        </Text>
-                        <Menu>
-                            <MenuButton as={Button}>
-                                <Icon as={IoEllipsisHorizontal} color='#7551FF' />
-                            </MenuButton>
-                            <MenuList>
-                                <MenuItem onClick={handleCopyInviteCode}>Add Member</MenuItem>
-                                <MenuItem>Delete</MenuItem>
-                            </MenuList>
-                        </Menu>
-                    </Flex>
-
-                    <Tabs variant="enclosed" colorScheme="blue" isLazy>
-                      <TabList>
-                        <Tab>Members</Tab>
-                        <Tab>Waiting</Tab>
-                      </TabList>
-
-                      <TabPanels>
-                        <TabPanel>
-                          <Box pt={0}>
-                            <Input placeholder="Search..." mb="4px"/>
-
-                            <List mt={0}>
-                              {['Member1', 'Member2', 'Member3'].map(member => <ListItem key={member}>{member}</ListItem>)}
-                            </List>
-                          </Box>
-                        </TabPanel>
-
-                        <TabPanel>
-                          <Box pt={0}>
-                            <Input placeholder="Search..." mb="4px"/>
-
-                            <List mt={0}>
-                              {['Waiting1', 'Waiting2', 'Waiting3'].map(waiting => <ListItem key={waiting}>{waiting}</ListItem>)}
-                            </List>
-                          </Box>
-                        </TabPanel>
-                      </TabPanels>
-                    </Tabs>
-
-                    <Modal isOpen={isOpen} onClose={onClose} isCentered>
-                        <ModalOverlay />
-                        <ModalContent>
-                            <ModalHeader>Copy Invite Code</ModalHeader>
-                            <ModalCloseButton />
-                            <ModalBody>
-                                {/* Display invite code here */}
-                            </ModalBody>
-
-                            <ModalFooter>
-                                <Button onClick={onClose}>Close</Button>
-                            </ModalFooter>
-                        </ModalContent>
-                    </Modal>
-                </Flex>
-            </Card>
+              <SpaceCard header={"Dataset Management"} bgImage={bgCardImg2} description={"regist yout own dataset here"} target="/dashboard/dataset"/>
+              {/* Model Hub */}
+              <SpaceCard header={"Model Hub"} bgImage={bgCardImg3} description={"Search AI Model for Your Project here"} target="/dashboard/modelhub"/>
+              
           </Grid>
 
           <Grid templateColumns={{ sm: '1fr', md: '1fr 1fr', lg: '2fr 1fr' }} gap='24px'>

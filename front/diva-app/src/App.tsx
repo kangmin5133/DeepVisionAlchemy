@@ -10,6 +10,7 @@ import LoginLoading from "./js/pages/LoginLoading";
 import LabelingWorkspace from "./js/pages/LabelingWorkspace";
 import GenerationWorkspace from "./js/pages/GenerationWorkspace";
 import RestorationWorkspace from "./js/pages/RestorationWorkspace";
+import ModelHub from "./js/pages/ModelHub";
 
 import Project from "./js/pages/Project";
 import SelectUserType from "./js/pages/SelectUserType"
@@ -58,7 +59,8 @@ const App: React.FC = () => {
             <Route path="/dashboard/workspace-labeling/project" element={<Project sideBarVisible={menuButton}/>} />
             <Route path="/dashboard/workspace-generation/project" element={<Project sideBarVisible={menuButton}/>} />
             <Route path="/dashboard/workspace-restoration/project" element={<Project sideBarVisible={menuButton}/>} />
-            <Route path="/dataset" element={<Dataset sideBarVisible={menuButton}/>} />
+            <Route path="/dashboard/dataset" element={<Dataset sideBarVisible={menuButton}/>} />
+            <Route path="/dashboard/modelhub" element={<ModelHub sideBarVisible={menuButton}/>} />
           </Routes>
         </div>
       </div>

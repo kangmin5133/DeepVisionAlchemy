@@ -84,7 +84,7 @@ const Dataset: React.FC<DatasetProps> = ({sideBarVisible}) => {
   // states 
   const { isLoggedIn, user} = UserAuthState();
   const paddingLeft = sideBarVisible ? '300px' : '8';
-  const { isOpen, onOpen, onClose } = useDisclosure()
+  const { isOpen, onOpen, onClose } = useDisclosure();
   const [selectedBox, setSelectedBox] = useState<string | null>(null);
   const [credentials, setCredentials] = useState<Credentials>({
     accessKeyId: '',
