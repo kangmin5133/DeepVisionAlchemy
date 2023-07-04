@@ -21,6 +21,7 @@ export function EmailVerificationForm({register, handleSubmit}: EmailVerificatio
 
   const [isSubmitted, setSubmitted] = useState(false);
 
+  // todo - send email verification API to server
   const onSubmit = async (data: Inputs) => {
     setSubmitted(true);
     console.log("isSubmitted : ",isSubmitted);
@@ -31,7 +32,7 @@ export function EmailVerificationForm({register, handleSubmit}: EmailVerificatio
     //   console.error(error);
     // }
   };
-
+  // todo - send email verification validation API to server
   const onVerification = async (data: Inputs) => {
     try {
       await axios.post("/api/verify_code", data);

@@ -40,6 +40,16 @@ import SpaceCard from "../components/SpaceCard";
 import bgCardImg from '../../assets/back-ground-image-of-card2.png';
 import { IoEllipsisHorizontal } from 'react-icons/io5';
 
+import LineChartView from "../components/LineChartView";
+import BarChartView from "../components/BarChartView";
+
+import {
+	barChartDataDashboard,
+	barChartOptionsDashboard,
+	lineChartDataDashboard,
+	lineChartOptionsDashboard
+} from '../states/testval';
+
 interface WorkspaceProps {
   sideBarVisible : boolean;
 }
@@ -117,18 +127,15 @@ const LabelingWorkspace: React.FC<WorkspaceProps> = ({sideBarVisible}) => {
                       </MenuList>
                   </Menu>
               </Flex>
-
               <Tabs variant="enclosed" colorScheme="blue" isLazy>
                 <TabList>
                   <Tab>Members</Tab>
                   <Tab>Waiting</Tab>
                 </TabList>
-
                 <TabPanels>
                   <TabPanel>
                     <Box pt={0}>
                       <Input placeholder="Search..." mb="4px"/>
-
                       {/* <List mt={0}>
                         {['Member1', 'Member2', 'Member3'].map(member => <ListItem key={member}>{member}</ListItem>)}
                       </List> */}
@@ -145,7 +152,6 @@ const LabelingWorkspace: React.FC<WorkspaceProps> = ({sideBarVisible}) => {
                             <Th color='gray.400' fontFamily='Plus Jakarta Display' borderBottomColor='#56577A'>
                               Profile
                             </Th>
-                            
                           </Tr>
                         </Thead>
                       </Table>
@@ -212,7 +218,24 @@ const LabelingWorkspace: React.FC<WorkspaceProps> = ({sideBarVisible}) => {
           </Flex>
         </Card>  
       </Grid>
-
+      <Grid
+				templateColumns={{ sm: '1fr', lg: '1.7fr 1.3fr' }}
+				maxW={{ sm: '100%', md: '100%' }}
+				gap='24px'
+				mb='24px'>
+          <LineChartView 
+          bg={colorMode === "dark" ? cardDarkColor : cardLightColor}
+          header = {"test line chart"}
+          lineChartData={lineChartDataDashboard}
+          lineChartOptions={lineChartOptionsDashboard}
+          />
+          <BarChartView 
+          bg={colorMode === "dark" ? cardDarkColor : cardLightColor}
+          header = {"test bar chart"}
+          barChartData={barChartDataDashboard}
+          barChartOptions={barChartOptionsDashboard}
+          />
+      </Grid>
     </Box>
   );
 }

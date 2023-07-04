@@ -83,8 +83,6 @@ const Dashboard: React.FC<DashboardProps> = ({sideBarVisible}) => {
 
   const selectedWorkSpace : WorkSpace | undefined = workspaceData.find(dataset => dataset.workspace_id === selectedWorkspaceId);
   
-  
-
   //hooks
   useEffect(() => {
     if (user) {
@@ -151,7 +149,7 @@ const Dashboard: React.FC<DashboardProps> = ({sideBarVisible}) => {
               description={" problems left in your projects"}
               value={8}/>
           </SimpleGrid>
-          {/* graphs & static */}
+          {/* SpaceCard */}
           <Grid templateColumns={{ sm: '1fr', md: '1fr 1fr', '2xl': '1.5fr 1.5fr 1.5fr' }} my='26px' gap='18px'>
               {/* Workspace Card */}
               <SpaceCard header={"Create Workspace"} bgImage={bgCardImg} description={"Create your Workspace here"} target="/select/workspace"/>
@@ -159,15 +157,9 @@ const Dashboard: React.FC<DashboardProps> = ({sideBarVisible}) => {
               <SpaceCard header={"Dataset Management"} bgImage={bgCardImg2} description={"regist yout own dataset here"} target="/dashboard/dataset"/>
               {/* Model Hub */}
               <SpaceCard header={"Model Hub"} bgImage={bgCardImg3} description={"Search AI Model for Your Project here"} target="/dashboard/modelhub"/>
-              
           </Grid>
-
+          {/* workspace list & history*/}
           <Grid templateColumns={{ sm: '1fr', md: '1fr 1fr', lg: '2fr 1fr' }} gap='24px'>
-            {/* workspace list */}
-            {/* <WorkListView 
-            colorMode={colorMode}
-            cardDarkColor={cardDarkColor}
-            cardLightColor={cardLightColor} /> */}
             <WorkListView 
             setSelectedWorkspaceId = {setSelectedWorkspaceId}
             selectedWorkspaceId = {selectedWorkspaceId}
@@ -176,7 +168,6 @@ const Dashboard: React.FC<DashboardProps> = ({sideBarVisible}) => {
             WorkListViewProps={{"colorMode":colorMode,"cardDarkColor":cardDarkColor,"cardLightColor":cardLightColor}}
             workspaceData={workspaceData}
             />
-            {/* working history overview */}
             <WorkHistoryView 
             colorMode={colorMode}
             cardDarkColor={cardDarkColor}
