@@ -4,8 +4,8 @@ from utils.auth_util import verify_google_token
 import bcrypt
 from fastapi import Depends
 from sqlalchemy.orm import Session
-from db.database import get_db
-from db import crud, schemas, models
+from db.mysql.database import get_db
+from db.mysql import crud, schemas, models
 import asyncio
 from configs.enums import *
 from utils.image_util import image_encode_base64

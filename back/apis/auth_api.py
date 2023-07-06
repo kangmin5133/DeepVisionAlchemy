@@ -1,7 +1,7 @@
 from fastapi import APIRouter, File, UploadFile, Form, Body, Response, Depends, HTTPException, status
 from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
-from db.database import get_db
+from db.mysql.database import get_db
 from fastapi.responses import JSONResponse
 # import numpy as np
 # from PIL import Image
@@ -18,7 +18,7 @@ from fastapi.security import OAuth2PasswordBearer
 from fastapi.security.oauth2 import OAuth2PasswordRequestForm
 from datetime import timedelta
 from datetime import datetime
-from db.schemas import *
+from db.mysql.schemas import *
 
 from starlette.requests import Request
 
@@ -326,3 +326,4 @@ async def createUser(request:dict, db: Session = Depends(get_db)):
 @router.get('/logout')
 async def logout():
     return {"detail": "Successfully logged out"}
+

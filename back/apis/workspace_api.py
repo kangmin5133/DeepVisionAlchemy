@@ -1,7 +1,7 @@
 from fastapi import APIRouter, File, UploadFile, Form, Body, Response, Depends, HTTPException, status
 from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
-from db.database import get_db
+from db.mysql.database import get_db
 from fastapi.responses import JSONResponse
 
 from configs.config import Config
