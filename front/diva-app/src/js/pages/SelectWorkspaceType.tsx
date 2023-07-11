@@ -53,7 +53,7 @@ const SelectWorkspaceType: React.FC = () => {
       console.log("onSubmitData : ",jsonData)
       try {
         await axios.post(`${config.serverUrl}/rest/api/workspace/create`, {jsonData});
-        navigate("/dashboard/workspace");
+        navigate("/dashboard");
       } catch (error) {
         console.error(error);
       }

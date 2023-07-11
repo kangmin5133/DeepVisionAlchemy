@@ -303,16 +303,29 @@ const Dataset: React.FC<DatasetProps> = ({sideBarVisible}) => {
     }
   };
   const handleRegisterClick = async () => {
+    // let jsonData: {
+    //   credentials?: { accessKeyId?: string; secretAccessKey?: string; jsonFile?: string };
+    //   bucketInfo: BucketInfo;
+    //   datasetInfo: { name: string; desc: string };
+    //   user: User | null;
+    //   dataType: string;
+    // } = {
+    //   bucketInfo,
+    //   datasetInfo: { name: datasetInfo.name, desc: datasetInfo.desc },
+    //   user,
+    //   dataType: selectedBox || '',
+    // };
+    
     let jsonData: {
       credentials?: { accessKeyId?: string; secretAccessKey?: string; jsonFile?: string };
       bucketInfo: BucketInfo;
       datasetInfo: { name: string; desc: string };
-      user: User | null;
+      user: { email: string; name: string } | null;
       dataType: string;
     } = {
       bucketInfo,
       datasetInfo: { name: datasetInfo.name, desc: datasetInfo.desc },
-      user,
+      user: user ? { email: user.email, name: user.name } : null,
       dataType: selectedBox || '',
     };
 
