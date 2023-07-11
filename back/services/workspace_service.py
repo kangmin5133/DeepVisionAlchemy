@@ -42,7 +42,7 @@ async def create_workspace(request:dict, db:Session):
                           invitation_link = invitation_link
                          )
     result = crud.create_workspace(db= db, workspace = workspace)
-    del result["_sa_instance_state"]
+
     return result
 
 async def get_workspace_by_invitation_link(invitation_link:str, db:Session):

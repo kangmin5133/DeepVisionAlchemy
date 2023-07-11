@@ -26,7 +26,7 @@ async def createWorkSpace(request: dict = None, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404,detail="workspace_type_id required")
     
     response = await workspace_service.create_workspace(request = jsonData ,db = db)
-    return JSONResponse(content=response)
+    return JSONResponse(content=str(response))
 
 @router.get("/get")
 async def getWorkSpaceByUserId(creator_id: int = None, db: Session = Depends(get_db)):

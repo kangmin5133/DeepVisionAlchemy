@@ -1,7 +1,19 @@
 from fastapi import Depends
+from PIL import Image
+import io
+from datetime import datetime
+
+# for mysql 
 from sqlalchemy.orm import Session
 from db.mysql.database import get_db
 from db.mysql import crud, schemas
+
+# for mongo
+from db.mongo import structure
+from db.mongo.database import get_nosql_db
+from dataclasses import asdict
+from db.mongo.structure import Image as ImageForm
+
 import asyncio
 from configs.config import Config
 from configs.enums import *
@@ -64,8 +76,11 @@ def read_image_in_gcs(bucket_name:str, blob_name:str, json_key : json):
     blob = bucket.get_blob(blob_name)
     # data = blob.download_as_text()  # text 파일의 경우
     data = blob.download_as_bytes()  # binary 파일의 경우, 예를 들어 이미지 파일
+
+    image = Image.open(io.BytesIO(data))
+    width, height = image.size
     
-    return data
+    return data, width, height
 
 def read_images_range_in_gcs(bucket_name, file_names_list, start, end, json_key):
     credentials = Credentials.from_service_account_info(json_key)
@@ -88,7 +103,7 @@ def read_all_images_in_gcs(bucket_name:str, prefix:str, json_key : json):
     
     data = []
     for blob in blobs:
-        blob_data = read_image_in_gcs(bucket_name, blob.name, json_key)
+        blob_data, w, h = read_image_in_gcs(bucket_name, blob.name, json_key)
         data.append(blob_data)
     return data
 
@@ -100,8 +115,11 @@ def read_image_in_s3(bucket_name, object_key, access_key_id, secret_access_key):
     response = s3.get_object(Bucket=bucket_name, Key=object_key)
     # data = response['Body'].read().decode('utf-8')  # text 파일의 경우
     data = response['Body'].read()  # binary 파일의 경우, 예를 들어 이미지 파일
+
+    image = Image.open(io.BytesIO(data))
+    width, height = image.size
     
-    return data
+    return data, width, height
 
 def read_images_range_in_s3(bucket_name, file_names_list, start, end, access_key_id, secret_access_key):
     s3 = boto3.client('s3', 
@@ -124,7 +142,7 @@ def read_all_images_in_s3(bucket_name, prefix, access_key_id, secret_access_key)
     
     data = []
     for content in response.get('Contents', []):
-        object_data = read_image_in_s3(bucket_name, content['Key'], access_key_id, secret_access_key)
+        object_data, w, h = read_image_in_s3(bucket_name, content['Key'], access_key_id, secret_access_key)
         data.append(object_data)
     
     return data
@@ -181,15 +199,16 @@ async def create_dataset(request : dict, db:Session):
         file_list = get_files_in_gcs(bucket_name=bucket_name,
                         prefix=prefix,
                         json_key = json_key)
+        
+        
     else: # Local Upload
         pass
 
-    # create dataset schema
+    # create dataset schema & insert to mysql
     user_info = request.get("user")
     email = user_info.get("email")
-    count = len(file_list[1:])
-    
-    user_obj = await auth_service.getUser(email,db)
+    count = len(file_list)
+    user_obj = crud.get_user(db, email)
     org_info = crud.get_organization_by_creator_id(db,user_obj.user_id)
     organization_id = None
     if org_info is not None:
@@ -208,10 +227,45 @@ async def create_dataset(request : dict, db:Session):
                           dataset_bucket_name = bucket_name,
                           dataset_prefix = prefix
                          )
+    print("\ndataset : ",dataset)
     db_dataset = crud.create_dataset(db=db,dataset=dataset)
     dataset_info = db_dataset.__dict__
     del dataset_info['_sa_instance_state']
     del dataset_info['dataset_credential']
+
+    # create Image dataclass form & insert to mongodb
+    """
+    id: int
+    dataset_id : int
+    width: int
+    height: int
+    file_name: str
+    license: Optional[int]
+    created: Optional[str]
+    """
+    db = get_nosql_db()
+    now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    if dataset_type == DataSrcType.Google_Cloud_Storage.value:
+        for i,name in enumerate(file_list):
+            #bucket_name:str, blob_name:str, json_key : json
+            _, w, h = read_image_in_gcs(bucket_name = bucket_name,
+                              blob_name = name,
+                              json_key = json_key)
+            
+            image = ImageForm(i,dataset_info["dataset_id"],w, h, name, 1, now_str)
+            db.images.insert_one(asdict(image))
+            
+            
+    elif dataset_type == DataSrcType.Amazon_S3.value:
+        #bucket_name, object_key, access_key_id, secret_access_key
+        for i,name in enumerate(file_list):
+            _, w, h = read_image_in_s3(bucket_name = bucket_name,
+                            object_key = name,
+                            access_key_id = access_key_id,
+                            secret_access_key = access_key_secret)
+            
+            image = ImageForm(i,dataset_info["dataset_id"],w, h, name, 1, now_str)
+            db.images.insert_one(asdict(image))
 
     return dataset_info
     
@@ -250,13 +304,21 @@ async def get_dataset_images_range(dataset_id : int,
     
     image_info_list = []
     if results.dataset_type == DataSrcType.Amazon_S3.value:
+        
+        db = get_nosql_db()
+        collection = db['images']
+        query = {'dataset_id': dataset_id, 'id': {'$gte': startIndex, '$lt': endIndex}}
+        result = collection.find(query)
+        result_list = list(result)
+
+        print("result from mongoDB : ", result_list)
 
         # todo : change get_files_in_s3 to mongoDB query
-        file_names_list = get_files_in_s3(bucket_name = results.dataset_bucket_name,
-                                          prefix = results.dataset_prefix,
-                                          access_key_id = credential["access_key_id"], 
-                                          secret_access_key = credential["access_key_secret"])
-        
+        # file_names_list = get_files_in_s3(bucket_name = results.dataset_bucket_name,
+        #                                   prefix = results.dataset_prefix,
+        #                                   access_key_id = credential["access_key_id"], 
+        #                                   secret_access_key = credential["access_key_secret"])
+        file_names_list = [doc["file_name"] for doc in result_list]
         images = read_images_range_in_s3(bucket_name = results.dataset_bucket_name,
                                          file_names_list = file_names_list,
                                          start = startIndex, end = endIndex, 
@@ -267,11 +329,17 @@ async def get_dataset_images_range(dataset_id : int,
 
         json_key = json.loads(credential["json_file"])
 
-        # todo : change get_files_in_gcs to mongoDB query
-        file_names_list = get_files_in_gcs(bucket_name = results.dataset_bucket_name,
-                                          prefix = results.dataset_prefix,
-                                          json_key = json_key)
+        db = get_nosql_db()
+        collection = db['images']
+        query = {'dataset_id': dataset_id, 'id': {'$gte': startIndex, '$lt': endIndex}}
+        result = await collection.find(query)
+        result_list = list(result)
 
+        # todo : change get_files_in_gcs to mongoDB query
+        # file_names_list = get_files_in_gcs(bucket_name = results.dataset_bucket_name,
+        #                                   prefix = results.dataset_prefix,
+        #                                   json_key = json_key)
+        file_names_list = [doc["file_name"] for doc in result_list]
         images = read_images_range_in_gcs(bucket_name = results.dataset_bucket_name,
                                           file_names_list = file_names_list,
                                          start = startIndex, end = endIndex, 

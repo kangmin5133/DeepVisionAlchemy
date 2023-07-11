@@ -51,7 +51,7 @@ async def social_login(loginFrom : str,
             "provider":provider_id,
             "user_type_id" : UserType.default().value,
             "membership_id" : Membership.default().value,
-            "profile_image" : image_encode_base64(user.profile_image),
+            # "profile_image" : image_encode_base64(user.profile_image),
             "access_token":access_token,
             "refresh_token":refresh_token,
             "is_user": False
@@ -92,8 +92,6 @@ async def get_user(email:str,db: Session):
 async def get_orgnization_by_user(user_id:str,db: Session):
     org_info = crud.object_as_dict(crud.get_user_organizations(db=db,user_id=user_id))
     return org_info
-
-
 
 async def create_org(jsonData : dict ,
                     user_info : dict,
@@ -162,9 +160,6 @@ async def register(jsonData : dict ,
         return user_dict, org_dict
     else:
         return user_dict, None
-
-
-
     
 
 
