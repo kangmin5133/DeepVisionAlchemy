@@ -1,4 +1,4 @@
-from fastapi import Depends
+from fastapi import Depends, HTTPException
 from PIL import Image
 import io
 from datetime import datetime
@@ -303,22 +303,23 @@ async def get_dataset_images_range(dataset_id : int,
     credential = decrypt_data(results.dataset_credential)  # return json
     
     image_info_list = []
+    # get images path from mongoDB
+    db = get_nosql_db()
+    collection = db['images']
+    query = {'dataset_id': dataset_id, 'id': {'$gte': startIndex, '$lt': endIndex}}
+    result = collection.find(query)
+    result_list = list(result)
+    file_names_list = [doc["file_name"] for doc in result_list]
+    
+    if len(file_names_list) == 0:
+        raise HTTPException(status_code=404,detail="dataset doesn't exist")
+    
     if results.dataset_type == DataSrcType.Amazon_S3.value:
-        
-        db = get_nosql_db()
-        collection = db['images']
-        query = {'dataset_id': dataset_id, 'id': {'$gte': startIndex, '$lt': endIndex}}
-        result = collection.find(query)
-        result_list = list(result)
-
-        print("result from mongoDB : ", result_list)
-
         # todo : change get_files_in_s3 to mongoDB query
         # file_names_list = get_files_in_s3(bucket_name = results.dataset_bucket_name,
         #                                   prefix = results.dataset_prefix,
         #                                   access_key_id = credential["access_key_id"], 
         #                                   secret_access_key = credential["access_key_secret"])
-        file_names_list = [doc["file_name"] for doc in result_list]
         images = read_images_range_in_s3(bucket_name = results.dataset_bucket_name,
                                          file_names_list = file_names_list,
                                          start = startIndex, end = endIndex, 
@@ -326,20 +327,11 @@ async def get_dataset_images_range(dataset_id : int,
                                          secret_access_key = credential["access_key_secret"])
         
     elif results.dataset_type == DataSrcType.Google_Cloud_Storage.value:
-
         json_key = json.loads(credential["json_file"])
-
-        db = get_nosql_db()
-        collection = db['images']
-        query = {'dataset_id': dataset_id, 'id': {'$gte': startIndex, '$lt': endIndex}}
-        result = await collection.find(query)
-        result_list = list(result)
-
         # todo : change get_files_in_gcs to mongoDB query
         # file_names_list = get_files_in_gcs(bucket_name = results.dataset_bucket_name,
         #                                   prefix = results.dataset_prefix,
         #                                   json_key = json_key)
-        file_names_list = [doc["file_name"] for doc in result_list]
         images = read_images_range_in_gcs(bucket_name = results.dataset_bucket_name,
                                           file_names_list = file_names_list,
                                          start = startIndex, end = endIndex, 
