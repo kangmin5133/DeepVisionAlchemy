@@ -1,5 +1,5 @@
-import React from "react";
-import { useNavigate } from "react-router-dom";
+import React, {useState, useEffect} from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import {
   Box,
   Grid,
@@ -21,8 +21,10 @@ import {
   ModalBody, 
   ModalFooter, 
   Tabs, TabList, TabPanels, Tab, TabPanel,
-  Table, Th, Tr, Thead
+  Table, Th, Tr, Thead,
+  Select, Checkbox, FormControl, FormLabel, VStack, HStack, Tag, TagLabel, TagCloseButton 
 } from "@chakra-ui/react";
+import { ArrowForwardIcon } from "@chakra-ui/icons";
 
 import UserAuthState from "../states/userAuthState"
 import axios from "axios"; 
@@ -50,13 +52,47 @@ import {
 	lineChartOptionsDashboard
 } from '../states/testval';
 
+import { useFormik } from "formik";
+
 interface WorkspaceProps {
   sideBarVisible : boolean;
 }
 
+interface FormValues {
+  projectName: string;
+  projectDescription: string;
+  dataset_id : number;
+  workspace_id : number;
+  preprocessing: boolean;
+  preprocessTags : string[],
+  taskType: string;
+  classTags : string[];
+}
+
+interface Dataset {
+  dataset_id: number;
+  org_id: number;
+  creator_id: number;
+  dataset_name: string;
+  dataset_desc: string;
+  dataset_type: string;
+  dataset_count: number;
+  dataset_prefix: string;
+  created: string;
+}
+
 const LabelingWorkspace: React.FC<WorkspaceProps> = ({sideBarVisible}) => {
 
+  // states
   const { isLoggedIn, user} = UserAuthState();
+  const location = useLocation();
+  const searchParams = new URLSearchParams(location.search);
+  const workspaceId = Number(searchParams.get('workspace_id'));
+  if (isNaN(workspaceId)) {
+    console.log("workspaceId is Nan")
+  }
+  const [datasets, setDatasets] = useState<Dataset[]>([]);
+  const [selectedDatasetId, setSelectedDatasetId] = useState<number>(0);
 
   const { colorMode, toggleColorMode } = useColorMode();
   const cardDarkColor = "linear-gradient(127.09deg, rgba(6, 11, 40, 0.94) 19.41%, rgba(10, 14, 35, 0.49) 76.65%)";
@@ -65,17 +101,98 @@ const LabelingWorkspace: React.FC<WorkspaceProps> = ({sideBarVisible}) => {
   const paddingLeft = sideBarVisible ? '300px' : '8';
   const navigate = useNavigate();
 
-  
-  // const [selectedTab, setSelectedTab] = useState('members');
   const { isOpen: isOpenInvite, onOpen: onOpenInvite, onClose: onCloseInvite } = useDisclosure();
   const { isOpen: isOpenProject, onOpen: onOpenProject, onClose: onCloseProject } = useDisclosure();
 
 
-  //funcs
+  const [classTags, setClassTags] = useState<string[]>([]);
+  const [preprocessTags, setPreprocessTags] = useState<string[]>([]);
+  const [inputValue, setInputValue] = useState<string>('');
+
+  
+
+  const formik = useFormik<FormValues>({
+    initialValues: {
+      projectName: '',
+      projectDescription: '',
+      dataset_id : 0,
+      workspace_id : 0,
+      preprocessing: false,
+      preprocessTags : [],
+      taskType: '',
+      classTags : []
+    },
+    onSubmit: (values) => {
+      // submit your form to server
+      values.dataset_id = selectedDatasetId;
+      values.workspace_id = workspaceId;
+      values.preprocessTags = preprocessTags;
+      values.classTags = classTags;
+      console.log("submit values : ",values)
+    },
+  });
+
+  
+
+  const preprocessingOptions = ["resize", "rotate", "grayscale", "sharpening", "contrast"];
+  const [selectedOptions, setSelectedOptions] = useState<string[]>([]);
+
+
+  // handlers
+  const handleDatasetIdChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    setSelectedDatasetId(Number(event.target.value));
+  };
+
+  const handleAddClassTag = () => {
+    if (inputValue && !classTags.includes(inputValue)) {
+      setClassTags([...classTags, inputValue]);
+    }
+    setInputValue('');
+  };
+
+  const handleRemoveClassTag = (tagToRemove: string) => {
+    setClassTags(classTags.filter((tag) => tag !== tagToRemove));
+  };
+
+  const handleAddPreprocessTag = () => {
+    if (inputValue && !preprocessTags.includes(inputValue)) {
+      setPreprocessTags([...preprocessTags, inputValue]);
+    }
+    setInputValue('');
+  };
+
+  const handleRemovePreprocessTag = (tagToRemove: string) => {
+    setPreprocessTags(preprocessTags.filter((tag) => tag !== tagToRemove));
+  };
+
+  // 선택한 전처리 항목을 화면에 추가
+  const handleAddOption = (option:string) => {
+    setSelectedOptions([...selectedOptions, option]);
+  };
+  
+  // 전처리 항목을 화면에서 삭제
+  const handleRemoveOption = (option:string) => {
+    setSelectedOptions(selectedOptions.filter((item) => item !== option));
+  };
+
   const handleCopyInviteCode = () => {
     // Here you can implement the copying invite code functionality
     onOpenInvite();
   };
+
+  //hooks
+  useEffect(() => {
+    const fetchDatasets = async () => {
+      try {
+        const response = await axios.get(`${config.serverUrl}/rest/api/dataset/get`, { params: { user_id: user?.user_id} });
+        setDatasets(response.data);
+        console.log("dataset info fetched")
+      } catch (error) {
+        console.error('Failed to fetch datasets:', error);
+      }
+    };
+    fetchDatasets();
+  }, []);
 
   return (
     <Box p={8} pl={paddingLeft} 
@@ -86,6 +203,7 @@ const LabelingWorkspace: React.FC<WorkspaceProps> = ({sideBarVisible}) => {
     >
       <Breadcrumbs />
       <Grid templateColumns={{ sm: '1fr', md: '1fr 1fr', '2xl': '2.5fr 0.8fr' }} my='26px' gap='18px'>
+        {/* project create card */}
         <Card 
         p='0px'
         gridArea={{ md: '1 / 1 / 2 / 3', '2xl': 'auto' }}
@@ -108,6 +226,7 @@ const LabelingWorkspace: React.FC<WorkspaceProps> = ({sideBarVisible}) => {
             </Flex>
           </CardBody>
         </Card>
+        {/* invite list */}
         <Card 
         gridArea={{ md: '2 / 2 / 3 / 3', '2xl': 'auto' }}  
         bg={colorMode === "dark" ? cardDarkColor : cardLightColor}
@@ -186,7 +305,7 @@ const LabelingWorkspace: React.FC<WorkspaceProps> = ({sideBarVisible}) => {
                   </TabPanel>
                 </TabPanels>
               </Tabs>
-
+              {/* Invite Code Model */}
               <Modal isOpen={isOpenInvite} onClose={onCloseInvite} isCentered>
                   <ModalOverlay />
                   <ModalContent>
@@ -201,17 +320,101 @@ const LabelingWorkspace: React.FC<WorkspaceProps> = ({sideBarVisible}) => {
                       </ModalFooter>
                   </ModalContent>
               </Modal>
+              {/* Project Create Model */}
               <Modal isOpen={isOpenProject} onClose={onCloseProject} isCentered>
                   <ModalOverlay />
-                  <ModalContent>
+                  <ModalContent as="form" onSubmit={(e: any) => formik.handleSubmit(e)}>
                       <ModalHeader>Create New Projects</ModalHeader>
                       <ModalCloseButton />
                       <ModalBody>
                           {/* Display project create modal here */}
+                          <VStack spacing={4} align="start">
+                          <FormControl>
+                            <FormLabel>Project Name</FormLabel>
+                            <Input name="projectName" onChange={formik.handleChange} value={formik.values.projectName} />
+                          </FormControl>
+                          <FormControl>
+                            <FormLabel>Project Info(description)</FormLabel>
+                            <Input name="projectDescription" onChange={formik.handleChange} value={formik.values.projectDescription} />
+                          </FormControl>
+                          <FormControl>
+                            <FormLabel>Select Dataset</FormLabel>
+                            <Select name="dataset_id" onChange={handleDatasetIdChange} value={formik.values.dataset_id.toString()}>
+                                {datasets.map((dataset) => (
+                                  <option key={dataset.dataset_id} value={dataset.dataset_id}>
+                                    {dataset.dataset_name}
+                                  </option>
+                                ))}
+                            </Select>
+                          </FormControl>
+                          <FormControl>
+                          <Flex wrap="wrap">
+                            <FormLabel>Apply Preprocessing</FormLabel>
+                            <Checkbox name="preprocessing" onChange={formik.handleChange} isChecked={formik.values.preprocessing} />
+                          </Flex>
+                            {formik.values.preprocessing && (
+                              <>
+                                <Select
+                                  // placeholder="Select preprocessing option"
+                                  onChange={(event) => {
+                                    const value = event.target.value;
+                                    if (value && !preprocessTags.includes(value)) {
+                                      setPreprocessTags([...preprocessTags, value]);
+                                    }
+                                  }}
+                                  value="" // 선택 후 Select를 초기화합니다.
+                                >
+                                  <option value="" disabled hidden>
+                                    Select preprocessing option
+                                  </option>                                  
+                                  {preprocessingOptions.map((option, index) => (
+                                    <option key={index} value={option}>
+                                      {option.charAt(0).toUpperCase() + option.slice(1)}
+                                    </option>
+                                  ))}
+                                </Select>
+                                <Flex wrap="wrap">
+                                  {preprocessTags.map((tag, index) => (
+                                    <Flex key={index} align="center">
+                                      <Tag size="md" variant="solid" colorScheme="blue" mt={2}>
+                                        <TagLabel>{tag}</TagLabel>
+                                        <TagCloseButton onClick={() => handleRemovePreprocessTag(tag)} />
+                                      </Tag>
+                                      {index < preprocessTags.length - 1 && <ArrowForwardIcon mt={2}/>}
+                                    </Flex>
+                                  ))}
+                                </Flex>
+                              </>
+                            )}
+                          </FormControl>
+                          <FormControl>
+                            <FormLabel>Configure Class</FormLabel>
+                            <HStack>
+                              <Input value={inputValue} onChange={(e) => setInputValue(e.target.value)} />
+                              <Button onClick={handleAddClassTag}>Add</Button>
+                            </HStack>
+                            <Box mt={2}>
+                              {classTags.map((tag) => (
+                                <Tag key={tag} size="md" variant="solid" colorScheme="blue" mr={2} mt={2}>
+                                  <TagLabel>{tag}</TagLabel>
+                                  <TagCloseButton onClick={() => handleRemoveClassTag(tag)} />
+                                </Tag>
+                              ))}
+                            </Box>
+                          </FormControl>
+                          <FormControl>
+                            <FormLabel>Task Type Select</FormLabel>
+                            <Select name="taskType" onChange={formik.handleChange} value={formik.values.taskType}>
+                              <option value="classification">Classification</option>
+                              <option value="objectDetection">Object Detection</option>
+                              <option value="semanticSegmentation">Semantic Segmentation</option>
+                              <option value="instanceSegmentation">Instance Segmentation</option>
+                            </Select>
+                          </FormControl>
+                        </VStack>
                       </ModalBody>
-
                       <ModalFooter>
-                          <Button onClick={onCloseProject}>Close</Button>
+                          <Button type="submit" colorScheme="blue">Create</Button>
                       </ModalFooter>
                   </ModalContent>
               </Modal>
