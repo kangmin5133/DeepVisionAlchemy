@@ -25,8 +25,12 @@ import {
   Select, Checkbox, FormControl, FormLabel, VStack, HStack, Tag, TagLabel, TagCloseButton 
 } from "@chakra-ui/react";
 import { ArrowForwardIcon } from "@chakra-ui/icons";
+import { FiCopy, FiCheck } from "react-icons/fi";
 
 import UserAuthState from "../states/userAuthState"
+import { useDispatch } from 'react-redux';
+import { AnyAction } from 'redux';
+
 import axios from "axios"; 
 import config from "../../conf/config";
 
@@ -53,6 +57,9 @@ import {
 } from '../states/testval';
 
 import { useFormik } from "formik";
+import { CopyToClipboard } from 'react-copy-to-clipboard';
+
+import ProjectTable from "../components/Table/ProjectTable";
 
 interface WorkspaceProps {
   sideBarVisible : boolean;
@@ -61,8 +68,8 @@ interface WorkspaceProps {
 interface FormValues {
   projectName: string;
   projectDescription: string;
-  dataset_id : number;
-  workspace_id : number;
+  datasetId : number;
+  workspaceId : number;
   preprocessing: boolean;
   preprocessTags : string[],
   taskType: string;
@@ -81,6 +88,19 @@ interface Dataset {
   created: string;
 }
 
+interface Project {
+  project_id : number;
+  project_name : string;
+  project_desc : string | null;
+  workspace_id : number; 
+  dataset_id : number;
+  org_id : number | null;
+  creator_id : number; 
+  preprocess_processes : string[] | null;
+  classes : string[]
+  created : string;
+}
+
 const LabelingWorkspace: React.FC<WorkspaceProps> = ({sideBarVisible}) => {
 
   // states
@@ -91,8 +111,16 @@ const LabelingWorkspace: React.FC<WorkspaceProps> = ({sideBarVisible}) => {
   if (isNaN(workspaceId)) {
     console.log("workspaceId is Nan")
   }
+  const [invitationCode, setInvitationCode] =  useState<string>("");
+  const [copySuccess, setCopySuccess] = useState<string>("");
+  const [isCopied, setIsCopied] = useState<boolean>(false);
   const [datasets, setDatasets] = useState<Dataset[]>([]);
   const [selectedDatasetId, setSelectedDatasetId] = useState<number>(0);
+
+  const [projectData, setProjectData] = useState<Project[]>([]);
+  const [detailViewActive, setDetailViewActive] = useState<boolean>(false);
+  const [showUDButtons, setShowUDButtons] = useState(false);
+  const [selectedProjectId, setSelectedProjectId] = useState<number>(0);
 
   const { colorMode, toggleColorMode } = useColorMode();
   const cardDarkColor = "linear-gradient(127.09deg, rgba(6, 11, 40, 0.94) 19.41%, rgba(10, 14, 35, 0.49) 76.65%)";
@@ -104,39 +132,42 @@ const LabelingWorkspace: React.FC<WorkspaceProps> = ({sideBarVisible}) => {
   const { isOpen: isOpenInvite, onOpen: onOpenInvite, onClose: onCloseInvite } = useDisclosure();
   const { isOpen: isOpenProject, onOpen: onOpenProject, onClose: onCloseProject } = useDisclosure();
 
-
   const [classTags, setClassTags] = useState<string[]>([]);
   const [preprocessTags, setPreprocessTags] = useState<string[]>([]);
   const [inputValue, setInputValue] = useState<string>('');
-
-  
 
   const formik = useFormik<FormValues>({
     initialValues: {
       projectName: '',
       projectDescription: '',
-      dataset_id : 0,
-      workspace_id : 0,
+      datasetId : 0,
+      workspaceId : 0,
       preprocessing: false,
       preprocessTags : [],
       taskType: '',
       classTags : []
     },
-    onSubmit: (values) => {
+    onSubmit: async (values) => {
       // submit your form to server
-      values.dataset_id = selectedDatasetId;
-      values.workspace_id = workspaceId;
+      values.datasetId = selectedDatasetId | datasets[0].dataset_id;
+      values.workspaceId = workspaceId;
       values.preprocessTags = preprocessTags;
       values.classTags = classTags;
       console.log("submit values : ",values)
+      try {
+        const response = await axios.post(`${config.serverUrl}/rest/api/project/create`, values, {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+        setProjectData(oldData => [...oldData, response.data]);
+      } catch (error) {
+        console.error(error);
+      }
     },
   });
 
-  
-
   const preprocessingOptions = ["resize", "rotate", "grayscale", "sharpening", "contrast"];
-  const [selectedOptions, setSelectedOptions] = useState<string[]>([]);
-
 
   // handlers
   const handleDatasetIdChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
@@ -154,25 +185,8 @@ const LabelingWorkspace: React.FC<WorkspaceProps> = ({sideBarVisible}) => {
     setClassTags(classTags.filter((tag) => tag !== tagToRemove));
   };
 
-  const handleAddPreprocessTag = () => {
-    if (inputValue && !preprocessTags.includes(inputValue)) {
-      setPreprocessTags([...preprocessTags, inputValue]);
-    }
-    setInputValue('');
-  };
-
   const handleRemovePreprocessTag = (tagToRemove: string) => {
     setPreprocessTags(preprocessTags.filter((tag) => tag !== tagToRemove));
-  };
-
-  // 선택한 전처리 항목을 화면에 추가
-  const handleAddOption = (option:string) => {
-    setSelectedOptions([...selectedOptions, option]);
-  };
-  
-  // 전처리 항목을 화면에서 삭제
-  const handleRemoveOption = (option:string) => {
-    setSelectedOptions(selectedOptions.filter((item) => item !== option));
   };
 
   const handleCopyInviteCode = () => {
@@ -183,16 +197,31 @@ const LabelingWorkspace: React.FC<WorkspaceProps> = ({sideBarVisible}) => {
   //hooks
   useEffect(() => {
     const fetchDatasets = async () => {
+      // if (user){
+      // }
       try {
         const response = await axios.get(`${config.serverUrl}/rest/api/dataset/get`, { params: { user_id: user?.user_id} });
         setDatasets(response.data);
-        console.log("dataset info fetched")
+        console.log("dataset fetched")
       } catch (error) {
         console.error('Failed to fetch datasets:', error);
       }
     };
     fetchDatasets();
-  }, []);
+  }, [user, isOpenProject]);
+
+  useEffect(() => {
+    const fetchInviteCode = async () => {
+      try {
+        const response = await axios.get(`${config.serverUrl}/rest/api/workspace/get/invitation`, { params: { workspace_id: workspaceId} });
+        setInvitationCode(response.data.invitation_code);
+        console.log("invitation code fetched")
+      } catch (error) {
+        console.error('Failed to fetch invitation code:', error);
+      }
+    };
+    fetchInviteCode();
+  }, [user,workspaceId]);
 
   return (
     <Box p={8} pl={paddingLeft} 
@@ -307,18 +336,22 @@ const LabelingWorkspace: React.FC<WorkspaceProps> = ({sideBarVisible}) => {
               </Tabs>
               {/* Invite Code Model */}
               <Modal isOpen={isOpenInvite} onClose={onCloseInvite} isCentered>
-                  <ModalOverlay />
-                  <ModalContent>
-                      <ModalHeader>Copy Invite Code</ModalHeader>
-                      <ModalCloseButton />
-                      <ModalBody>
-                          {/* Display invite code here */}
-                      </ModalBody>
-
-                      <ModalFooter>
-                          <Button onClick={onCloseInvite}>Close</Button>
-                      </ModalFooter>
-                  </ModalContent>
+                <ModalOverlay />
+                <ModalContent>
+                  <ModalHeader>Copy Invite Code</ModalHeader>
+                  <ModalCloseButton />
+                  <ModalBody>
+                    <HStack spacing="24px">
+                      <Text>{invitationCode}</Text>
+                      <CopyToClipboard text={invitationCode} onCopy={() => setIsCopied(true)}>
+                        <Button>{isCopied ? <FiCheck /> : <FiCopy />}</Button>
+                      </CopyToClipboard>
+                    </HStack>
+                  </ModalBody>
+                  <ModalFooter>
+                    <Button onClick={onCloseInvite}>Close</Button>
+                  </ModalFooter>
+                </ModalContent>
               </Modal>
               {/* Project Create Model */}
               <Modal isOpen={isOpenProject} onClose={onCloseProject} isCentered>
@@ -339,7 +372,7 @@ const LabelingWorkspace: React.FC<WorkspaceProps> = ({sideBarVisible}) => {
                           </FormControl>
                           <FormControl>
                             <FormLabel>Select Dataset</FormLabel>
-                            <Select name="dataset_id" onChange={handleDatasetIdChange} value={formik.values.dataset_id.toString()}>
+                            <Select name="dataset_id" onChange={handleDatasetIdChange} value={formik.values.datasetId.toString()}>
                                 {datasets.map((dataset) => (
                                   <option key={dataset.dataset_id} value={dataset.dataset_id}>
                                     {dataset.dataset_name}
@@ -439,6 +472,15 @@ const LabelingWorkspace: React.FC<WorkspaceProps> = ({sideBarVisible}) => {
           barChartOptions={barChartOptionsDashboard}
           />
       </Grid>
+      {/* project list view */}
+      <ProjectTable 
+      projectData = {projectData}
+      showUDButtons = {showUDButtons}
+      setShowUDButtons = {setShowUDButtons}
+      setDetailViewActive = {setDetailViewActive}
+      setSelectedProjectId = {setSelectedProjectId}
+      selectedProjectId = {selectedProjectId}
+      />
     </Box>
   );
 }

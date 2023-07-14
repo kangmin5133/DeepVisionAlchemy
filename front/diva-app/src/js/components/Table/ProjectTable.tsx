@@ -21,10 +21,14 @@ import ProjectTableRow from "./ProjectTableRow";
 
 interface ProjectData {
   project_id : number;
+  project_name : string;
+  project_desc : string | null;
+  workspace_id : number; 
+  dataset_id : number;
   org_id : number | null;
   creator_id : number; 
-  project_name : string ;
-  project_desc : string | null;
+  preprocess_processes : string[] | null;
+  classes : string[]
   created : string;
 }
 
@@ -50,7 +54,7 @@ const ProjectTable: React.FC<ProjectTableProps> = ({
       <Card overflowX={{ sm: "scroll", xl: "hidden" }} pb='0px'>
       <CardHeader p='6px 0px 22px 0px'>
         <Text fontSize='lg' color='#fff' fontWeight='bold'>
-          Dataset List
+          Projects
         </Text>
       </CardHeader>
       <CardBody>
@@ -62,25 +66,31 @@ const ProjectTable: React.FC<ProjectTableProps> = ({
                 color='gray.400'
                 fontFamily='Plus Jakarta Display'
                 borderBottomColor='#56577A'>
-                Dataset Name
+                Project Name
               </Th>
               <Th
                 color='gray.400'
                 fontFamily='Plus Jakarta Display'
                 borderBottomColor='#56577A'>
-                Type
+                Registered Dataset
               </Th>
               <Th
                 color='gray.400'
                 fontFamily='Plus Jakarta Display'
                 borderBottomColor='#56577A'>
-                Count
+                Categories
               </Th>
               <Th
                 color='gray.400'
                 fontFamily='Plus Jakarta Display'
                 borderBottomColor='#56577A'>
                 Created
+              </Th>
+              <Th
+                color='gray.400'
+                fontFamily='Plus Jakarta Display'
+                borderBottomColor='#56577A'>
+                Progress
               </Th>
               <Th borderBottomColor='#56577A'></Th>
             </Tr>

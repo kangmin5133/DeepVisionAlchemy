@@ -8,18 +8,11 @@ import {
     FormControl, 
     FormLabel, 
     Input, 
-    Stack,
     Button, 
-    Heading, 
-    useColorModeValue,
-    Icon,
     HStack,
     Link,
-    DarkMode,
-    Switch,
     Text,
-    Image,
-    Spacer
+    Image
 } from '@chakra-ui/react';
 // import { FaApple, FaFacebook, FaGoogle } from "react-icons/fa";
 import GoogleIcon from '../../assets/google.png';

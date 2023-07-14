@@ -22,7 +22,7 @@ import axios from 'axios';
 import { useDispatch } from 'react-redux';
 import config from "../../conf/config";
 import { AnyAction } from 'redux';
-import { logout, User } from '../actions/authActions';
+import { logout } from '../actions/authActions';
 
 
 interface TopbarProps {
