@@ -30,9 +30,16 @@ async def createWorkSpace(request: dict = None, db: Session = Depends(get_db)):
 
 @router.get("/get")
 async def getWorkSpaceByUserId(creator_id: int = None, db: Session = Depends(get_db)):
-    print("getWorkSpaceByUserId in")
     if creator_id is None:
         raise HTTPException(status_code=404,detail="creator_id required")
     
     response = await workspace_service.get_workspaces_by_creator_id(creator_id = creator_id,db = db)
+    return JSONResponse(content=response)
+
+@router.get("/get/invitation")
+async def getInvitationCode(workspace_id: int = None, db: Session = Depends(get_db)):
+    if workspace_id is None:
+        raise HTTPException(status_code=404,detail="workspace_id required")
+    
+    response = await workspace_service.get_invitation_code(workspace_id = workspace_id,db = db)
     return JSONResponse(content=response)

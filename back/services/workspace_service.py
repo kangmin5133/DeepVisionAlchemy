@@ -45,8 +45,11 @@ async def create_workspace(request:dict, db:Session):
 
     return result
 
-async def get_workspace_by_invitation_link(invitation_link:str, db:Session):
-    pass
+async def get_invitation_code(workspace_id:str, db:Session):
+    result = crud.get_workspace( db = db, workspace_id = workspace_id)
+    response_data = {"workspace_id":result.workspace_id, 
+                     "invitation_code": result.invitation_link}
+    return response_data
 
 async def get_workspaces_by_creator_id(creator_id:int, db:Session):
     results = crud.get_workspaces_by_creator_id(db= db,creator_id=creator_id)

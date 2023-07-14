@@ -35,7 +35,7 @@ async def getImageDataRange(dataset_id: int = None,
                                                      db = db)
     return JSONResponse(content=response)
 
-@router.get("/get/image")
+@router.get("/get/images")
 async def getImageData(dataset_id: int = None, db: Session = Depends(get_db)):
     if dataset_id is None:
         raise HTTPException(status_code=404,detail="dataset_id must required!")

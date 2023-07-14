@@ -42,11 +42,11 @@ user_project_roles_association = Table(
     Column('project_id', Integer, ForeignKey('project.project_id',ondelete='CASCADE',onupdate='CASCADE'))
 )
 
-user_datasets_association = Table(
-    'user_datasets', Base.metadata,
-    Column('user_id', Integer, ForeignKey('user.user_id',ondelete='CASCADE',onupdate='CASCADE')),
-    Column('dataset_id', Integer, ForeignKey('dataset.dataset_id',ondelete='CASCADE',onupdate='CASCADE'))
-)
+# user_datasets_association = Table(
+#     'user_datasets', Base.metadata,
+#     Column('user_id', Integer, ForeignKey('user.user_id',ondelete='CASCADE',onupdate='CASCADE')),
+#     Column('dataset_id', Integer, ForeignKey('dataset.dataset_id',ondelete='CASCADE',onupdate='CASCADE'))
+# )
 
 
 # Tables
@@ -130,7 +130,7 @@ class User(Base):
     teams = relationship("Team", secondary="user_teams", back_populates="users")
     created_organizations = relationship("Organization", back_populates="creator")
     organizations = relationship("Organization", secondary=user_organization_association, back_populates="users")
-    datasets = relationship("Dataset", secondary=user_datasets_association, back_populates="users")
+    # datasets = relationship("Dataset", secondary=user_datasets_association, back_populates="users")
 
 class Organization(Base):
     __tablename__ = "organization"
@@ -211,7 +211,7 @@ class Dataset(Base):
     created = Column(DateTime(timezone=True), server_default=func.now())
     updated = Column(DateTime(timezone=True), onupdate=func.now())
 
-    users = relationship("User", secondary=user_datasets_association, back_populates="datasets")
+    # users = relationship("User", secondary=user_datasets_association, back_populates="datasets")
     projects = relationship("Project", secondary=dataset_projects_association, back_populates="datasets")
     organization = relationship("Organization", back_populates="datasets")
     

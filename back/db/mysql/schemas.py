@@ -45,7 +45,7 @@ class UserBase(BaseModel):
     provider: Optional[int]
     name: Optional[str]
     membership_id: int
-    profile_image: str
+    profile_image: Optional[str]
 
 class OrganizationBase(BaseModel):
     org_email: str
@@ -129,6 +129,7 @@ class UserUpdate(UserBase):
     provider: Optional[int]
     name: Optional[str]
     membership_id: Optional[int]
+    profile_image: Optional[str]
 
 class OrganizationUpdate(OrganizationBase):
     org_email: Optional[str]
