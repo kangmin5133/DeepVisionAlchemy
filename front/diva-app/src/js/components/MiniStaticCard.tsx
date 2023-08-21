@@ -27,9 +27,9 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 
 interface MiniStaticCardProps {
-  colorMode : string;
-  cardDarkColor : string;
-  cardLightColor : string;
+  colorMode ?: string;
+  cardDarkColor? : string;
+  cardLightColor? : string;
   title: string;
   value: string | number;
   description : string;
@@ -37,7 +37,9 @@ interface MiniStaticCardProps {
 
 const MiniStaticCard: React.FC<MiniStaticCardProps> = ({ colorMode,cardDarkColor,cardLightColor,title, value,description }) => {
   return (
-    <Card bg={colorMode === "dark" ? cardDarkColor : cardLightColor}>
+    <Card 
+    // bg={colorMode === "dark" ? cardDarkColor : cardLightColor}
+    >
       <CardBody>
         <Flex flexDirection='row' align='center' justify='center' w='100%'>
           <Stat me='auto'>

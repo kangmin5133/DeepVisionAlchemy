@@ -112,7 +112,10 @@ const Sidebar: React.FC<SidebarProps> =  ({ isVisible }) => {
           ps='20px'
           pe='20px'
           m={sidebarMargins}
-          borderRadius={sidebarRadius}>
+          borderRadius={sidebarRadius}
+          borderWidth= "0.15rem" // 테두리 두께 설정
+          borderColor="teal" // 테두리 색상 설정
+          >
           <Box>{brand}</Box>
           <Stack direction='column' mb='40px'>
             {/* Links */}

@@ -36,7 +36,7 @@ interface WorkSpace {
 }
 
 interface WorkListProps {
-  WorkListViewProps : WorkListViewProps;
+  WorkListViewProps? : WorkListViewProps;
   workspaceData : WorkSpace[];
   setShowUDButtons : React.Dispatch<React.SetStateAction<boolean>>;
   showUDButtons : boolean;
@@ -57,7 +57,8 @@ export const WorkListView : React.FC<WorkListProps> = ({
         <Card 
             p='16px' 
             overflowX={{ sm: 'scroll', xl: 'hidden' }} 
-            bg={WorkListViewProps.colorMode === "dark" ? WorkListViewProps.cardDarkColor : WorkListViewProps.cardLightColor}>
+            // bg={WorkListViewProps.colorMode === "dark" ? WorkListViewProps.cardDarkColor : WorkListViewProps.cardLightColor}
+            >
               <CardHeader p='12px 0px 28px 0px'>
                 <Flex direction='column'>
                   <Text fontSize='lg' color='#fff' fontWeight='bold' pb='8px' align='left'>

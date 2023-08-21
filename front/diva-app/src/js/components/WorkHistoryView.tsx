@@ -19,16 +19,17 @@ import {
   } from "@chakra-ui/react";
 
 interface WorkHistoryViewProps {
-    colorMode : string;
-    cardDarkColor : string;
-    cardLightColor : string;    
+    colorMode ?: string;
+    cardDarkColor ?: string;
+    cardLightColor ?: string;    
 }
 
 export const WorkHistoryView : React.FC<WorkHistoryViewProps> = ({colorMode,cardDarkColor,cardLightColor}) => {
 
     return (
       <Card 
-      bg={colorMode === "dark" ? cardDarkColor : cardLightColor}>
+      // bg={colorMode === "dark" ? cardDarkColor : cardLightColor}
+      >
         <CardHeader mb='32px'>
           <Flex direction='column'>
             <Text fontSize='lg' color='#fff' fontWeight='bold' mb='6px' align='left'>

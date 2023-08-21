@@ -19,18 +19,18 @@ import {
 	Stack,
 } from '@chakra-ui/react';
 
-import Card from "../components/Card/Card";
-import CardHeader from "../components/Card/CardHeader";
-import CardBody from "../components/Card/CardBody";
-import IconBox from "../components/IconBox";
-import { AiFillCheckCircle } from 'react-icons/ai';
-import { BiHappy } from 'react-icons/bi';
-import { IoCheckmarkDoneCircleSharp, IoEllipsisHorizontal } from 'react-icons/io5';
+// import Card from "../components/Card/Card";
+// import CardHeader from "../components/Card/CardHeader";
+// import CardBody from "../components/Card/CardBody";
+// import IconBox from "../components/IconBox";
+// import { AiFillCheckCircle } from 'react-icons/ai';
+// import { BiHappy } from 'react-icons/bi';
+// import { IoCheckmarkDoneCircleSharp, IoEllipsisHorizontal } from 'react-icons/io5';
 // for testing
 
 // import { useSelector } from "react-redux"; 
 import UserAuthState from "../states/userAuthState"
-import { User } from '../actions/authActions';
+// import { User } from '../actions/authActions';
 import axios from "axios"; 
 import config from "../../conf/config";
 
@@ -40,20 +40,14 @@ import WorkListView from "../components/WorkListView";
 import WorkHistoryView from "../components/WorkHistoryView";
 import SpaceCard from "../components/SpaceCard";
 
-import bgImage from "../../assets/alchemistic.png";
-import bgCardImg from '../../assets/back-ground-image.png';
-import bgCardImg2 from '../../assets/back-ground-image-card.png';
-import bgCardImg3 from '../../assets/back-ground-image-of-card2.png';
+// import bgImage from "../../assets/alchemistic.png";
+// import bgCardImg from '../../assets/back-ground-image.png';
+// import bgCardImg2 from '../../assets/back-ground-image-card.png';
+// import bgCardImg3 from '../../assets/back-ground-image-of-card2.png';
 
 interface DashboardProps {
   sideBarVisible : boolean;
 }
-
-// interface WorkListViewProps {
-//   colorMode : string;
-//   cardDarkColor : string;
-//   cardLightColor : string;    
-// }
 
 interface WorkSpace {
   workspace_id : number;
@@ -74,7 +68,9 @@ const Dashboard: React.FC<DashboardProps> = ({sideBarVisible}) => {
   const { colorMode, toggleColorMode } = useColorMode();
   const navigate = useNavigate();
 
-  const cardDarkColor = "linear-gradient(127.09deg, rgba(6, 11, 40, 0.94) 19.41%, rgba(10, 14, 35, 0.49) 76.65%)";
+  // const cardDarkColor = "linear-gradient(127.09deg, rgba(6, 11, 40, 0.94) 19.41%, rgba(10, 14, 35, 0.49) 76.65%)";
+  const bgColor = "linear-gradient(127.09deg, rgba(5, 20, 40, 0.94) 19.41%, rgba(10, 25, 45, 0.49) 76.65%)";
+  const cardDarkColor = "rgba(40, 60, 70, 1)";
   const cardLightColor = "linear-gradient(127.09deg, rgba(140, 140, 140, 0.94) 19.41%, rgba(200, 200, 200, 0.49) 76.65%)";
 
   const [workspaceData, setWorkspaceData] = useState<WorkSpace[]>([]);
@@ -109,9 +105,9 @@ const Dashboard: React.FC<DashboardProps> = ({sideBarVisible}) => {
 
 
   return (
-    <Box p={8} pl={paddingLeft} transition="all 0.5s ease-in-out" pt="60px" bg={colorMode === "dark" ? "gray.700" : "gray.100"} minH="100vh"
+    <Box p={8} pl={paddingLeft} transition="all 0.5s ease-in-out" pt="60px" bg={colorMode === "dark" ? bgColor : "gray.100"} minH="100vh"
     overflow="auto" height="100vh"
-    backgroundImage={bgImage}
+    // backgroundImage={bgImage}
     backgroundPosition="center"
     backgroundSize="cover">
       <Breadcrumbs />
@@ -152,11 +148,23 @@ const Dashboard: React.FC<DashboardProps> = ({sideBarVisible}) => {
           {/* SpaceCard */}
           <Grid templateColumns={{ sm: '1fr', md: '1fr 1fr', '2xl': '1.5fr 1.5fr 1.5fr' }} my='26px' gap='18px'>
               {/* Workspace Card */}
-              <SpaceCard header={"Create Workspace"} bgImage={bgCardImg} description={"Create your Workspace here"} target="/select/workspace"/>
+              <SpaceCard header={"Create Workspace"} 
+              colorMode={colorMode}
+              cardDarkColor={cardDarkColor}
+              cardLightColor={cardLightColor} 
+              description={"Create your Workspace here"} target="/select/workspace"/>
               {/* Dataset */}
-              <SpaceCard header={"Dataset Management"} bgImage={bgCardImg2} description={"regist yout own dataset here"} target="/dashboard/dataset"/>
+              <SpaceCard header={"Dataset Management"} 
+              colorMode={colorMode}
+              cardDarkColor={cardDarkColor}
+              cardLightColor={cardLightColor} 
+              description={"regist yout own dataset here"} target="/dashboard/dataset"/>
               {/* Model Hub */}
-              <SpaceCard header={"Model Hub"} bgImage={bgCardImg3} description={"Search AI Model for Your Project here"} target="/dashboard/modelhub"/>
+              <SpaceCard header={"Model Hub"} 
+              colorMode={colorMode}
+              cardDarkColor={cardDarkColor}
+              cardLightColor={cardLightColor} 
+              description={"Search AI Model for Your Project here"} target="/dashboard/modelhub"/>
           </Grid>
           {/* workspace list & history*/}
           <Grid templateColumns={{ sm: '1fr', md: '1fr 1fr', lg: '2fr 1fr' }} gap='24px'>
@@ -165,7 +173,7 @@ const Dashboard: React.FC<DashboardProps> = ({sideBarVisible}) => {
             selectedWorkspaceId = {selectedWorkspaceId}
             setShowUDButtons ={setShowUDButtons}
             showUDButtons = {showUDButtons}
-            WorkListViewProps={{"colorMode":colorMode,"cardDarkColor":cardDarkColor,"cardLightColor":cardLightColor}}
+            // WorkListViewProps={{"colorMode":colorMode,"cardDarkColor":cardDarkColor,"cardLightColor":cardLightColor}}
             workspaceData={workspaceData}
             />
             <WorkHistoryView 

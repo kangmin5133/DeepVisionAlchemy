@@ -8,6 +8,7 @@ import {
   Flex,
   SimpleGrid,
   Circle,
+  Spacer,
   useDisclosure, 
   Button, 
   Modal, 
@@ -21,22 +22,27 @@ import {
   FormLabel, 
   Input,
   VStack,
-  HStack
+  HStack,
+  useColorMode,
+  Menu, MenuButton, MenuList, MenuItem, IconButton
 } from "@chakra-ui/react";
 import { AiFillFile } from 'react-icons/ai';
+import { AddIcon, ViewIcon} from "@chakra-ui/icons";
+import { FaTh } from 'react-icons/fa';
 
 import config from "../../conf/config";
 
 import Breadcrumbs from "../components/Breadcrumbs";
 import bgImage from "../../assets/alchemistic.png";
-import SpaceCard from "../components/SpaceCard";
 import { FaPlus } from "react-icons/fa";
 
+import { chunk } from 'lodash';
 import Card from "../components/Card/Card";
 import CardHeader from "../components/Card/CardHeader";
 import CardBody from "../components/Card/CardBody";
+import ObjectCard from '../components/Card/ObjectCard';
 
-import DatasetTableRow from "../components/Table/DatasetTable";
+
 
 import S3logo from "../../assets/Amazon-S3-Logo.png";
 import GCSlogo from "../../assets/Google_Storage-Logo.png";
@@ -48,6 +54,8 @@ import { User } from '../actions/authActions';
 
 import { Carousel } from 'react-responsive-carousel';
 import "react-responsive-carousel/lib/styles/carousel.min.css"; 
+
+import Table from "../components/Table/Table";
 
 // interface
 interface DatasetProps {
@@ -106,13 +114,47 @@ const Dataset: React.FC<DatasetProps> = ({sideBarVisible}) => {
 
   const [datasetData, setDatasetData] = useState<DatasetData[]>([]);
   const [selectedDatasetId, setSelectedDatasetId] = useState<number>(0);
+  // const [selectedObjId, setSelectedObjId] = useState<number>(0);
 
   const selectedDataset : DatasetData | undefined = datasetData.find(dataset => dataset.dataset_id === selectedDatasetId);
   const [imageData, setImageData] = useState<any>(null);
 
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+
+  const columns = [
+    { header: 'Dataset Name', field: 'dataset_name' },
+    { header: 'Type', field: 'dataset_type' },
+    { header: 'Count', field: 'dataset_count' },
+    { header: 'Created', field: 'created' }
+    // 다른 열 정의
+  ];
+
+  const previewContainerStyle = {
+    position: 'absolute' as 'absolute',
+    bottom: 24,
+    width: sideBarVisible ? `calc(96.5% - ${paddingLeft})` : `93.4vw`,    
+    height: isPreviewOpen ? '60vh' : '5vh',
+    transition: '0.5s ease-in-out',
+    overflow: 'hidden',
+  };
   
-  const [showUDButtons, setShowUDButtons] = useState(false);
+  const previewButtonStyle = {
+    top: 0,
+    height: 'auto',
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    cursor: 'pointer',
+  };
+
+  const { colorMode, toggleColorMode } = useColorMode();
+  const bgColor = "linear-gradient(127.09deg, rgba(5, 20, 40, 0.94) 19.41%, rgba(10, 25, 45, 0.49) 76.65%)";
+  const cardDarkColor = "rgba(40, 60, 70, 1)";
+  const cardLightColor = "linear-gradient(127.09deg, rgba(140, 140, 140, 0.94) 19.41%, rgba(200, 200, 200, 0.49) 76.65%)";
+
+  const [viewMode, setViewMode] = useState<string>('table');
+  const [orderMode, setOrderMode] = useState<string>('latest');
 
   //funcs
   const fetchImageData = async (datasetId: number, startIndex: number, endIndex: number, maxResult: number) => {
@@ -129,102 +171,109 @@ const Dataset: React.FC<DatasetProps> = ({sideBarVisible}) => {
 
   //components
   const datasetDetailView = () => {
-    if (!detailViewActive || selectedDatasetId === 0) {
+
+    const commonCardProps = {
+      backgroundRepeat: 'no-repeat',
+      bgSize: 'cover',
+      bgPosition: '10%',
+      // bgColor: "gray.700",
+      p: '0px 16px 16px 16px',
+      h: "100%",
+      borderWidth: "2px",
+      borderColor: "teal",
+      borderStyle : "dashed",
+      // mb: 4,
+      _hover: {
+        backgroundColor: 'rgba(0, 0, 0, 0.7)',
+        transition: 'background-color 0.2s',
+      },
+    };
+
+    const commonCardBodyProps = {
+      direction: 'column' as const,
+      color:'white',
+      h:'100%',
+      p: '0px 10px 20px 10px',
+      w:'100%',
+      justifyContent:"center",
+      align:"center"
+    };
+
+    if (isPreviewOpen){
+      if (!detailViewActive || selectedDatasetId === 0) {
+        return (
+          <Card {...commonCardProps}>
+            <Box style={previewButtonStyle} onClick={togglePreview}>
+              {isPreviewOpen ? '▼' : '▲'}
+            </Box>
+              <CardBody h='100%' w='100%'>
+                <Flex {...commonCardBodyProps}>
+                    No Selected Dataset
+                </Flex>
+              </CardBody>
+          </Card>
+        );
+      }
       return (
-        <Card
-          backgroundRepeat='no-repeat'
-          bgSize='cover'
-          bgPosition='10%'
-          bgColor="gray.700"
-          p='16px'
-          h = "100%"
-          borderStyle="dashed"
-          borderWidth="2px"
-          borderColor="gray.400"
-          mb={4}
-          _hover={{ 
-            backgroundColor: 'rgba(0, 0, 0, 0.7)',
-            transition: 'background-color 0.2s',
-          }}
-          >
-            <CardBody h='100%' w='100%'>
-              <Flex
-                direction='column'
-                color='white'
-                h='100%'
-                p='0px 10px 20px 10px'
-                w='100%'
-                justifyContent="center"
-                align="center">
-                  No Selected Dataset
-              </Flex>
-            </CardBody>
-        </Card>
-      );
-    }
-    return (
-      <Card
-          backgroundRepeat='no-repeat'
-          bgSize='cover'
-          bgPosition='10%'
-          bgColor="gray.700"
-          p='16px'
-          h = "100%"
-          borderWidth="2px"
-          borderColor="gray.400"
-          mb={4}
-          _hover={{ 
-            backgroundColor: 'rgba(0, 0, 0, 0.7)',
-            transition: 'background-color 0.2s',
-          }}
-          >
-            <CardBody h='100%' w='100%'>
-              <Flex
-                direction='column'
-                color='white'
-                h='100%'
-                p='0px 10px 20px 10px'
-                w='100%'
-                justifyContent="center"
-                align="center">
-                  {selectedDataset && (
-                    <Box>
-                      <Box h='100%' w='100%'>
-                        <Text fontSize="xl" align="center" justifyContent="center">
-                          Dataset Preview
-                        </Text>
-                        <Carousel 
-                          showThumbs={false} 
-                          showStatus={false} 
-                          onChange={handleSlideChange}
-                          selectedItem={currentSlide}
-                        >
-                          {imageData && imageData.images.map((image: any, index: number) => (
-                            <Box 
-                            key={index}
-                            h="400px" 
-                            w="100%"
-                            >
-                              <Image 
-                              src={`data:image/jpeg;base64,${image.image}`} 
-                              objectFit="contain" 
-                              maxWidth="100%" 
-                              maxHeight="100%" 
-                              borderRadius="16px"/>
-                            </Box>
-                          ))}
-                        </Carousel>
+        <Card {...commonCardProps}>
+          <Box style={previewButtonStyle} onClick={togglePreview}>
+            {isPreviewOpen ? '▼' : '▲'}
+          </Box>
+              <CardBody h='100%' w='100%'> 
+                <Flex {...commonCardBodyProps}>
+                    {selectedDataset && (
+                      <Box>
+                        <Box h='100%' w='100%'>
+                          <Text fontSize="xl" align="center" justifyContent="center">
+                            Dataset Preview
+                          </Text>
+                          <Carousel 
+                            showThumbs={false} 
+                            showStatus={false} 
+                            onChange={handleSlideChange}
+                            selectedItem={currentSlide}
+                          >
+                            {imageData && imageData.images.map((image: any, index: number) => (
+                              <Box 
+                              key={index}
+                              h="400px" 
+                              w="100%"
+                              >
+                                <Image 
+                                src={`data:image/jpeg;base64,${image.image}`} 
+                                objectFit="contain" 
+                                maxWidth="100%" 
+                                maxHeight="100%" 
+                                borderRadius="16px"/>
+                              </Box>
+                            ))}
+                          </Carousel>
+                        </Box>
+                        <Text fontSize="xl">Name: {selectedDataset.dataset_name}</Text>
+                        <Text fontSize="xl">Description: {selectedDataset.dataset_desc || 'No description provided'}</Text>
+                        {/* Add more fields as needed */}
                       </Box>
-                      <Text fontSize="xl">Name: {selectedDataset.dataset_name}</Text>
-                      <Text fontSize="xl">Description: {selectedDataset.dataset_desc || 'No description provided'}</Text>
-                      {/* Add more fields as needed */}
-                    </Box>
-                  )}
-              </Flex>
-            </CardBody>
+                    )}
+                </Flex>
+              </CardBody>
+          </Card>
+      )
+    } else {
+      return(
+        <Card {...commonCardProps}>
+          <Box style={previewButtonStyle} onClick={togglePreview}>
+            {isPreviewOpen ? '▼' : '▲'}
+          </Box>
+          {/* <CardBody h='100%' w='100%'>
+            <Flex {...commonCardBodyProps}/>
+              
+            
+          </CardBody> */}
         </Card>
-    )
+      )
+    }
   }
+
   const bucketInputForm = () => {
     return (
       <>
@@ -302,23 +351,10 @@ const Dataset: React.FC<DatasetProps> = ({sideBarVisible}) => {
       setUploadedFileName(e.target.files[0].name);
     }
   };
-  const handleRegisterClick = async () => {
-    // let jsonData: {
-    //   credentials?: { accessKeyId?: string; secretAccessKey?: string; jsonFile?: string };
-    //   bucketInfo: BucketInfo;
-    //   datasetInfo: { name: string; desc: string };
-    //   user: User | null;
-    //   dataType: string;
-    // } = {
-    //   bucketInfo,
-    //   datasetInfo: { name: datasetInfo.name, desc: datasetInfo.desc },
-    //   user,
-    //   dataType: selectedBox || '',
-    // };
-    
+  const handleRegisterClick = async () => {    
     let jsonData: {
       credentials?: { accessKeyId?: string; secretAccessKey?: string; jsonFile?: string };
-      bucketInfo: BucketInfo;
+      bucketInfo?: BucketInfo;
       datasetInfo: { name: string; desc: string };
       user: { email: string; name: string } | null;
       dataType: string;
@@ -351,6 +387,10 @@ const Dataset: React.FC<DatasetProps> = ({sideBarVisible}) => {
       jsonData = { ...jsonData, credentials: encodedCredentials };
     }
 
+    else if (selectedBox === "Local upload") {
+      jsonData = { ...jsonData};
+    }
+
     // Make the API request
     try {
       console.log("jsonData : ",jsonData)
@@ -371,52 +411,64 @@ const Dataset: React.FC<DatasetProps> = ({sideBarVisible}) => {
   const handleSlideChange = (currentIndex: number) => {
     setCurrentSlide(currentIndex);
   };
+  const handleRowClick = (row: any) => {
+    setSelectedDatasetId(row.dataset_id); // 또는 row.user_id, row.workspace_id 등
+    setDetailViewActive(true);
+    setIsPreviewOpen(true);
+  };
+  const togglePreview = () => {
+    setIsPreviewOpen(!isPreviewOpen);
+  };
+  const handleCardClick = (id: number) => {
+    // ID를 사용하여 필요한 작업 수행
+    console.log("selected ID : ",id)
+    setSelectedDatasetId(id); // 또는 row.user_id, row.workspace_id 등
+    setDetailViewActive(true);
+    setIsPreviewOpen(true);
+  };
 
   return (
-    <Box p={8} pl={paddingLeft} transition="all 0.5s ease-in-out" pt="60px" overflow="auto" height="100vh" minH="100vh"
-    backgroundImage={bgImage}
+    <Box p={8} pl={paddingLeft} bg={colorMode === "dark" ? bgColor : "gray.100"} 
+    transition="all 0.5s ease-in-out" pt="60px" overflow="hidden" height="100vh" minH="100vh"
     backgroundPosition="center"
-    backgroundSize="cover">
-      <Breadcrumbs />
+    backgroundSize="cover"
+    >
+      <HStack spacing={2}>
+        <Breadcrumbs />
+        <Spacer />
+        <Button rightIcon={<AddIcon />} colorScheme="teal" variant="outline" onClick={onOpen}>
+          Add Dataset
+        </Button>
+      </HStack>
+      <HStack spacing={2}>
+      <Spacer />
+        <Menu>
+          <MenuButton>
+          order by ▿
+          </MenuButton>  
+          <MenuList>
+            <MenuItem onClick={() => setOrderMode('latest')}>latest</MenuItem>
+            <MenuItem onClick={() => setOrderMode('oldest')}>oldest</MenuItem>
+            <MenuItem onClick={() => setOrderMode('A-Z')}>A-Z</MenuItem>
+          </MenuList>
+        </Menu>
+        <Menu>
+          <MenuButton
+            as={IconButton}
+            aria-label="Options"
+            icon={<FaTh />}
+            variant="outline"
+          />
+          <MenuList>
+            <MenuItem onClick={() => setViewMode('table')}>Table View</MenuItem>
+            <MenuItem onClick={() => setViewMode('grid')}>Grid View</MenuItem>
+          </MenuList>
+        </Menu>
+      </HStack>
       <HStack>
         <VStack h='100%' w='100%'>
-        {/* add dataset card*/}
-        <Card
-          backgroundRepeat='no-repeat'
-          bgSize='cover'
-          bgPosition='10%'
-          p='16px'
-          // w="50%"
-          borderStyle="dashed"
-          borderWidth="2px"
-          borderColor="gray.400"
-          onClick={onOpen}
-          cursor="pointer"
-          mb={4}
-          _hover={{ // 이 부분을 추가
-            backgroundColor: 'rgba(0, 0, 0, 0.3)',
-            transition: 'background-color 0.2s',
-          }}
-          >
-          <CardBody h='100%' w='100%'>
-            <Flex
-              direction='column'
-              color='white'
-              h='100%'
-              p='0px 10px 20px 10px'
-              w='100%'
-              justifyContent="center"
-              align="center">
-                <Circle size="50px" bg="gray.400" color="white" onClick={onOpen}>
-                  <FaPlus size="24px" />
-                </Circle>
-                <Text mt="10px" fontSize="lg" color="white">
-                  Add Dataset
-                </Text>
-            </Flex>
-          </CardBody>
-          {/* Input Modal */}
-          <Modal isOpen={isOpen} onClose={onClose}>
+        {/* Input Modal */}
+        <Modal isOpen={isOpen} onClose={onClose}>
           <ModalOverlay />
           <ModalContent>
             <ModalHeader>Add a new dataset</ModalHeader>
@@ -565,18 +617,47 @@ const Dataset: React.FC<DatasetProps> = ({sideBarVisible}) => {
               <Button onClick={onClose}>Cancel</Button>
             </ModalFooter>
           </ModalContent>
-          </Modal>
-        </Card>
-        {/*Dataset list table*/}
-        <DatasetTableRow 
-        datasetData = {datasetData}
-        selectedDatasetId = {selectedDatasetId}
-        setSelectedDatasetId={setSelectedDatasetId} 
-        setDetailViewActive={setDetailViewActive}
-        setShowUDButtons = {setShowUDButtons}
-        showUDButtons = {showUDButtons}/>
+        </Modal>
+        {/*Dataset list table & Dataset card grid*/}
+        {
+        viewMode === 'table' ?
+        <Table
+          title={"Datasets"}
+          columns={columns}
+          data={datasetData}
+          handleRowClick={handleRowClick}
+          // 필요한 다른 props
+        />
+        :
+        <Carousel
+        showThumbs={false}
+        showStatus={false}
+        emulateTouch
+        >
+          {chunk(datasetData, 8).map((pageDatasets) => (
+            <SimpleGrid columns={4} spacing={6} 
+            style={{
+              marginBottom: '0.6rem',
+              padding : "2rem" // 원하는 간격 값으로 조정
+            }}
+            >
+              {pageDatasets.map((dataset) => (
+                <ObjectCard
+                  id={dataset.dataset_id}
+                  // imageSrc={dataset.imageSrc} // 적절한 이미지 소스
+                  title={dataset.dataset_name}
+                  onClick={handleCardClick}
+                />
+              ))}
+            </SimpleGrid>        
+          ))}
+        
+        </Carousel>
+        }
+        <Box style={previewContainerStyle}>
+          {datasetDetailView()}
+        </Box>
         </VStack>
-        {datasetDetailView()}
       </HStack>
     </Box>
     

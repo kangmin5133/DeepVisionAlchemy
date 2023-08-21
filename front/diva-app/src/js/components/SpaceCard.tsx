@@ -36,10 +36,13 @@ interface SpaceCardProps {
     header: string;
     description : string;
     target : string;
-    bgImage : string;
+    colorMode? : string;
+    cardDarkColor? : string;
+    cardLightColor? : string;
+    bgImage? : string;
   }
   
-const SpaceCard: React.FC<SpaceCardProps> = ({ header,description,target,bgImage}) => {
+const SpaceCard: React.FC<SpaceCardProps> = ({ header,description,target,bgImage, colorMode,cardDarkColor,cardLightColor}) => {
     const navigate = useNavigate();
     const urlTarget = target
     const parts = urlTarget.split("/");
@@ -49,6 +52,11 @@ const SpaceCard: React.FC<SpaceCardProps> = ({ header,description,target,bgImage
         p='0px'
         gridArea={{ md: '1 / 1 / 2 / 3', '2xl': 'auto' }}
         bgImage={bgImage}
+        _hover={{
+            backgroundColor: 'rgba(0, 0, 0, 0.7)',
+            transition: 'background-color 0.2s',
+          }}
+        // bg={colorMode === "dark" ? cardDarkColor : cardLightColor}
         bgSize='cover'
         bgPosition='50%'
         cursor="pointer"

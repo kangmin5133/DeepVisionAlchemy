@@ -14,7 +14,9 @@ const Card: React.FC<CardProps> = ({ variant, children, ...rest }) => {
       width: "100%",
       borderRadius: "20px",
       backgroundClip: "border-box",
-      boxShadow : "xl"
+      boxShadow : "xl",
+      borderWidth: "0.15rem", // 테두리 두께 설정
+      borderColor: "teal", // 테두리 색상 설정
   };
   return (
     <Box __css={styles} {...rest}>
