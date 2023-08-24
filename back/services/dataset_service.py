@@ -2,6 +2,8 @@ from fastapi import Depends, HTTPException
 from PIL import Image
 import io
 from datetime import datetime
+import cv2
+from io import BytesIO
 
 # for mysql 
 from sqlalchemy.orm import Session
@@ -202,7 +204,10 @@ async def create_dataset(request : dict, db:Session):
         
         
     else: # Local Upload
-        pass
+        dataset_type = DataSrcType.Local_Upload.value
+        en_dataset_credential = None
+        bucket_name = None
+        prefix = None
 
     # create dataset schema & insert to mysql
     user_info = request.get("user")
@@ -315,11 +320,6 @@ async def get_dataset_images_range(dataset_id : int,
         raise HTTPException(status_code=404,detail="dataset doesn't exist")
     
     if results.dataset_type == DataSrcType.Amazon_S3.value:
-        # todo : change get_files_in_s3 to mongoDB query
-        # file_names_list = get_files_in_s3(bucket_name = results.dataset_bucket_name,
-        #                                   prefix = results.dataset_prefix,
-        #                                   access_key_id = credential["access_key_id"], 
-        #                                   secret_access_key = credential["access_key_secret"])
         images = read_images_range_in_s3(bucket_name = results.dataset_bucket_name,
                                          file_names_list = file_names_list,
                                          start = startIndex, end = endIndex, 
@@ -328,10 +328,6 @@ async def get_dataset_images_range(dataset_id : int,
         
     elif results.dataset_type == DataSrcType.Google_Cloud_Storage.value:
         json_key = json.loads(credential["json_file"])
-        # todo : change get_files_in_gcs to mongoDB query
-        # file_names_list = get_files_in_gcs(bucket_name = results.dataset_bucket_name,
-        #                                   prefix = results.dataset_prefix,
-        #                                   json_key = json_key)
         images = read_images_range_in_gcs(bucket_name = results.dataset_bucket_name,
                                           file_names_list = file_names_list,
                                          start = startIndex, end = endIndex, 
@@ -349,6 +345,63 @@ async def get_dataset_images_range(dataset_id : int,
     return response
     
 
-async def getDatasetImage(dataset_id : int, db: Session):
-    pass
+async def getDatasetImage(dataset_id : int, image_id: int, db: Session):
     
+    results = crud.get_dataset_by_dataset_id(db = db, dataset_id = dataset_id)
+    
+    # get images path from mongoDB
+    db = get_nosql_db()
+    collection = db['images']
+    try:
+        query = {'dataset_id': dataset_id, 'id': image_id}
+        result = collection.find(query)[0]
+        if len(result)==0:
+        # raise HTTPException(status_code=404,detail="no data registered")
+        # make emtpy image for test
+            width, height = 256, 128
+            gray_value = 128
+            image = Image.new("L", (width, height), gray_value)
+            resized_image = image.resize((256, 128))
+            buffered = BytesIO()
+            resized_image.save(buffered, format="JPEG")
+            image_bytes = buffered.getvalue()
+    except:
+        width, height = 256, 128
+        gray_value = 128
+        image = Image.new("L", (width, height), gray_value)
+        resized_image = image.resize((256, 128))
+        buffered = BytesIO()
+        resized_image.save(buffered, format="JPEG")  # 또는 원하는 형식, 예: "PNG"
+        image_bytes = buffered.getvalue()    
+
+    if results.dataset_type == DataSrcType.Amazon_S3.value:
+        credential = decrypt_data(results.dataset_credential) 
+        image_bytes, width, height = read_image_in_s3(bucket_name = results.dataset_bucket_name,
+                                  object_key = result["file_name"],
+                                  access_key_id = credential["access_key_id"],
+                                  secret_access_key = credential["access_key_secret"]) #bucket_name, object_key, access_key_id, secret_access_key
+        original_image = Image.open(BytesIO(image_bytes))
+        new_size = (256, 128)
+        resized_image = original_image.resize(new_size)
+        buffered = BytesIO()
+        resized_image.save(buffered, format="JPEG")  # 원래 형식과 동일한 형식을 사용
+        image_bytes = buffered.getvalue()
+        
+    elif results.dataset_type == DataSrcType.Google_Cloud_Storage.value:
+        credential = decrypt_data(results.dataset_credential) 
+        json_key = json.loads(credential["json_file"])
+        image_bytes, width, height = read_image_in_gcs(bucket_name = results.dataset_bucket_name,
+                                   blob_name = result["file_name"],
+                                   json_key = json_key) #blob_name:str, json_key : json
+        original_image = Image.open(BytesIO(image_bytes))
+        new_size = (256, 128)
+        resized_image = original_image.resize(new_size)
+        buffered = BytesIO()
+        resized_image.save(buffered, format="JPEG")  # 원래 형식과 동일한 형식을 사용
+        image_bytes = buffered.getvalue()
+        
+    base64_image = base64.b64encode(image_bytes).decode('utf-8')
+    response = {"dataset_id": dataset_id, 
+                 "image" : base64_image}
+    
+    return response

@@ -35,26 +35,40 @@ async def getImageDataRange(dataset_id: int = None,
                                                      db = db)
     return JSONResponse(content=response)
 
-@router.get("/get/images")
-async def getImageData(dataset_id: int = None, db: Session = Depends(get_db)):
+@router.get("/get/image")
+async def getImageData(dataset_id: int = None,image_id : int = None, db: Session = Depends(get_db)):
     if dataset_id is None:
         raise HTTPException(status_code=404,detail="dataset_id must required!")
     
-    response = await dataset_service.get_dataset_images_range(dataset_id = dataset_id, db = db)
+    response = await dataset_service.getDatasetImage(dataset_id = dataset_id,image_id=image_id, db = db)
+    return JSONResponse(content=response)
+
+@router.get("/get/thumbnail")
+async def getImageThumbnail(dataset_id: int = None, db: Session = Depends(get_db)):
+    if dataset_id is None:
+        raise HTTPException(status_code=404,detail="dataset_id must required!")
+    
+    response = await dataset_service.getDatasetImage(dataset_id = dataset_id,image_id = 0, db = db)
     return JSONResponse(content=response)
 
 @router.post("/create")
 async def createDataset(request:dict, db: Session = Depends(get_db)):
     print("request from createDataset: ",request)
 
-    bucket_name = request["bucketInfo"]["bucketName"]
-    if bucket_name is None:
-        raise HTTPException(status_code=401,detail="must require bucketName")
+    if request["dataType"] is None:
+        raise HTTPException(status_code=401,detail="dataType missing")
     
-    prefix = request["bucketInfo"]["prefix"]
-    if prefix is None:
-        raise HTTPException(status_code=401,detail="must require prefix")
-    
+    if request["dataType"] == "Local upload":
+        pass
+    else:
+        bucket_name = request["bucketInfo"]["bucketName"]
+        if bucket_name is None:
+            raise HTTPException(status_code=401,detail="must require bucketName")
+        
+        prefix = request["bucketInfo"]["prefix"]
+        if prefix is None:
+            raise HTTPException(status_code=401,detail="must require prefix")
+        
     response = await dataset_service.create_dataset(request = request , db = db)
 
     return JSONResponse(content=str(response))

@@ -1,8 +1,12 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
-from apis import auth_api, dataset_api, workspace_api
+from apis import auth_api, dataset_api, workspace_api, project_api
+import logging
 # from config.logger import setup_logger
+
+logging.basicConfig()
+logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
 
 app = FastAPI()
 
@@ -24,6 +28,7 @@ app.add_middleware(
 app.include_router(auth_api.router)
 app.include_router(dataset_api.router)
 app.include_router(workspace_api.router)
+app.include_router(project_api.router)
 
 if __name__ == "__main__":
     # setup_logger()

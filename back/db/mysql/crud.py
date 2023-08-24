@@ -98,6 +98,9 @@ def delete_workspace(db: Session, workspace_id: int):
 def get_project(db: Session, project_id: int):
     return db.query(models.Project).filter(models.Project.project_id == project_id).first()
 
+def get_projects_by_workspace_id(db: Session, workspace_id:int):
+    return db.query(models.Project).filter(models.Project.workspace_id == workspace_id).all()
+
 def get_projects(db: Session, skip: int = 0, limit: int = 100):
     return db.query(models.Project).offset(skip).limit(limit).all()
 
@@ -107,6 +110,18 @@ def create_project(db: Session, project: schemas.ProjectCreate):
     db.commit()
     db.refresh(db_project)
     return db_project
+
+def associate_project_with_dataset(db: Session, project_id: int, dataset_id: int):
+    project = db.query(models.Project).filter(models.Project.project_id == project_id).first()
+    dataset = db.query(models.Dataset).filter(models.Dataset.dataset_id == dataset_id).first()
+
+    if project is None or dataset is None:
+        return None
+
+    project.datasets.append(dataset)
+    db.commit()
+    db.refresh(project)
+    return project
 
 def update_project(db: Session, project: schemas.ProjectUpdate, project_id: int):
     db.query(models.Project).filter(models.Project.project_id == project_id).update(project.dict())

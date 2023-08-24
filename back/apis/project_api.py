@@ -5,7 +5,7 @@ from db.mysql.database import get_db
 from fastapi.responses import JSONResponse
 
 from configs.config import Config
-from services import workspace_service
+from services import workspace_service, project_service
 import httpx
 from urllib.parse import urlencode
 
@@ -19,16 +19,40 @@ async def createProject(request: dict = None, db: Session = Depends(get_db)):
     data type : Project
       projectName: '',
       projectDescription: '',
-      dataset_id : 0,
-      workspace_id : 0,
+      datasetId : 0,
+      workspaceId : 0,
       preprocessing: false,
       preprocessTags : [],
       taskType: '',
       classTags : []
     """
     print("request : ", request)
-    # return JSONResponse(content=response)
+    if request.get("projectName") is None:
+        raise HTTPException(status_code=404,detail="project name must required!")
+    if request.get("datasetId") is None:
+        raise HTTPException(status_code=404,detail="dataset id must required!")
+    if request.get("workspaceId") is None:
+        raise HTTPException(status_code=404,detail="workspace id must required!")
+    if request.get("taskType") is None:
+        raise HTTPException(status_code=404,detail="project task type must required!")
 
-@router.get("/get")
-async def getProject(project_id: int = None, db: Session = Depends(get_db)):
-    pass
+    response = await project_service.create_project(request = request, db = db)
+    print("response : ",response)
+
+    return JSONResponse(content=response)
+
+@router.get("/get/by/projectid")
+async def getProjectByProjectId(project_id: int = None, db: Session = Depends(get_db)):
+    if project_id is None:
+        raise HTTPException(status_code=404,detail="project id must required!")
+    
+    response = await project_service.get_project_by_project_id(project_id = project_id,db = db)
+    return JSONResponse(content=response)
+
+@router.get("/get/by/workspaceid")
+async def getProjectsByUserIdAndWorkspaceId(workspace_id:int=None,db: Session = Depends(get_db)):
+    if workspace_id is None:
+        raise HTTPException(status_code=404,detail="workspace id must required!")
+    
+    response = await project_service.get_projects_by_workspace_id(workspace_id = workspace_id,db = db)
+    return JSONResponse(content=response)

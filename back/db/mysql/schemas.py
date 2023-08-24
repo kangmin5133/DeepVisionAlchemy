@@ -61,9 +61,13 @@ class WorkspaceBase(BaseModel):
     org_id: Optional[int] = None
 
 class ProjectBase(BaseModel):
+    workspace_id: int  
     project_type: int
     project_name: str
     desc: Optional[str] = None
+    project_preproccess: bool 
+    preproccess_tags: Optional[str] = None  
+    project_classes: Optional[str] = None  
 
 class DatasetBase(BaseModel):
     dataset_name: str
@@ -144,8 +148,12 @@ class WorkspaceUpdate(WorkspaceBase):
 
 
 class ProjectUpdate(ProjectBase):
-    project_name: Optional[str]
-    desc: Optional[str]
+    project_name: Optional[str] = None
+    desc: Optional[str] = None
+    project_preproccess: Optional[bool] = None  
+    preproccess_tags: Optional[str] = None  
+    project_classes: Optional[str] = None  
+    project_task_type: Optional[str] = None  
 
 class DatasetUpdate(DatasetBase):
     dataset_name: Optional[str]

@@ -162,21 +162,29 @@ class Workspace(Base):
     updated = Column(DateTime(timezone=True), onupdate=func.now())
 
     teams = relationship("Team", secondary=workspace_teams_association, back_populates="workspaces")
+    projects = relationship("Project", back_populates="workspace")
 
 
 class Project(Base):
     __tablename__ = "project"
 
-    project_id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    project_id = Column(Integer, primary_key=True, index=True, autoincrement=True, nullable=False)
+    workspace_id = Column(Integer, ForeignKey('workspace.workspace_id', ondelete='CASCADE', onupdate='CASCADE'))
     project_type = Column(Integer, ForeignKey("project_type.project_type_id"))
-    project_name = Column(String(32))
+    project_name = Column(String(32),nullable=False)
     desc = Column(Text)
+    project_preproccess = Column(Boolean, nullable=False)
+    preproccess_tags = Column(Text, nullable=True)
+    project_classes = Column(Text, nullable=True)
+    
     created = Column(DateTime(timezone=True), server_default=func.now())
     updated = Column(DateTime(timezone=True), onupdate=func.now())
 
     teams = relationship("Team", secondary=team_projects_association, back_populates="projects")
     user_roles = relationship("User",secondary=user_project_roles_association,backref="projects")
     datasets = relationship("Dataset", secondary=dataset_projects_association, back_populates="projects")
+    workspace = relationship("Workspace", back_populates="projects")
+
 
 class Team(Base):
     __tablename__ = "team"
