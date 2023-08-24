@@ -156,6 +156,8 @@ const Dataset: React.FC<DatasetProps> = ({sideBarVisible}) => {
   const [viewMode, setViewMode] = useState<string>('table');
   const [orderMode, setOrderMode] = useState<string>('latest');
 
+  const [thumbnails, setThumbnails] = useState<{ [key: number]: string }>({});
+
   //funcs
   const fetchImageData = async (datasetId: number, startIndex: number, endIndex: number, maxResult: number) => {
     const response = await axios.get(`${config.serverUrl}/rest/api/dataset/get/images`, {
@@ -167,6 +169,21 @@ const Dataset: React.FC<DatasetProps> = ({sideBarVisible}) => {
         }
     });
     return response.data;
+  }
+
+  const fetchThumbnail = async (datasetId: number) => {
+    const response = await axios.get(`${config.serverUrl}/rest/api/dataset/get/thumbnail`, {
+        params: {
+            dataset_id: datasetId
+        }
+    });
+    // 응답에서 base64 이미지를 가져와 Data URL로 변환
+    const base64Image = response.data.image;
+    const imageUrl = `data:image/jpeg;base64,${base64Image}`;
+    return {
+      ...response.data,
+      image: imageUrl // 변환된 이미지 URL 반환
+    };
   }
 
   //components
@@ -340,6 +357,17 @@ const Dataset: React.FC<DatasetProps> = ({sideBarVisible}) => {
   }, [selectedDatasetId]);
 
   useEffect(() => {
+    // 데이터셋 배열을 순회하면서 각각의 썸네일을 가져오는 로직
+    datasetData.forEach(async (dataset) => {
+      const thumbnailData = await fetchThumbnail(dataset.dataset_id);
+      setThumbnails((prevThumbnails) => ({
+        ...prevThumbnails,
+        [dataset.dataset_id]: thumbnailData.image,
+      }));
+    });
+  }, [datasetData]); // datasetData가 변경될 때만 실행
+
+  useEffect(() => {
     console.log("selectedDatasetId : ",selectedDatasetId)
     console.log("detailViewActive : ",detailViewActive)
   }, [selectedDatasetId,detailViewActive]);
@@ -470,7 +498,7 @@ const Dataset: React.FC<DatasetProps> = ({sideBarVisible}) => {
         {/* Input Modal */}
         <Modal isOpen={isOpen} onClose={onClose}>
           <ModalOverlay />
-          <ModalContent>
+          <ModalContent bg="rgba(40, 40, 40, 0.9)">
             <ModalHeader>Add a new dataset</ModalHeader>
             <ModalCloseButton />
             <ModalBody pb={6}>
@@ -632,6 +660,7 @@ const Dataset: React.FC<DatasetProps> = ({sideBarVisible}) => {
         <Carousel
         showThumbs={false}
         showStatus={false}
+        showIndicators={!isPreviewOpen}
         emulateTouch
         >
           {chunk(datasetData, 8).map((pageDatasets) => (
@@ -644,7 +673,8 @@ const Dataset: React.FC<DatasetProps> = ({sideBarVisible}) => {
               {pageDatasets.map((dataset) => (
                 <ObjectCard
                   id={dataset.dataset_id}
-                  // imageSrc={dataset.imageSrc} // 적절한 이미지 소스
+                  objectType = "dataset"
+                  imageSrc={thumbnails[dataset.dataset_id]} // 적절한 이미지 소스
                   title={dataset.dataset_name}
                   onClick={handleCardClick}
                 />
@@ -660,7 +690,6 @@ const Dataset: React.FC<DatasetProps> = ({sideBarVisible}) => {
         </VStack>
       </HStack>
     </Box>
-    
   );
 }
 

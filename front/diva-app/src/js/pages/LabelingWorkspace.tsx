@@ -170,6 +170,7 @@ const LabelingWorkspace: React.FC<WorkspaceProps> = ({sideBarVisible}) => {
             'Content-Type': 'application/json',
           },
         });
+        console.log("response.data : ",response.data)
         setProjectData(oldData => [...oldData, response.data]);
       } catch (error) {
         console.error(error);
@@ -334,6 +335,7 @@ const LabelingWorkspace: React.FC<WorkspaceProps> = ({sideBarVisible}) => {
   const handleRowClick = (row: any) => {
     setSelectedProjectId(row.project_id); // 또는 row.user_id, row.workspace_id 등
     setDetailViewActive(true);
+    setIsPreviewOpen(true);
   };
 
   const togglePreview = () => {
@@ -364,6 +366,23 @@ const LabelingWorkspace: React.FC<WorkspaceProps> = ({sideBarVisible}) => {
     };
     fetchDatasets();
   }, [user, isOpenProject]);
+
+  useEffect(() => {
+    if (user) {
+        const fetchData = async () => {
+            const response = await axios.get(`${config.serverUrl}/rest/api/project/get/by/workspaceid`, {
+                params: {
+                  workspace_id : workspaceId
+                }
+            });
+            console.log("get project response.data : ",response.data)
+            // 데이터를 상태에 저장
+            setProjectData(response.data);
+        }
+      // fetchData 함수를 호출하여 데이터 불러오기 시작
+        fetchData();
+    }
+  }, [user]); 
 
   useEffect(() => {
     const fetchInviteCode = async () => {
@@ -419,11 +438,13 @@ const LabelingWorkspace: React.FC<WorkspaceProps> = ({sideBarVisible}) => {
           </MenuList>
         </Menu>
       </HStack>
-      <Grid templateColumns={{ sm: '1fr', md: '1fr 1fr', '2xl': '2.5fr 0.8fr' }} my='26px' gap='18px'>
+      <HStack>
+      <VStack h='100%' w='100%'>
+      {/* <Grid templateColumns={{ sm: '1fr', md: '1fr 1fr', '2xl': '2.5fr 0.8fr' }} my='26px' gap='18px'> */}
         {/* Invite Code Model */}
         <Modal isOpen={isOpenInvite} onClose={onCloseInvite} isCentered>
           <ModalOverlay />
-          <ModalContent>
+          <ModalContent bg="rgba(40, 40, 40, 0.9)">
             <ModalHeader>Copy Invite Code</ModalHeader>
             <ModalCloseButton />
             <ModalBody>
@@ -461,7 +482,7 @@ const LabelingWorkspace: React.FC<WorkspaceProps> = ({sideBarVisible}) => {
         {/* Project Create Model */}
         <Modal isOpen={isOpenProject} onClose={onCloseProject} isCentered>
             <ModalOverlay />
-            <ModalContent as="form" onSubmit={(e: any) => formik.handleSubmit(e)}>
+            <ModalContent  bg="rgba(40, 40, 40, 0.9)" as="form" onSubmit={(e: any) => formik.handleSubmit(e)}>
                 <ModalHeader>Create New Projects</ModalHeader>
                 <ModalCloseButton />
                 <ModalBody>
@@ -556,7 +577,7 @@ const LabelingWorkspace: React.FC<WorkspaceProps> = ({sideBarVisible}) => {
                 </ModalFooter>
             </ModalContent>
         </Modal>
-      </Grid>
+      {/* </Grid> */}
       {
         viewMode === 'table' ?
       <Table 
@@ -570,6 +591,8 @@ const LabelingWorkspace: React.FC<WorkspaceProps> = ({sideBarVisible}) => {
         <Carousel
         showThumbs={false}
         showStatus={false}
+        showIndicators={!isPreviewOpen}
+        emulateTouch
         >
           {chunk(projectData, 8).map((pageProjects) => (
             <SimpleGrid columns={4} spacing={6} 
@@ -581,6 +604,7 @@ const LabelingWorkspace: React.FC<WorkspaceProps> = ({sideBarVisible}) => {
               {pageProjects.map((project) => (
                 <ObjectCard
                   id={project.project_id}
+                  objectType = "project"
                   // imageSrc={dataset.imageSrc} // 적절한 이미지 소스
                   title={project.project_name}
                   onClick={handleCardClick}
@@ -595,6 +619,8 @@ const LabelingWorkspace: React.FC<WorkspaceProps> = ({sideBarVisible}) => {
         <Box style={previewContainerStyle}>
           {projectDetailView()}
         </Box>
+        </VStack>
+      </HStack>
     </Box>
   );
 }
