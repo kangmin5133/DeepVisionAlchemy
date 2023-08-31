@@ -345,7 +345,7 @@ async def get_dataset_images_range(dataset_id : int,
     return response
     
 
-async def getDatasetImage(dataset_id : int, image_id: int, db: Session):
+async def getDatasetImage(dataset_id : int, image_id: int,is_thumbnail: bool, db: Session):
     
     results = crud.get_dataset_by_dataset_id(db = db, dataset_id = dataset_id)
     
@@ -358,20 +358,22 @@ async def getDatasetImage(dataset_id : int, image_id: int, db: Session):
         if len(result)==0:
         # raise HTTPException(status_code=404,detail="no data registered")
         # make emtpy image for test
+            if is_thumbnail: 
+                width, height = 256, 128
+                gray_value = 128
+                image = Image.new("L", (width, height), gray_value)
+                image = image.resize((256, 128))
+            buffered = BytesIO()
+            image.save(buffered, format="JPEG")
+            image_bytes = buffered.getvalue()
+    except:
+        if is_thumbnail: 
             width, height = 256, 128
             gray_value = 128
             image = Image.new("L", (width, height), gray_value)
-            resized_image = image.resize((256, 128))
-            buffered = BytesIO()
-            resized_image.save(buffered, format="JPEG")
-            image_bytes = buffered.getvalue()
-    except:
-        width, height = 256, 128
-        gray_value = 128
-        image = Image.new("L", (width, height), gray_value)
-        resized_image = image.resize((256, 128))
+            image = image.resize((256, 128))
         buffered = BytesIO()
-        resized_image.save(buffered, format="JPEG")  # 또는 원하는 형식, 예: "PNG"
+        image.save(buffered, format="JPEG")  # 또는 원하는 형식, 예: "PNG"
         image_bytes = buffered.getvalue()    
 
     if results.dataset_type == DataSrcType.Amazon_S3.value:
@@ -381,10 +383,11 @@ async def getDatasetImage(dataset_id : int, image_id: int, db: Session):
                                   access_key_id = credential["access_key_id"],
                                   secret_access_key = credential["access_key_secret"]) #bucket_name, object_key, access_key_id, secret_access_key
         original_image = Image.open(BytesIO(image_bytes))
-        new_size = (256, 128)
-        resized_image = original_image.resize(new_size)
+        if is_thumbnail: 
+            new_size = (256, 128)
+            original_image = original_image.resize(new_size)
         buffered = BytesIO()
-        resized_image.save(buffered, format="JPEG")  # 원래 형식과 동일한 형식을 사용
+        original_image.save(buffered, format="JPEG")  # 원래 형식과 동일한 형식을 사용
         image_bytes = buffered.getvalue()
         
     elif results.dataset_type == DataSrcType.Google_Cloud_Storage.value:
@@ -394,10 +397,11 @@ async def getDatasetImage(dataset_id : int, image_id: int, db: Session):
                                    blob_name = result["file_name"],
                                    json_key = json_key) #blob_name:str, json_key : json
         original_image = Image.open(BytesIO(image_bytes))
-        new_size = (256, 128)
-        resized_image = original_image.resize(new_size)
+        if is_thumbnail: 
+            new_size = (256, 128)
+            original_image = original_image.resize(new_size)
         buffered = BytesIO()
-        resized_image.save(buffered, format="JPEG")  # 원래 형식과 동일한 형식을 사용
+        original_image.save(buffered, format="JPEG")  # 원래 형식과 동일한 형식을 사용
         image_bytes = buffered.getvalue()
         
     base64_image = base64.b64encode(image_bytes).decode('utf-8')
@@ -405,3 +409,14 @@ async def getDatasetImage(dataset_id : int, image_id: int, db: Session):
                  "image" : base64_image}
     
     return response
+
+
+async def getImageFileList(dataset_id:int,db: Session):
+    db = get_nosql_db()
+    collection = db['images']
+    query = {'dataset_id': dataset_id}
+    result = list(collection.find(query))
+    if len(result)!=0:
+        for file_info in result:
+            del file_info["_id"]
+    return result

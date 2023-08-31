@@ -40,7 +40,7 @@ async def getImageData(dataset_id: int = None,image_id : int = None, db: Session
     if dataset_id is None:
         raise HTTPException(status_code=404,detail="dataset_id must required!")
     
-    response = await dataset_service.getDatasetImage(dataset_id = dataset_id,image_id=image_id, db = db)
+    response = await dataset_service.getDatasetImage(dataset_id = dataset_id,image_id=image_id,is_thumbnail=False,db = db)
     return JSONResponse(content=response)
 
 @router.get("/get/thumbnail")
@@ -48,8 +48,17 @@ async def getImageThumbnail(dataset_id: int = None, db: Session = Depends(get_db
     if dataset_id is None:
         raise HTTPException(status_code=404,detail="dataset_id must required!")
     
-    response = await dataset_service.getDatasetImage(dataset_id = dataset_id,image_id = 0, db = db)
+    response = await dataset_service.getDatasetImage(dataset_id = dataset_id,image_id = 0,is_thumbnail=True,db = db)
     return JSONResponse(content=response)
+
+@router.get("/get/filenames")
+async def getImageFileName(dataset_id: int = None, db: Session = Depends(get_db)):
+    if dataset_id is None:
+        raise HTTPException(status_code=404,detail="dataset_id must required!")
+    
+    response = await dataset_service.getImageFileList(dataset_id = dataset_id, db = db)
+    return JSONResponse(content=response)
+
 
 @router.post("/create")
 async def createDataset(request:dict, db: Session = Depends(get_db)):

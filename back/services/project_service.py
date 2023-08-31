@@ -8,15 +8,19 @@ from configs.config import Config
 from configs.enums import *
 import json
 
-def get_project_list(query_results):
+def get_project_list(query_results,db):
     result_list = []
     for result in query_results:
+        dataset_ids = crud.get_dataset_ids_by_project_id(project_id=result.project_id,db=db)
+        print("dataset_ids : ",dataset_ids)
         dict_form ={}
         dict_form["project_id"] = result.project_id
+        dict_form["creator_id"] = result.creator_id
         dict_form["project_name"] = result.project_name
         dict_form["workspace_id"] = result.workspace_id
         dict_form["project_desc"] = result.desc
         dict_form["project_type"] = result.project_type
+        dict_form["dataset_id"] = dataset_ids[0] if len(dataset_ids) != 0 else None
         dict_form["project_preproccess"] = result.project_preproccess
         dict_form["preproccess_tags"] = json.loads(result.preproccess_tags.replace("'", '"')) if result.preproccess_tags else None
         dict_form["project_classes"] = json.loads(result.project_classes.replace("'", '"')) if result.project_classes else None
@@ -25,6 +29,7 @@ def get_project_list(query_results):
     return result_list
 
 async def create_project(request:dict, db:Session):
+    creator_id = request.get("userId")
     project_name = request.get("projectName")
     project_description = request.get("projectDescription")
     dataset_id = request.get("datasetId")
@@ -47,6 +52,7 @@ async def create_project(request:dict, db:Session):
         project_name=project_name,
         project_type = project_type,
         desc=project_description,
+        creator_id=creator_id,
         workspace_id=workspace_id,
         project_preproccess = preprocessing,
         preproccess_tags=str(preprocess_tags) if preprocessing else None,
@@ -54,23 +60,39 @@ async def create_project(request:dict, db:Session):
     )
     project_obj = crud.create_project(db = db, project = new_project)
     project = crud.associate_project_with_dataset(db = db, project_id = project_obj.project_id, dataset_id = dataset_id)
-
     project_dict = {}
-    project_dict["project_id"] = project.project_id
-    project_dict["project_name"] = project.project_name
-    project_dict["workspace_id"] = project.workspace_id
-    project_dict["project_desc"] = project.desc
-    project_dict["project_type"] = project.project_type
-    project_dict["project_preproccess"] = project.project_preproccess
-    project_dict["preproccess_tags"] =json.loads(project.preproccess_tags.replace("'", '"')) if project.preproccess_tags else None
-    project_dict["project_classes"] = json.loads(project.project_classes.replace("'", '"')) if project.project_classes else None
-    project_dict["created"] = str(project.created).split(" ")[0].replace("-","/")
+    project_dict["project_id"] = project_obj.project_id
+    project_dict["creator_id"] = project_obj.creator_id
+    project_dict["project_name"] = project_obj.project_name
+    project_dict["workspace_id"] = project_obj.workspace_id
+    project_dict["dataset_id"] = dataset_id
+    project_dict["project_desc"] = project_obj.desc
+    project_dict["project_type"] = project_obj.project_type
+    project_dict["project_preproccess"] = project_obj.project_preproccess
+    project_dict["preproccess_tags"] =json.loads(project_obj.preproccess_tags.replace("'", '"')) if project_obj.preproccess_tags else None
+    project_dict["project_classes"] = json.loads(project_obj.project_classes.replace("'", '"')) if project_obj.project_classes else None
+    project_dict["created"] = str(project_obj.created).split(" ")[0].replace("-","/")
     return project_dict
 
 async def get_project_by_project_id(project_id:int, db:Session):
-    pass
+    query_result =crud.get_project(project_id = project_id,db=db)
+    dataset_ids = crud.get_dataset_ids_by_project_id(project_id=project_id,db=db)
+    
+    project_dict = {}
+    project_dict["project_id"] = query_result.project_id
+    project_dict["creator_id"] = query_result.creator_id
+    project_dict["project_name"] = query_result.project_name
+    project_dict["workspace_id"] = query_result.workspace_id
+    project_dict["dataset_id"] = dataset_ids[0] if len(dataset_ids) != 0 else None
+    project_dict["project_desc"] = query_result.desc
+    project_dict["project_type"] = query_result.project_type
+    project_dict["project_preproccess"] = query_result.project_preproccess
+    project_dict["preproccess_tags"] =json.loads(query_result.preproccess_tags.replace("'", '"')) if query_result.preproccess_tags else None
+    project_dict["project_classes"] = json.loads(query_result.project_classes.replace("'", '"')) if query_result.project_classes else None
+    project_dict["created"] = str(query_result.created).split(" ")[0].replace("-","/")
+    return project_dict
 
 async def get_projects_by_workspace_id(workspace_id :int, db:Session):
    query_results = crud.get_projects_by_workspace_id(workspace_id = workspace_id,db=db)
-   results = get_project_list(query_results)
+   results = get_project_list(query_results,db)
    return results

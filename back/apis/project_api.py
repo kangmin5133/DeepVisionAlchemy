@@ -27,6 +27,8 @@ async def createProject(request: dict = None, db: Session = Depends(get_db)):
       classTags : []
     """
     print("request : ", request)
+    if request.get("userId") is None:
+        raise HTTPException(status_code=404,detail="user_id is missing")
     if request.get("projectName") is None:
         raise HTTPException(status_code=404,detail="project name must required!")
     if request.get("datasetId") is None:
@@ -55,4 +57,5 @@ async def getProjectsByUserIdAndWorkspaceId(workspace_id:int=None,db: Session = 
         raise HTTPException(status_code=404,detail="workspace id must required!")
     
     response = await project_service.get_projects_by_workspace_id(workspace_id = workspace_id,db = db)
+    print("response : ",response)
     return JSONResponse(content=response)
