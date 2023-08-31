@@ -62,6 +62,7 @@ class WorkspaceBase(BaseModel):
 
 class ProjectBase(BaseModel):
     workspace_id: int  
+    creator_id:int
     project_type: int
     project_name: str
     desc: Optional[str] = None

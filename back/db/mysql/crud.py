@@ -1,6 +1,7 @@
 from sqlalchemy.orm import Session
 import sqlalchemy
 from . import models, schemas
+from sqlalchemy import select
 
 def object_as_dict(obj):
     if isinstance(obj, list):
@@ -123,6 +124,24 @@ def associate_project_with_dataset(db: Session, project_id: int, dataset_id: int
     db.refresh(project)
     return project
 
+def get_dataset_ids_by_project_id(db: Session, project_id: int):
+    # 이 함수는 특정 Project와 관련된 모든 Dataset의 ID를 반환합니다.
+
+    project = db.query(models.Project).filter(models.Project.project_id == project_id).first()
+    
+    if project is None:
+        # 만약 프로젝트가 데이터베이스에서 찾아지지 않는다면, 에러를 반환합니다.
+        return None
+
+    # 프로젝트에 연결된 모든 데이터셋의 ID를 가져옵니다.
+    dataset_ids = db.query(models.Dataset.dataset_id).join(
+        models.dataset_projects_association).filter(
+        models.dataset_projects_association.c.project_id == project.project_id).first()
+
+    return dataset_ids
+
+
+
 def update_project(db: Session, project: schemas.ProjectUpdate, project_id: int):
     db.query(models.Project).filter(models.Project.project_id == project_id).update(project.dict())
     db.commit()
@@ -223,3 +242,5 @@ def get_user_organizations(db: Session, user_id: int):
         models.user_organization_association.c.user_id == user.user_id).all()
 
     return organizations
+
+

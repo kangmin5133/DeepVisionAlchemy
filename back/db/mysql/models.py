@@ -130,6 +130,7 @@ class User(Base):
     teams = relationship("Team", secondary="user_teams", back_populates="users")
     created_organizations = relationship("Organization", back_populates="creator")
     organizations = relationship("Organization", secondary=user_organization_association, back_populates="users")
+    peojects = relationship("Project", back_populates="creator")
     # datasets = relationship("Dataset", secondary=user_datasets_association, back_populates="users")
 
 class Organization(Base):
@@ -172,6 +173,7 @@ class Project(Base):
     workspace_id = Column(Integer, ForeignKey('workspace.workspace_id', ondelete='CASCADE', onupdate='CASCADE'))
     project_type = Column(Integer, ForeignKey("project_type.project_type_id"))
     project_name = Column(String(32),nullable=False)
+    creator_id = Column(Integer, ForeignKey("user.user_id",ondelete='CASCADE',onupdate='CASCADE'))
     desc = Column(Text)
     project_preproccess = Column(Boolean, nullable=False)
     preproccess_tags = Column(Text, nullable=True)
@@ -184,6 +186,7 @@ class Project(Base):
     user_roles = relationship("User",secondary=user_project_roles_association,backref="projects")
     datasets = relationship("Dataset", secondary=dataset_projects_association, back_populates="projects")
     workspace = relationship("Workspace", back_populates="projects")
+    creator = relationship("User", back_populates="projects")
 
 
 class Team(Base):
