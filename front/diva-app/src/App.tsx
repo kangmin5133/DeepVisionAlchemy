@@ -27,6 +27,7 @@ const App: React.FC = () => {
   const [menuButton, setMenuButtonActive] = useState(true);
   const dispatch = useDispatch();
   const [showSidebar, setShowSidebar] = useState(true);
+  const [isProjectPage, setIsProjectPage] =  useState(false);
   
   const toggleMenu = () => {
     setMenuButtonActive(!menuButton);
@@ -37,13 +38,21 @@ const App: React.FC = () => {
   useEffect(() => {
     dispatch(restoreSession());
   }, [dispatch]);
+
+  const hideSidebar = () => {
+    setShowSidebar(false);
+  };
+
+  const renderSidebar = () => {
+    setShowSidebar(true);
+  };
   
   return (
     <Router>
       <div className="App">
         {/* <Topbar onMenuClick={toggleMenu}></ Topbar> */}
-        {isLoggedIn && <Topbar onMenuClick={toggleMenu} />}
-        {isLoggedIn &&showSidebar && <Sidebar isVisible={menuButton} />} {/* 로그인 상태에 따라 사이드바를 보이게 하거나 숨김 */}
+        {isLoggedIn && <Topbar onMenuClick={toggleMenu}/>}
+        {isLoggedIn && showSidebar && <Sidebar isVisible={menuButton} />} {/* 로그인 상태에 따라 사이드바를 보이게 하거나 숨김 */}
         <div className="content">
           <Routes>
             <Route path="/" element={<Home />} />
@@ -56,11 +65,11 @@ const App: React.FC = () => {
             <Route path="/loginLoading" element={<LoginLoading />} />
             <Route path="/dashboard" element={<Dashboard sideBarVisible={menuButton}/>} />
             <Route path="/dashboard/workspace-labeling" element={<LabelingWorkspace sideBarVisible={menuButton}/>} />
-            <Route path="/dashboard/workspace-generation" element={<GenerationWorkspace sideBarVisible={menuButton}/>} />
+            <Route path="/dashboard/workspace-generation" element={<GenerationWorkspace sideBarVisible={menuButton} />} />
             <Route path="/dashboard/workspace-restoration" element={<RestorationWorkspace sideBarVisible={menuButton}/>} />
-            <Route path="/dashboard/workspace-labeling/project" element={<Project sideBarVisible={menuButton}/>} />
-            <Route path="/dashboard/workspace-generation/project" element={<Project sideBarVisible={menuButton}/>} />
-            <Route path="/dashboard/workspace-restoration/project" element={<Project sideBarVisible={menuButton}/>} />
+            <Route path="/dashboard/workspace-labeling/project" element={<Project onHideSidebar={() => setShowSidebar(false)} onShowSidebar={() => setShowSidebar(true)} />} />
+            <Route path="/dashboard/workspace-generation/project" element={<Project onHideSidebar={() => setShowSidebar(false)} onShowSidebar={() => setShowSidebar(true)} />} />
+            <Route path="/dashboard/workspace-restoration/project" element={<Project onHideSidebar={() => setShowSidebar(false)} onShowSidebar={() => setShowSidebar(true)} />} />
             <Route path="/dashboard/dataset" element={<Dataset sideBarVisible={menuButton}/>} />
             <Route path="/dashboard/modelhub" element={<ModelHub sideBarVisible={menuButton}/>} />
           </Routes>
