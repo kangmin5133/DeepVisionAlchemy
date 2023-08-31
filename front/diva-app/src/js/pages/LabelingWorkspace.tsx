@@ -154,18 +154,27 @@ const LabelingWorkspace: React.FC<WorkspaceProps> = ({sideBarVisible}) => {
       workspaceId : 0,
       preprocessing: false,
       preprocessTags : [],
-      taskType: '',
+      taskType: 'classification',
       classTags : []
     },
     onSubmit: async (values) => {
       // submit your form to server
+      if (!values.taskType) {
+        values.taskType = 'classification'; // 기본값 설정
+      }
       values.datasetId = selectedDatasetId | datasets[0].dataset_id;
       values.workspaceId = workspaceId;
       values.preprocessTags = preprocessTags;
       values.classTags = classTags;
       console.log("submit values : ",values)
+
+      const payload = {
+        ...values,
+        userId: user?.user_id,  // user.user_id 추가
+      };
+
       try {
-        const response = await axios.post(`${config.serverUrl}/rest/api/project/create`, values, {
+        const response = await axios.post(`${config.serverUrl}/rest/api/project/create`, payload, {
           headers: {
             'Content-Type': 'application/json',
           },
@@ -187,7 +196,7 @@ const LabelingWorkspace: React.FC<WorkspaceProps> = ({sideBarVisible}) => {
     // 다른 열 정의
   ];
 
-  const [currentSlide, setCurrentSlide] = useState(0);
+  // const [currentSlide, setCurrentSlide] = useState(0);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
 
   const previewContainerStyle = {
@@ -309,6 +318,8 @@ const LabelingWorkspace: React.FC<WorkspaceProps> = ({sideBarVisible}) => {
 
   // handlers
   const handleDatasetIdChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    const newDatasetId = event.target.value;
+    formik.setFieldValue('datasetId', newDatasetId);
     setSelectedDatasetId(Number(event.target.value));
   };
 
@@ -563,7 +574,7 @@ const LabelingWorkspace: React.FC<WorkspaceProps> = ({sideBarVisible}) => {
                     </FormControl>
                     <FormControl>
                       <FormLabel>Task Type Select</FormLabel>
-                      <Select name="taskType" onChange={formik.handleChange} value={formik.values.taskType}>
+                      <Select name="taskType" onChange={formik.handleChange} value={formik.values.taskType || 'classification'}>
                         <option value="classification">Classification</option>
                         <option value="objectDetection">Object Detection</option>
                         <option value="semanticSegmentation">Semantic Segmentation</option>

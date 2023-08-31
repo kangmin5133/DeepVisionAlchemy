@@ -18,6 +18,12 @@ const ObjectCard: React.FC<CardProps> = ({ id,objectType,imageSrc, title, onClic
   // }, [id]);
   const navigate = useNavigate();
 
+  const handleLaunch = () => {
+    navigate(`/dashboard/workspace-labeling/project`, {
+      state: { projectId: id }
+    });
+  };
+
   return(
     <Box 
   borderRadius="10px" 
@@ -48,7 +54,7 @@ const ObjectCard: React.FC<CardProps> = ({ id,objectType,imageSrc, title, onClic
               <>
                 <MenuItem>Update</MenuItem>
                 <MenuItem>Delete</MenuItem>
-                <MenuItem onClick={() => navigate('/dashboard/workspace-labeling/project')}>Launch</MenuItem>
+                <MenuItem onClick={handleLaunch}>Launch</MenuItem>
               </>
             )}
             {objectType === 'dataset' && (

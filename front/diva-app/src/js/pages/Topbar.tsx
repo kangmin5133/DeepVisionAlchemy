@@ -1,4 +1,4 @@
-import React,{Dispatch} from "react";
+import React,{Dispatch,useEffect} from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
   Avatar,
@@ -13,7 +13,8 @@ import {
   HStack
 } from "@chakra-ui/react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faBars } from "@fortawesome/free-solid-svg-icons";
+import { IoArrowBack } from "react-icons/io5";
+import { faBars, faBullseye } from "@fortawesome/free-solid-svg-icons";
 import { ChevronDownIcon } from "@chakra-ui/icons";
 // import { useSelector } from "react-redux";
 // import { RootState } from '../store/index'; // Assuming index.tsx is the store file
@@ -23,20 +24,36 @@ import { useDispatch } from 'react-redux';
 import config from "../../conf/config";
 import { AnyAction } from 'redux';
 import { logout } from '../actions/authActions';
+import queryString from 'query-string';
 
 
 interface TopbarProps {
   onMenuClick: () => void;
+  // isProjectPage?: boolean;
+  // setIsProjectPage:React.Dispatch<React.SetStateAction<boolean>>;
   // isVisible: boolean; // 추가된 속성
 }
 
 const Topbar: React.FC<TopbarProps> = ({ onMenuClick }) => {
   const navigate = useNavigate(); 
   const { isLoggedIn, user} = UserAuthState();
+  const isProjectPage = window.location.pathname.endsWith('/project')
   // const isLoggedIn = useSelector((state: RootState) => state.auth.isLoggedIn);
   // const user = useSelector((state: RootState) => state.auth.user);
   const dispatch: Dispatch<AnyAction> = useDispatch();
 
+
+  const handleBackClick = () => {
+    // if (setIsProjectPage) {
+    // setIsProjectPage(!isProjectPage);
+    // }
+    navigate(-1); // 이전 페 돌아감
+  };
+
+  useEffect(() => {
+    console.log("isProjectPage:", isProjectPage);
+  }, [isProjectPage]);
+  
 
   const logoutfunc = async () => {
     try {
@@ -72,6 +89,21 @@ const Topbar: React.FC<TopbarProps> = ({ onMenuClick }) => {
         width="100%"
         height="100%"
       >
+      {
+        isProjectPage ?
+        <Button
+          onClick={handleBackClick}
+          bg="#1e1d1d"
+          color="white"
+          _hover={{ bg: "gray.700" }}
+          _active={{ bg: "gray.800" }}
+          _focus={{ boxShadow: "none" }}
+          position="absolute"
+          left="1rem"
+        >
+          <IoArrowBack />
+        </Button>
+        :
         <Button
           onClick={onMenuClick}
           bg="#1e1d1d"
@@ -84,6 +116,7 @@ const Topbar: React.FC<TopbarProps> = ({ onMenuClick }) => {
         >
           <FontAwesomeIcon icon={faBars} />
         </Button>
+      }
         <Box position="absolute" left="50%" transform="translateX(-50%)" textAlign="center">
           <Link to="/dashboard">
             <HStack>
