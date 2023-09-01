@@ -56,7 +56,6 @@ def get_files_in_s3(bucket_name, prefix, access_key_id, secret_access_key):
     response = s3.list_objects(Bucket=bucket_name, Prefix=prefix)
     return [content['Key'] for content in response.get('Contents', [])][1:]
 
-
 def get_files_in_gcs(bucket_name:str, prefix:str, json_key:json):    
     # credentials = Credentials.from_service_account_file(json_key_path)
     # json_key = json.loads(json_key_string)
@@ -149,8 +148,7 @@ def read_all_images_in_s3(bucket_name, prefix, access_key_id, secret_access_key)
     
     return data
 
-
-async def create_dataset(request : dict, db:Session):
+async def create_dataset(request : dict, db:Session, zipFile=None):
     """
     create dataset data into (mySQL , MongoDB)
     return type : Dataset
@@ -203,11 +201,18 @@ async def create_dataset(request : dict, db:Session):
                         json_key = json_key)
         
         
-    else: # Local Upload
+    elif request["dataType"] =="Local Upload" and zipFile: # Local Upload
         dataset_type = DataSrcType.Local_Upload.value
         en_dataset_credential = None
         bucket_name = None
         prefix = None
+        # Todo
+        """
+         1. 파일 저장 위치 지정
+         2. 파일 검증
+         3. 압축 해제 & 파일 리스트 생성
+         2. 파일 저장
+         """
 
     # create dataset schema & insert to mysql
     user_info = request.get("user")
@@ -271,6 +276,10 @@ async def create_dataset(request : dict, db:Session):
             
             image = ImageForm(i,dataset_info["dataset_id"],w, h, name, 1, now_str)
             db.images.insert_one(asdict(image))
+
+    elif dataset_type == DataSrcType.Local_Upload.value:
+        # Todo
+        pass
 
     return dataset_info
     
@@ -409,7 +418,6 @@ async def getDatasetImage(dataset_id : int, image_id: int,is_thumbnail: bool, db
                  "image" : base64_image}
     
     return response
-
 
 async def getImageFileList(dataset_id:int,db: Session):
     db = get_nosql_db()

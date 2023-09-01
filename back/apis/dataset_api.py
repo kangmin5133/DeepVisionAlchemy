@@ -3,7 +3,7 @@ from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
 from db.mysql.database import get_db
 from fastapi.responses import JSONResponse
-
+import json
 from configs.config import Config
 from services import dataset_service
 import httpx
@@ -80,6 +80,30 @@ async def createDataset(request:dict, db: Session = Depends(get_db)):
         
     response = await dataset_service.create_dataset(request = request , db = db)
 
+    return JSONResponse(content=str(response))
+
+# for local upload dataset
+@router.post("/create/upload")
+async def createLocalDataset(zipFile: UploadFile = File(...),
+                             jsonData: str = Form(...), 
+                             db: Session = Depends(get_db)):
+    print("Received file:", zipFile.filename)
+    try:
+        json_data = json.loads(jsonData)
+    except json.JSONDecodeError:
+        raise HTTPException(status_code=400, detail="Invalid JSON format")
+
+    datasetInfo = json_data.get("datasetInfo", {})
+    user = json_data.get("user", None)
+    dataType = json_data.get("dataType", '')
+
+    print("Dataset Info:", datasetInfo)
+    print("User:", user)
+    print("Data Type:", dataType)
+
+    request = {"datasetInfo":datasetInfo,"User":user,"dataType":dataType}
+
+    response = await dataset_service.create_dataset(request = request, zipfile = zipFile, db = db)
     return JSONResponse(content=str(response))
 
 @router.post("/update")
