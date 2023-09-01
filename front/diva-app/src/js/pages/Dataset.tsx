@@ -67,6 +67,7 @@ interface Credentials {
 }
 interface FileState {
   jsonFile: File | null;
+  zipFile: File | null; 
 }
 interface BucketInfo {
   bucketName: string;
@@ -108,6 +109,7 @@ const Dataset: React.FC<DatasetProps> = ({sideBarVisible}) => {
   });
   const [fileState, setFileState] = useState<FileState>({
     jsonFile: null,
+    zipFile: null,
   });
   const [uploadedFileName, setUploadedFileName] = useState<string | null>(null);
   const [detailViewActive, setDetailViewActive] = useState<boolean>(false);
@@ -318,10 +320,37 @@ const Dataset: React.FC<DatasetProps> = ({sideBarVisible}) => {
     );
   }
 
+  const LocalFileInputForm = () => {
+    return (
+      <>
+        {/* <FormControl>
+          <FormLabel>BUCKET NAME</FormLabel>
+          <Input
+            placeholder="BUCKET NAME"
+            value={bucketInfo.bucketName}
+            onChange={(e) =>
+              setBucketInfo({ ...bucketInfo, bucketName: e.target.value })
+            }
+          />
+        </FormControl>
+        <FormControl>
+        <FormLabel>PREFIX</FormLabel>
+        <Input
+          placeholder="PREFIX"
+          value={bucketInfo.prefix}
+          onChange={(e) =>
+            setBucketInfo({ ...bucketInfo, prefix: e.target.value })
+          }
+        />
+      </FormControl> */}
+    </>
+    );
+  }
+
   // hooks
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop: (acceptedFiles) => {
-      setFileState({ jsonFile: acceptedFiles[0] });
+      setFileState({ zipFile: acceptedFiles[0] , jsonFile: acceptedFiles[0] });
     },
     // accept: 'application/json',
     maxFiles: 1,
@@ -379,6 +408,7 @@ const Dataset: React.FC<DatasetProps> = ({sideBarVisible}) => {
       setUploadedFileName(e.target.files[0].name);
     }
   };
+
   const handleRegisterClick = async () => {    
     let jsonData: {
       credentials?: { accessKeyId?: string; secretAccessKey?: string; jsonFile?: string };
@@ -400,6 +430,17 @@ const Dataset: React.FC<DatasetProps> = ({sideBarVisible}) => {
         secretAccessKey: btoa(credentials.secretAccessKey),
       };
       jsonData = { ...jsonData, credentials: encodedCredentials };
+
+      try {
+        console.log("jsonData : ",jsonData)
+        await axios.post(`${config.serverUrl}/rest/api/dataset/create`, jsonData, {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+      } catch (error) {
+        console.error(error);
+      }
     }
 
     // Google Cloud Storage
@@ -413,26 +454,64 @@ const Dataset: React.FC<DatasetProps> = ({sideBarVisible}) => {
 
       const encodedCredentials = { jsonFile: fileContent };
       jsonData = { ...jsonData, credentials: encodedCredentials };
+
+      try {
+        console.log("jsonData : ",jsonData)
+        await axios.post(`${config.serverUrl}/rest/api/dataset/create`, jsonData, {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+      } catch (error) {
+        console.error(error);
+      }
+
     }
 
-    else if (selectedBox === "Local upload") {
-      jsonData = { ...jsonData};
-    }
+    else if (selectedBox === 'Local upload' && fileState.zipFile instanceof File) {
+      console.log("zip file proccessing start!")
+      const LocalFileMetaData = {
+        datasetInfo: { name: datasetInfo.name, desc: datasetInfo.desc },
+        user: user ? { email: user.email, name: user.name } : null,
+        dataType: selectedBox || '',
+      };
 
-    // Make the API request
-    try {
-      console.log("jsonData : ",jsonData)
-      await axios.post(`${config.serverUrl}/rest/api/dataset/create`, jsonData, {
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-    } catch (error) {
-      console.error(error);
-    }
+      const formData = new FormData();
 
+      formData.append('zipFile', fileState.zipFile);  // 실제 파일 객체를 FormData에 추가
+      formData.append('jsonData',JSON.stringify(LocalFileMetaData));
+    
+      try {
+        await axios.post(`${config.serverUrl}/rest/api/dataset/create/upload`, formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        });
+      } catch (error) {
+        console.error("File upload failed:", error);
+      }
+    }
     onClose();
   };
+
+  const handleLocalFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      const file = e.target.files[0];
+      const extension = file.name.split('.').pop()?.toLowerCase();
+
+      if (extension !== 'zip') {
+        alert('Only .zip files are allowed.');
+        return;
+      }
+      // 용량 확인 (500MB)
+      if (file.size > 500 * 1024 * 1024) {
+        alert('File size exceeds 500MB.');
+        return;
+      }
+      setUploadedFileName(file.name);
+    }
+  };
+
   const handleDataSrcClick = (boxName: string) => {
     setSelectedBox(boxName);
   };
@@ -617,6 +696,36 @@ const Dataset: React.FC<DatasetProps> = ({sideBarVisible}) => {
                   </VStack>
                 </Box>
               )}
+
+              {
+                selectedBox === 'Local upload' && (
+                  <Box p={4} style={{border: '1px solid gray'}} borderRadius="15px">
+                    <VStack spacing={2} alignItems="flex-start">
+                      <Box {...getRootProps()} style={{ cursor: 'pointer', padding: '20px', marginTop: '20px' }}
+                        borderStyle="dashed"
+                        borderWidth="1px"
+                        borderRadius="10px"
+                        borderColor="gray.400"
+                      >
+                        <input {...getInputProps({onChange: handleLocalFileUpload})} />
+                        {uploadedFileName ? (
+                          <Box display="flex" alignItems="center">
+                            <AiFillFile size="40" />
+                            <Text ml={2}>{uploadedFileName}</Text>
+                          </Box>
+                        ) : (
+                          isDragActive ? (
+                            <Text>Drop the zip files here ...</Text>
+                          ) : (
+                            <Text>Drag & drop a zip file here, or click to select file</Text>
+                          )
+                        )}
+                      </Box>
+                      {LocalFileInputForm()}
+                    </VStack>
+                  </Box>
+                )
+              }
 
               <FormControl >
                 <FormLabel>Name</FormLabel>
