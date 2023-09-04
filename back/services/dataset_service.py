@@ -342,6 +342,8 @@ async def create_dataset(request : dict, db:Session, zipFile:ZipFile = None):
             file_name = rel_file.replace(f"{dataset_info['dataset_id']}/", "")
             image = ImageForm(i, dataset_info["dataset_id"], w, h, file_name, 1, now_str)
             db.images.insert_one(asdict(image))
+        
+        if os.path.exists(unique_temp_dir): shutil.rmtree(unique_temp_dir)
 
     return dataset_info
     
