@@ -97,13 +97,9 @@ async def createLocalDataset(zipFile: UploadFile = File(...),
     user = json_data.get("user", None)
     dataType = json_data.get("dataType", '')
 
-    print("Dataset Info:", datasetInfo)
-    print("User:", user)
-    print("Data Type:", dataType)
+    request = {"datasetInfo":datasetInfo,"user":user,"dataType":dataType}
 
-    request = {"datasetInfo":datasetInfo,"User":user,"dataType":dataType}
-
-    response = await dataset_service.create_dataset(request = request, zipfile = zipFile, db = db)
+    response = await dataset_service.create_dataset(request = request, db = db, zipFile = zipFile)
     return JSONResponse(content=str(response))
 
 @router.post("/update")

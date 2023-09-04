@@ -33,6 +33,13 @@ import json
 # for S3
 import boto3
 
+# for uploaded file
+from zipfile import ZipFile
+import os 
+import shutil
+import uuid
+from io import BytesIO
+
 def encrypt_data(data: dict):
     data_str = json.dumps(data)  # Convert dict to string
     data_bytes = data_str.encode()  # Convert string to bytes
@@ -148,14 +155,37 @@ def read_all_images_in_s3(bucket_name, prefix, access_key_id, secret_access_key)
     
     return data
 
-async def create_dataset(request : dict, db:Session, zipFile=None):
+def read_images_range_in_local(dataset_id, file_names_list,start, end): 
+    root_file_path = Config.LOCAL_STORAGE
+    data_list = []
+    for i in range(start, end):
+        image = cv2.imread(root_file_path+f"/{dataset_id}/"+file_names_list[i])
+        data_list.append(image)
+
+    return data_list
+
+def read_image_in_local(dataset_id,file_name):
+    root_file_path = Config.LOCAL_STORAGE
+    print(" file_name :",root_file_path+f"/{dataset_id}/"+file_name)
+    image = cv2.imread(root_file_path+f"/{dataset_id}/"+file_name)
+    _, buffer = cv2.imencode('.jpg', image)
+    image_bytes = buffer.tobytes()
+    
+    height, width,_ = image.shape
+
+    return image_bytes, width, height
+
+async def create_dataset(request : dict, db:Session, zipFile:ZipFile = None):
     """
     create dataset data into (mySQL , MongoDB)
     return type : Dataset
     """
     file_list = []
-    bucket_name = request["bucketInfo"].get("bucketName",None)
-    prefix = request["bucketInfo"].get("prefix",None)
+    if request.get("bucketInfo") :
+        bucket_name = request["bucketInfo"].get("bucketName",None)
+        prefix = request["bucketInfo"].get("prefix",None)
+    else:
+        bucket_name, prefix = None, None
     dataset_credential = None
     # get file list for insert mongoDB - images
     if request["dataType"] =="Amazon S3":
@@ -199,20 +229,31 @@ async def create_dataset(request : dict, db:Session, zipFile=None):
         file_list = get_files_in_gcs(bucket_name=bucket_name,
                         prefix=prefix,
                         json_key = json_key)
-        
-        
-    elif request["dataType"] =="Local Upload" and zipFile: # Local Upload
+             
+    elif request["dataType"] =="Local upload" and zipFile: # Local Upload
         dataset_type = DataSrcType.Local_Upload.value
         en_dataset_credential = None
         bucket_name = None
         prefix = None
-        # Todo
         """
          1. 파일 저장 위치 지정
          2. 파일 검증
          3. 압축 해제 & 파일 리스트 생성
-         2. 파일 저장
-         """
+        """
+        zip_stream = BytesIO(await zipFile.read())
+        unique_temp_dir = os.path.join(Config.TEMP_PATH, str(uuid.uuid4()))
+
+        with ZipFile(zip_stream, 'r') as zip_ref:
+            zip_ref.extractall(unique_temp_dir)
+            macosx_dir = os.path.join(unique_temp_dir, '__MACOSX')
+            if os.path.exists(macosx_dir): shutil.rmtree(macosx_dir)
+            for root, dirs, files in os.walk(unique_temp_dir):
+                for file in files:
+                    if file.lower().endswith(('.png', '.jpg', '.jpeg', '.bmp')):
+                        rel_dir = os.path.relpath(root, unique_temp_dir)
+                        rel_file = os.path.join(rel_dir, file)
+                        file_list.append(rel_file)
+
 
     # create dataset schema & insert to mysql
     user_info = request.get("user")
@@ -264,8 +305,7 @@ async def create_dataset(request : dict, db:Session, zipFile=None):
             
             image = ImageForm(i,dataset_info["dataset_id"],w, h, name, 1, now_str)
             db.images.insert_one(asdict(image))
-            
-            
+                      
     elif dataset_type == DataSrcType.Amazon_S3.value:
         #bucket_name, object_key, access_key_id, secret_access_key
         for i,name in enumerate(file_list):
@@ -278,8 +318,30 @@ async def create_dataset(request : dict, db:Session, zipFile=None):
             db.images.insert_one(asdict(image))
 
     elif dataset_type == DataSrcType.Local_Upload.value:
-        # Todo
-        pass
+        new_storage_path = os.path.join(Config.LOCAL_STORAGE, str(dataset_info["dataset_id"]))
+        
+        dir_set = set()
+        for rel_file in file_list:
+            new_path = os.path.join(new_storage_path, rel_file)
+            dir_set.add(os.path.dirname(new_path))
+
+        for dir_path in dir_set:
+            os.makedirs(dir_path, exist_ok=True)
+
+        updated_file_list = []
+        for rel_file in file_list:
+            old_path = os.path.join(unique_temp_dir, rel_file)
+            new_path = os.path.join(new_storage_path, rel_file)
+            shutil.move(old_path, new_path)
+            updated_file_list.append(os.path.join(str(dataset_info["dataset_id"]), rel_file)) # {dataset_id}/{zip_root_dir}/{file}
+
+        for i, rel_file in enumerate(updated_file_list):
+            img_path = os.path.join(Config.LOCAL_STORAGE, rel_file) # ../storage/{dataset_id}/{zip_root_dir}/{file}
+            img = cv2.imread(img_path)
+            h, w, _ = img.shape
+            file_name = rel_file.replace(f"{dataset_info['dataset_id']}/", "")
+            image = ImageForm(i, dataset_info["dataset_id"], w, h, file_name, 1, now_str)
+            db.images.insert_one(asdict(image))
 
     return dataset_info
     
@@ -313,8 +375,10 @@ async def get_dataset_images_range(dataset_id : int,
     
     results = crud.get_dataset_by_dataset_id(db = db, dataset_id = dataset_id)
     
-
-    credential = decrypt_data(results.dataset_credential)  # return json
+    if results.dataset_type == DataSrcType.Local_Upload.value:
+        credential = None
+    else:
+        credential = decrypt_data(results.dataset_credential)  # return json
     
     image_info_list = []
     # get images path from mongoDB
@@ -342,6 +406,9 @@ async def get_dataset_images_range(dataset_id : int,
                                          start = startIndex, end = endIndex, 
                                          json_key = json_key)
         
+    elif results.dataset_type == DataSrcType.Local_Upload.value:
+        images = read_images_range_in_local(dataset_id=dataset_id,file_names_list = file_names_list,
+                                         start = startIndex, end = endIndex)
     
     for i in range(len(file_names_list[startIndex:endIndex])):
         base64_image = base64.b64encode(images[i]).decode('utf-8')
@@ -405,6 +472,18 @@ async def getDatasetImage(dataset_id : int, image_id: int,is_thumbnail: bool, db
         image_bytes, width, height = read_image_in_gcs(bucket_name = results.dataset_bucket_name,
                                    blob_name = result["file_name"],
                                    json_key = json_key) #blob_name:str, json_key : json
+        original_image = Image.open(BytesIO(image_bytes))
+        if is_thumbnail: 
+            new_size = (256, 128)
+            original_image = original_image.resize(new_size)
+        buffered = BytesIO()
+        original_image.save(buffered, format="JPEG")  # 원래 형식과 동일한 형식을 사용
+        image_bytes = buffered.getvalue()
+
+    elif results.dataset_type == DataSrcType.Local_Upload.value:
+        query = {'dataset_id': dataset_id, 'id': image_id}
+        file_name = list(collection.find(query))[0]["file_name"]
+        image_bytes, width, height = read_image_in_local(dataset_id=dataset_id,file_name=file_name)
         original_image = Image.open(BytesIO(image_bytes))
         if is_thumbnail: 
             new_size = (256, 128)
