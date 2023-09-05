@@ -59,3 +59,7 @@ async def getProjectsByUserIdAndWorkspaceId(workspace_id:int=None,db: Session = 
     response = await project_service.get_projects_by_workspace_id(workspace_id = workspace_id,db = db)
     print("response : ",response)
     return JSONResponse(content=response)
+
+@router.post("/labeling/oneclick")
+async def oneClickSegmentation(request: dict = None,db: Session = Depends(get_db)):
+    pass

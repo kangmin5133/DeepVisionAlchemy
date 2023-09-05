@@ -11,6 +11,7 @@ import json
 def get_project_list(query_results,db):
     result_list = []
     for result in query_results:
+        print("result as dict : ",result.__dict__)
         dataset_ids = crud.get_dataset_ids_by_project_id(project_id=result.project_id,db=db)
         print("dataset_ids : ",dataset_ids)
         dict_form ={}
@@ -29,6 +30,8 @@ def get_project_list(query_results,db):
     return result_list
 
 async def create_project(request:dict, db:Session):
+
+    print("\n\n\n Request from create dataset : \n", request)
     creator_id = request.get("userId")
     project_name = request.get("projectName")
     project_description = request.get("projectDescription")

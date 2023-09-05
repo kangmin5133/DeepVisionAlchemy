@@ -75,6 +75,12 @@ const Project: React.FC<ProjectProps> = ({onHideSidebar,onShowSidebar}) => {
 
   const [selectedRowId, setSelectedRowId] = useState<number>(0); // 선택된 행의 ID를 저장
 
+  // bbox drawing states
+  const [startPoint, setStartPoint] = useState<{ x: number, y: number } | null>(null);
+  const [endPoint, setEndPoint] = useState<{ x: number, y: number } | null>(null);
+  const [drawing, setDrawing] = useState(false);
+  const [ctx, setCtx] = useState<CanvasRenderingContext2D | null>(null);
+
   // funcs
   const fetchProjectData = async (projectId: number) => {
     const response = await axios.get(`${config.serverUrl}/rest/api/project/get/by/projectid`, {
@@ -124,9 +130,107 @@ const Project: React.FC<ProjectProps> = ({onHideSidebar,onShowSidebar}) => {
     setCanvasSize({ width: img.width, height: img.height });
   };
 
-  const handleImageClick = (e: React.MouseEvent<HTMLImageElement>) => {
-    // 서버로 보낼 요청을 구성
-    // 예를 들어, 선택된 툴과 클릭 좌표를 함께 보낼 수 있습니다.
+  const handleMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    if (selectedTool === 'bbox') {
+      const canvas = canvasRef.current;
+      if (canvas) {
+        const rect = canvas.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        setStartPoint({ x: x, y: y });
+        setDrawing(true);
+      }
+    }
+  };
+  
+  const handleMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    if (selectedTool === 'bbox' && drawing) {
+      const canvas = canvasRef.current;
+      if (canvas && startPoint) {
+        const rect = canvas.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        setEndPoint({ x: x, y: y });
+
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          // 이전에 그렸던 박스를 지우기 위해 캔버스를 클리어
+          ctx.clearRect(0, 0, canvasSize.width, canvasSize.height);
+
+          // 새로운 박스를 그림
+          ctx.beginPath();
+          ctx.rect(startPoint.x, startPoint.y, x - startPoint.x, y - startPoint.y);
+          // 네온 사인 효과를 위한 그림자 설정
+          ctx.shadowColor = "lime";
+          ctx.shadowBlur = 10;
+          ctx.shadowOffsetX = 0;
+          ctx.shadowOffsetY = 0;
+          
+          ctx.strokeStyle = "rgba(0, 255, 0, 1)";
+          ctx.lineWidth = 2;
+          ctx.stroke();
+
+          // 그림자 효과를 초기화
+          ctx.shadowColor = "transparent";
+          ctx.shadowBlur = 0;
+        }
+      }
+    }
+  };
+  
+  const handleMouseUp = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    if (selectedTool === 'bbox' && drawing) {
+      setDrawing(false);
+      setEndPoint({ x: e.clientX, y: e.clientY });
+      // 여기에 박스 그리기를 완료하고 서버로 보낼 로직을 넣으면 됩니다.
+    }
+  };
+  
+
+  const handleImageClick = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    const x = e.clientX;
+    const y = e.clientY;
+    const coords = [x, y];
+    const dataset_id = projectData.dataset_id;
+    const file_name = currentImage; // 또는 현재 이미지의 파일 이름
+    const requestData = {
+      dataset_id,
+      file_name,
+    };
+    switch (selectedTool) {
+      case "globalSegment":
+        // globalSegment일 때의 동작
+        axios.post("/api/segment/global", requestData)
+          .then(response => {
+            // 성공 시 처리
+          })
+          .catch(error => {
+            // 실패 시 처리
+          });
+        break;
+        
+      case "oneClickSegment":
+        // oneClickSegment일 때의 동작
+        axios.post("/api/segment/one-click", { ...requestData, x, y })
+          .then(response => {
+            // 성공 시 처리
+          })
+          .catch(error => {
+            // 실패 시 처리
+          });
+        break;
+        
+      case "bbox":
+        // bbox일 때의 동작
+        // 여기에는 bbox 그리기와 관련된 로직이 들어갈 것입니다.
+        // 예를 들면, 첫 클릭에서는 시작점을 설정하고,
+        // 두 번째 클릭에서는 끝점을 설정하여 bbox를 그립니다.
+        break;
+        
+      default:
+        // 그 외 도구일 때의 동작
+        break;
+    }
   };
 
   const handleTableRowClick = (index: number) => {
@@ -193,7 +297,6 @@ const Project: React.FC<ProjectProps> = ({onHideSidebar,onShowSidebar}) => {
       if (ctx) {
         // 투명도 설정
         ctx.globalAlpha = 0.5;
-        // 여기서 Canvas에 그림을 그릴 수 있습니다.
       }
     }
   }, [canvasSize]);
@@ -208,6 +311,14 @@ const Project: React.FC<ProjectProps> = ({onHideSidebar,onShowSidebar}) => {
   useEffect(() => {
     console.log("selected Tool : ",selectedTool)
   }, [selectedTool]);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (canvas) {
+      const context = canvas.getContext('2d');
+      setCtx(context);
+    }
+  }, [canvasRef]);
   
   return (
     <Box 
@@ -246,16 +357,23 @@ const Project: React.FC<ProjectProps> = ({onHideSidebar,onShowSidebar}) => {
                   borderRadius={5} 
                   src={currentImage}
                   onLoad={handleImageLoad} // 이미지 로드 시 handleImageLoad 호출
+                  boxShadow={"0 0 8px #3182ce, 0 0 16px #3182ce, 0 0 24px #3182ce, 0 0 32px #3182ce"}
                 />
                 <canvas 
                   ref={canvasRef}
                   width={canvasSize.width} 
                   height={canvasSize.height} 
                   style={{ 
-                  position: 'absolute', 
-                  top: 0, 
-                  left: 0 }} /* ... 스타일 및 기타 설정 */>
-                </canvas>
+                    position: 'absolute', 
+                    top: 0, 
+                    left: 0,
+                    cursor: selectedTool === 'bbox' ? 'crosshair' : 'default'
+                  }}
+                  onClick={handleImageClick}
+                  onMouseDown={handleMouseDown}
+                  onMouseMove={handleMouseMove}
+                  onMouseUp={handleMouseUp}
+                  />
             </Box>
             <Box marginRight={8}>
                 <Button variant="ghost" onClick={() => handlePrevNextClick('next')}>

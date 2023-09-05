@@ -162,28 +162,27 @@ const LabelingWorkspace: React.FC<WorkspaceProps> = ({sideBarVisible}) => {
       if (!values.taskType) {
         values.taskType = 'classification'; // 기본값 설정
       }
-      values.datasetId = selectedDatasetId | datasets[0].dataset_id;
+      values.datasetId = selectedDatasetId || datasets[0].dataset_id;
       values.workspaceId = workspaceId;
       values.preprocessTags = preprocessTags;
       values.classTags = classTags;
-      console.log("submit values : ",values)
 
       const payload = {
         ...values,
         userId: user?.user_id,  // user.user_id 추가
       };
-
+      console.log("project create data sending.... : ",payload)
       try {
         const response = await axios.post(`${config.serverUrl}/rest/api/project/create`, payload, {
           headers: {
             'Content-Type': 'application/json',
           },
         });
-        console.log("response.data : ",response.data)
         setProjectData(oldData => [...oldData, response.data]);
       } catch (error) {
         console.error(error);
       }
+      onCloseProject();
     },
   });
 
@@ -370,7 +369,7 @@ const LabelingWorkspace: React.FC<WorkspaceProps> = ({sideBarVisible}) => {
       try {
         const response = await axios.get(`${config.serverUrl}/rest/api/dataset/get`, { params: { user_id: user?.user_id} });
         setDatasets(response.data);
-        console.log("dataset fetched")
+        console.log("dataset fetched :",response.data)
       } catch (error) {
         console.error('Failed to fetch datasets:', error);
       }

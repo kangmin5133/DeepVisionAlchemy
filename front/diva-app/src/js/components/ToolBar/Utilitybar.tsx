@@ -203,7 +203,7 @@ const UtilityBar: React.FC<UtilityBarProps> = ({ imageFiles, onTableRowClick, se
                     borderColor="black" 
                     borderWidth="0.1rem"
                     p={isTableVisible ? 0 : 2}
-                    maxH={isTableVisible ? "500px" : "0px"}
+                    maxH={isTableVisible ? "100%" : "0px"}
                     transition="all 0.5s ease-in-out"
                     overflow="hidden"
                 >
@@ -358,6 +358,11 @@ const UtilityBar: React.FC<UtilityBarProps> = ({ imageFiles, onTableRowClick, se
         width="100%"
         zIndex={2}
         bgColor="blue.700"
+        _hover={{ 
+            cursor : "pointer",
+            backgroundColor: 'blue.500',
+            transition: 'background-color 0.2s',
+          }}
         >
         Save
         </Button>
