@@ -18,7 +18,6 @@ import config from "../../conf/config";
 import axios from "axios"; 
 import IconBox from "../components/IconBox";
 
-
 interface ProjectProps {
   onHideSidebar: () => void; 
   onShowSidebar: () => void;
@@ -46,6 +45,8 @@ interface ImageFile {
   license : number;
   created : string;
 }
+
+
 
 const Project: React.FC<ProjectProps> = ({onHideSidebar,onShowSidebar}) => {
 
@@ -80,6 +81,10 @@ const Project: React.FC<ProjectProps> = ({onHideSidebar,onShowSidebar}) => {
   const [endPoint, setEndPoint] = useState<{ x: number, y: number } | null>(null);
   const [drawing, setDrawing] = useState(false);
   const [ctx, setCtx] = useState<CanvasRenderingContext2D | null>(null);
+
+  // scroll (scale up, down)
+  const [scale, setScale] = useState<number>(1);
+  
 
   // funcs
   const fetchProjectData = async (projectId: number) => {
@@ -185,7 +190,41 @@ const Project: React.FC<ProjectProps> = ({onHideSidebar,onShowSidebar}) => {
       // 여기에 박스 그리기를 완료하고 서버로 보낼 로직을 넣으면 됩니다.
     }
   };
+
+  const handleScroll = (e: React.WheelEvent<HTMLDivElement>) => {
+    // e.preventDefault();
+    let MIN_SCALE = 0.5
+    let MAX_SCALE = 3
+    let newScale = scale;
+    if (e.deltaY < 0) {
+      // 스크롤 업: 확대
+      newScale = scale * 1.1;
+    } else {
+      // 스크롤 다운: 축소
+      newScale = scale / 1.1;
+    }
+
+    if (newScale >= MIN_SCALE && newScale <= MAX_SCALE) {
+      e.preventDefault();
+    }
+    setScale(newScale);
+  }; 
+
+  const calculateButtonPrevPosition = (scale: number) => {
+    // scale 값이 1보다 크면 왼쪽으로, 1보다 작으면 오른쪽으로 이동
+    const ratio = 500;
+    const offset = scale > 1 ? (scale - 1) * -ratio : (1 - scale) * ratio;
+    
+    return `translateX(${offset}px)`;
+  };
   
+  const calculateButtonNextPosition = (scale: number) => {
+    // scale 값이 1보다 크면 오른쪽으로, 1보다 작으면 왼쪽으로 이동
+    const ratio = 500;
+    const offset = scale > 1 ? (scale - 1) * ratio : (1 - scale) * -ratio;
+    
+    return `translateX(${offset}px)`;
+  };
 
   const handleImageClick = (e: React.MouseEvent<HTMLCanvasElement>) => {
     const x = e.clientX;
@@ -321,7 +360,7 @@ const Project: React.FC<ProjectProps> = ({onHideSidebar,onShowSidebar}) => {
   }, [canvasRef]);
   
   return (
-    <Box 
+    <Flex 
     bgColor="gray.500" 
     transition="all 0.5s ease-in-out" pt="60px" 
     overflow="hidden" 
@@ -336,13 +375,21 @@ const Project: React.FC<ProjectProps> = ({onHideSidebar,onShowSidebar}) => {
     }}
     >
       <ToolBar selectedTool={selectedTool} onToolClick={handleToolClick}/>
-      <Flex direction="row" align="center" justify="space-between">
+      
+      <Flex direction="row" align="center" >
 
-        <Flex left="5vw" align="center" justify="center" height="90vh" w="80vw">
+        <Flex align="center" justify="center" 
+        height="calc(100vh - 60px)" 
+        w="80vw"
+        maxW="70vw"
+        overflow="auto"
+         >
         <Box position="relative">
         <HStack>
-            <Box marginLeft={8}>
-                <Button variant="ghost" onClick={() => handlePrevNextClick('prev')}>
+            <Box position="relative" marginLeft={8}>
+                <Button variant="ghost" onClick={() => handlePrevNextClick('prev')}
+                style={{transform : calculateButtonPrevPosition(scale)}}
+                >
                   <IconBox> 
                     <FontAwesomeIcon 
                     size="2x"
@@ -352,12 +399,13 @@ const Project: React.FC<ProjectProps> = ({onHideSidebar,onShowSidebar}) => {
                   </IconBox>
                 </Button>
             </Box>
-            <Box position="relative">
+            <Box position="relative" onWheel={handleScroll} style={{ transform: `scale(${scale})`}}>
                 <Image 
                   borderRadius={5} 
                   src={currentImage}
                   onLoad={handleImageLoad} // 이미지 로드 시 handleImageLoad 호출
                   boxShadow={"0 0 8px #3182ce, 0 0 16px #3182ce, 0 0 24px #3182ce, 0 0 32px #3182ce"}
+                  style={{ transform: `scale(${scale})`}}
                 />
                 <canvas 
                   ref={canvasRef}
@@ -367,7 +415,8 @@ const Project: React.FC<ProjectProps> = ({onHideSidebar,onShowSidebar}) => {
                     position: 'absolute', 
                     top: 0, 
                     left: 0,
-                    cursor: selectedTool === 'bbox' ? 'crosshair' : 'default'
+                    cursor: selectedTool === 'bbox' ? 'crosshair' : 'default',
+                    transform: `scale(${scale})`
                   }}
                   onClick={handleImageClick}
                   onMouseDown={handleMouseDown}
@@ -375,8 +424,10 @@ const Project: React.FC<ProjectProps> = ({onHideSidebar,onShowSidebar}) => {
                   onMouseUp={handleMouseUp}
                   />
             </Box>
-            <Box marginRight={8}>
-                <Button variant="ghost" onClick={() => handlePrevNextClick('next')}>
+            <Box position="relative" marginRight={8}>
+                <Button variant="ghost" onClick={() => handlePrevNextClick('next')}
+                style={{transform : calculateButtonNextPosition(scale)}}
+                >
                 <IconBox> 
                   <FontAwesomeIcon 
                   size="2x"
@@ -389,15 +440,14 @@ const Project: React.FC<ProjectProps> = ({onHideSidebar,onShowSidebar}) => {
         </HStack>
         </Box>
         </Flex>
+      </Flex>
       <UtilityBar 
         imageFiles={imageFiles} 
         onTableRowClick={handleTableRowClick}
         selectedRowId={selectedRowId}
         setSelectedRowId={setSelectedRowId}
         />
-      {/* Image List Table component */}
-      </Flex>
-    </Box>
+    </Flex>
   );
 }
 

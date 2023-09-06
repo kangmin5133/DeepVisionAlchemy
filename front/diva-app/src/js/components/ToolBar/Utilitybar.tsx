@@ -203,7 +203,7 @@ const UtilityBar: React.FC<UtilityBarProps> = ({ imageFiles, onTableRowClick, se
                     borderColor="black" 
                     borderWidth="0.1rem"
                     p={isTableVisible ? 0 : 2}
-                    maxH={isTableVisible ? "100%" : "0px"}
+                    maxH={isTableVisible ? "700px" : "0px"}
                     transition="all 0.5s ease-in-out"
                     overflow="hidden"
                 >
