@@ -2,7 +2,7 @@ from mobile_sam import sam_model_registry, SamAutomaticMaskGenerator, SamPredict
 import torch
 
 model_type = "vit_t"
-sam_checkpoint = "MobileSAM/weights/mobile_sam.pt"
+sam_checkpoint = "models/MobileSAM/weights/mobile_sam.pt"
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
 mobile_sam = sam_model_registry[model_type](checkpoint=sam_checkpoint)

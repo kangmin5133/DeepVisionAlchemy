@@ -7,6 +7,7 @@ import asyncio
 from configs.config import Config
 from configs.enums import *
 import json
+import requests
 
 def get_project_list(query_results,db):
     result_list = []
@@ -99,3 +100,30 @@ async def get_projects_by_workspace_id(workspace_id :int, db:Session):
    query_results = crud.get_projects_by_workspace_id(workspace_id = workspace_id,db=db)
    results = get_project_list(query_results,db)
    return results
+
+
+async def image_labeling(request:dict, db:Session):
+    dataset_id = request.get("dataset_id")
+    file_name = request.get("file_name")
+    mode = request.get("mode")
+
+    parsed_data = {
+        "dataset_id": dataset_id,
+        "file_name": file_name,
+        "mode": mode
+    }
+    URL = f'{Config.SERVING_URL}/serving/api/inference/sam'
+    if mode == "oneclick":
+        print("oneclick mode request sending")
+        parsed_data["coords"] = request.get("coords")
+        response = requests.post(URL, json={"dataset_id": dataset_id,"image_path": file_name,"coords": parsed_data["coords"]})
+
+    elif mode == "bbox":
+        parsed_data["bbox"] = request.get("bbox")
+        response = requests.post(URL, json={"dataset_id": dataset_id,"image_path": file_name,"bbox": parsed_data["bbox"]})
+
+    elif mode == "globalSegment":
+        response = requests.post(URL, json={"dataset_id": dataset_id,"image_path": file_name,"global": True})
+
+    return response
+

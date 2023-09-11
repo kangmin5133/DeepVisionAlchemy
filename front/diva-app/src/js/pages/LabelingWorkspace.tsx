@@ -190,7 +190,20 @@ const LabelingWorkspace: React.FC<WorkspaceProps> = ({sideBarVisible}) => {
   const columns = [
     { header: 'Project Name', field: 'project_name' },
     { header: 'Members', field: 'project_members' },
-    { header: 'Task ID', field: 'project_task' },
+    { header: 'Task Type', field: 'project_type',
+    render: (value : number) => {
+      switch (value) {
+        case 1:
+          return 'Classification';
+        case 2:
+          return 'Object Detection';
+        case 3:
+          return 'Semantic Segmentation';
+        case 4:
+          return 'Instance Segmentation';
+        default:
+          return value;
+      } }},
     { header: 'Created', field: 'created' }
     // 다른 열 정의
   ];

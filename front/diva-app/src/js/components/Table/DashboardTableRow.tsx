@@ -12,6 +12,8 @@ import {
   } from "@chakra-ui/react";
   import React from "react";
   import { useNavigate } from "react-router-dom";
+  import {dashboardTableData} from "../../states/testval"
+
   
   interface DashboardTableRowProps {
     workspace_id : number;
@@ -32,6 +34,7 @@ import {
     }) => {
     const textColor = useColorModeValue("gray.700", "white");
     const navigate = useNavigate();
+    const members = dashboardTableData
 
     //handler
     const goToWorkspaceBtnHandler =()=> {
@@ -47,7 +50,19 @@ import {
       }
       navigate(`/dashboard/workspace-${pathName}?workspace_id=${workspace_id}`)
     }
-    
+
+    const getWorkspaceTypeName = (id : number) => {
+      switch (id) {
+        case 1:
+          return "labeling";
+        case 2:
+          return "generation";
+        case 3:
+          return "restoration";
+        default:
+          return "undefine";
+      }
+    };
 
     return (
       <Tr
@@ -80,23 +95,24 @@ import {
         </Td>
   
         <Td borderBottomColor='#56577A' border={lastItem ? "none" : undefined}>
-          {/* <AvatarGroup size='xs'>
-            {members.map((member) => {
+          <AvatarGroup size='xs'>
+          {dashboardTableData.map((data) => {
+            return data.members.map((avatarUrl) => {
               return (
                 <Avatar
-                  name='Ryan Florence'
-                  src={member}
+                  src={avatarUrl}
                   showBorder={false}
                   border='none'
                   _hover={{ zIndex: "3", cursor: "pointer" }}
                 />
               );
-            })}
-          </AvatarGroup> */}
+            });
+          })}
+          </AvatarGroup>
         </Td>
         <Td borderBottomColor='#56577A' border={lastItem ? "none" : undefined}>
           <Text fontSize='sm' color='#fff' fontWeight='bold' pb='.5rem'>
-            {workspace_type_id}
+            {getWorkspaceTypeName(workspace_type_id)}
           </Text>
         </Td>
         <Td borderBottomColor='#56577A' border={lastItem ? "none" : undefined}>

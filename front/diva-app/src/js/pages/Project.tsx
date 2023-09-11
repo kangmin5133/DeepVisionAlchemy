@@ -1,13 +1,10 @@
 import React, {useEffect,useState, useRef} from "react";
-import { useNavigate ,useLocation} from "react-router-dom";
+import { useLocation} from "react-router-dom";
 import {
   Box,
-  Center,
   HStack,
-  Heading,
   Flex,
   Image,
-  VStack,
   Button
 } from "@chakra-ui/react";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -46,8 +43,6 @@ interface ImageFile {
   created : string;
 }
 
-
-
 const Project: React.FC<ProjectProps> = ({onHideSidebar,onShowSidebar}) => {
 
   // states
@@ -84,6 +79,11 @@ const Project: React.FC<ProjectProps> = ({onHideSidebar,onShowSidebar}) => {
 
   // scroll (scale up, down)
   const [scale, setScale] = useState<number>(1);
+  const flexContainerRef = useRef<HTMLDivElement>(null);
+  const imageContainerRef = useRef<HTMLImageElement>(null);
+  const [isImageOverflow,setIsImageOverflow] = useState(false);
+
+  const [originalCanvasSize, setOriginalCanvasSize] = useState({ width: 0, height: 0 });
   
 
   // funcs
@@ -121,6 +121,22 @@ const Project: React.FC<ProjectProps> = ({onHideSidebar,onShowSidebar}) => {
     };
   }
 
+  const calculateButtonPrevPosition = (scale: number) => {
+    // scale 값이 1보다 크면 왼쪽으로, 1보다 작으면 오른쪽으로 이동
+    const ratio = 500;
+    const offset = scale > 1 ? (scale - 1) * -ratio : (1 - scale) * ratio;
+    
+    return `translateX(${offset}px)`;
+  };
+  
+  const calculateButtonNextPosition = (scale: number) => {
+    // scale 값이 1보다 크면 오른쪽으로, 1보다 작으면 왼쪽으로 이동
+    const ratio = 500;
+    const offset = scale > 1 ? (scale - 1) * ratio : (1 - scale) * -ratio;
+    
+    return `translateX(${offset}px)`;
+  };
+
   // handlers
   const handleToolClick = (tool: string) => {
     if (selectedTool === tool) {
@@ -128,11 +144,28 @@ const Project: React.FC<ProjectProps> = ({onHideSidebar,onShowSidebar}) => {
     } else {
       setSelectedTool(tool);
     }
+
+    if (tool === "globalSegment"){
+      const dataset_id = projectData.dataset_id;
+      const file_name = imageFiles[currentImageIndex].file_name; // 또는 현재 이미지의 파일 이름
+      const requestData = {
+        dataset_id,
+        file_name,
+      };
+      axios.post(`${config.serverUrl}/rest/api/project/labeling/global`, { ...requestData})
+          .then(response => {
+            // 성공 시 처리
+          })
+          .catch(error => {
+            // 실패 시 처리
+          });
+    }
   };
 
   const handleImageLoad = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
     const img = e.currentTarget;
     setCanvasSize({ width: img.width, height: img.height });
+    setOriginalCanvasSize({ width: img.width, height: img.height });
   };
 
   const handleMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
@@ -184,10 +217,37 @@ const Project: React.FC<ProjectProps> = ({onHideSidebar,onShowSidebar}) => {
   };
   
   const handleMouseUp = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    if (selectedTool === 'bbox' && drawing) {
-      setDrawing(false);
-      setEndPoint({ x: e.clientX, y: e.clientY });
-      // 여기에 박스 그리기를 완료하고 서버로 보낼 로직을 넣으면 됩니다.
+    const canvas = canvasRef.current;
+    if (canvas) {
+      const rect = canvas.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      const dataset_id = projectData.dataset_id;
+      const file_name = imageFiles[currentImageIndex].file_name; // 또는 현재 이미지의 파일 이름
+      const requestData = {
+        dataset_id,
+        file_name,
+      };
+  
+      if (selectedTool === 'bbox' && drawing && startPoint) {
+        setDrawing(false);
+        setEndPoint({ x: x, y: y });
+        
+        const coordinates = {
+          startX: startPoint.x,
+          startY: startPoint.y,
+          endX: x,
+          endY: y
+        };
+        
+        axios.post(`${config.serverUrl}/rest/api/project/labeling/bbox`, { ...requestData, ...coordinates})
+          .then(response => {
+            // 성공 시 처리
+          })
+          .catch(error => {
+            // 실패 시 처리
+          });
+      }
     }
   };
 
@@ -210,65 +270,29 @@ const Project: React.FC<ProjectProps> = ({onHideSidebar,onShowSidebar}) => {
     setScale(newScale);
   }; 
 
-  const calculateButtonPrevPosition = (scale: number) => {
-    // scale 값이 1보다 크면 왼쪽으로, 1보다 작으면 오른쪽으로 이동
-    const ratio = 500;
-    const offset = scale > 1 ? (scale - 1) * -ratio : (1 - scale) * ratio;
-    
-    return `translateX(${offset}px)`;
-  };
-  
-  const calculateButtonNextPosition = (scale: number) => {
-    // scale 값이 1보다 크면 오른쪽으로, 1보다 작으면 왼쪽으로 이동
-    const ratio = 500;
-    const offset = scale > 1 ? (scale - 1) * ratio : (1 - scale) * -ratio;
-    
-    return `translateX(${offset}px)`;
-  };
-
   const handleImageClick = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    const x = e.clientX;
-    const y = e.clientY;
+    const rect = (e.target as HTMLCanvasElement).getBoundingClientRect();
+    // const x = e.clientX;
+    // const y = e.clientY;
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
     const coords = [x, y];
     const dataset_id = projectData.dataset_id;
-    const file_name = currentImage; // 또는 현재 이미지의 파일 이름
+    const file_name = imageFiles[currentImageIndex].file_name; // 또는 현재 이미지의 파일 이름
     const requestData = {
       dataset_id,
       file_name,
     };
-    switch (selectedTool) {
-      case "globalSegment":
-        // globalSegment일 때의 동작
-        axios.post("/api/segment/global", requestData)
-          .then(response => {
-            // 성공 시 처리
-          })
-          .catch(error => {
-            // 실패 시 처리
-          });
-        break;
-        
-      case "oneClickSegment":
+    if (selectedTool === "oneClickSegment") {
         // oneClickSegment일 때의 동작
-        axios.post("/api/segment/one-click", { ...requestData, x, y })
+        console.log("requestData : ",{ ...requestData, x, y })
+        axios.post(`${config.serverUrl}/rest/api/project/labeling/oneclick`, { ...requestData, x, y })
           .then(response => {
             // 성공 시 처리
           })
           .catch(error => {
             // 실패 시 처리
           });
-        break;
-        
-      case "bbox":
-        // bbox일 때의 동작
-        // 여기에는 bbox 그리기와 관련된 로직이 들어갈 것입니다.
-        // 예를 들면, 첫 클릭에서는 시작점을 설정하고,
-        // 두 번째 클릭에서는 끝점을 설정하여 bbox를 그립니다.
-        break;
-        
-      default:
-        // 그 외 도구일 때의 동작
-        break;
     }
   };
 
@@ -293,6 +317,140 @@ const Project: React.FC<ProjectProps> = ({onHideSidebar,onShowSidebar}) => {
         handleTableRowClick(newIndex);
       }
     }
+  };
+
+  //components
+  const MiniViewer = () => {
+
+    const [miniViewerSize, setMiniViewerSize] = useState(() => {
+      if (flexContainerRef.current) {
+        const flexContainer = flexContainerRef.current.getBoundingClientRect();
+        return {
+          width: flexContainer.width * 0.2,
+          height: flexContainer.height * 0.2
+        };
+      }
+      return null;
+    });
+    const miniViewerBoxContainerRef = useRef<HTMLDivElement>(null);
+    const miniViewerImageContainerRef = useRef<HTMLImageElement>(null);
+    const [dragging, setDragging] = useState(false);
+    const [dragStart, setDragStart] = useState<{ x: number; y: number } | null>(null);
+    const [viewportPos, setViewportPos] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
+    const [viewportWidth, setViewportWidth] = useState<number | null>(null);
+    const [viewportHeight, setViewportHeight] = useState<number | null>(null);
+    const [accumulatedDelta, setAccumulatedDelta] = useState<{ x: number, y: number }>({ x: 0, y: 0 });
+    const flexContainer = flexContainerRef.current;
+    const imageContainer  = imageContainerRef.current;
+    const canvasContainer = canvasRef.current;
+    
+    // hooks
+    useEffect(() => {
+      // const flexContainer = flexContainerRef.current;
+      if (flexContainer && canvasContainer && imageContainer && miniViewerBoxContainerRef.current) {
+        const flexWidth = flexContainer.getBoundingClientRect().width;
+        const flexHeight = flexContainer.getBoundingClientRect().height;
+
+        const miniViewerSize = miniViewerBoxContainerRef.current.getBoundingClientRect();
+        const newViewportWidth = (miniViewerSize.width * flexWidth) / canvasContainer.getBoundingClientRect().width;
+        const newViewportHeight = (miniViewerSize.height * flexHeight) / canvasContainer.getBoundingClientRect().height;
+
+        setViewportWidth(newViewportWidth);
+        setViewportHeight(newViewportHeight);
+
+        const flexContainerRect = flexContainer.getBoundingClientRect();
+        const canvasContainerRect = canvasContainer.getBoundingClientRect();
+
+        const newViewportX = ((flexContainerRect.left - canvasContainerRect.left) / canvasContainerRect.width) * miniViewerSize.width ;
+        const newViewportY = ((flexContainerRect.top - canvasContainerRect.top) / canvasContainerRect.height) * miniViewerSize.height;
+
+        setViewportPos({ x: newViewportX, y: newViewportY });
+      
+      }
+    }, [flexContainer, canvasContainer]);
+
+    // handlers
+    const handleDragStart = (e: React.MouseEvent) => {
+      setDragStart({ x: e.clientX, y: e.clientY });
+      setDragging(true);
+    };
+
+    const handleDrag = (e: React.MouseEvent) => {
+      if (dragging && dragStart && viewportWidth && viewportHeight && miniViewerBoxContainerRef.current && imageContainerRef.current && flexContainerRef.current) {
+        let deltaX = e.clientX - dragStart.x;
+        let deltaY = e.clientY - dragStart.y;
+
+        const maxX = miniViewerBoxContainerRef.current.getBoundingClientRect().width - viewportWidth;
+        const maxY = miniViewerBoxContainerRef.current.getBoundingClientRect().height - viewportHeight;
+
+        const scaleFactorX = imageContainerRef.current.getBoundingClientRect().width / miniViewerBoxContainerRef.current.getBoundingClientRect().width;
+        const scaleFactorY = imageContainerRef.current.getBoundingClientRect().height / miniViewerBoxContainerRef.current.getBoundingClientRect().height;
+
+        const scaledDeltaX = deltaX * scaleFactorX
+        const scaledDeltaY = deltaY * scaleFactorY
+
+        const newAccumulatedDeltaX = accumulatedDelta.x + scaledDeltaX;
+        const newAccumulatedDeltaY = accumulatedDelta.y + scaledDeltaY;
+
+        setAccumulatedDelta({ x: newAccumulatedDeltaX, y: newAccumulatedDeltaY });
+
+        const newX = Math.min(Math.max(0, viewportPos.x + deltaX), maxX);
+        const newY = Math.min(Math.max(0, viewportPos.y + deltaY), maxY);
+
+        setViewportPos({ x: newX, y: newY });
+    
+        // 원래 이미지의 위치를 변경
+        if (imageContainerRef.current && canvasRef.current) {
+          const newTransform = `scale(${scale}) translate(${-newAccumulatedDeltaX}px, ${-newAccumulatedDeltaY}px)`;
+          imageContainerRef.current.style.transform = newTransform;
+          canvasRef.current.style.transform = newTransform;
+        }
+    
+        setDragStart({ x: e.clientX, y: e.clientY });
+
+      }
+    };
+
+    const handleDragEnd = () => {
+      setDragging(false);
+      setDragStart(null);
+      setAccumulatedDelta({ x: 0, y: 0 });
+    };
+
+    return (
+      <Box
+      ref={miniViewerBoxContainerRef}
+      position="absolute"
+      right="25vw"
+      bottom="0"
+      zIndex="3"
+      w={`${miniViewerSize ? miniViewerSize.width + 'px' : 'auto'}`}
+      h={`${miniViewerSize ? miniViewerSize.height + 'px' : 'auto'}`}
+      bg="rgba(50,50,50,0.5)"
+    >
+      <Image
+        ref={miniViewerImageContainerRef}
+        src={currentImage}
+        width="100%"
+        height="100%"
+        objectFit="contain"
+      />
+      {viewportWidth && viewportHeight && viewportPos ? (
+        <Box
+          position="absolute"
+          top={`${viewportPos.y}px`}
+          left={`${viewportPos.x}px`}
+          w={`${viewportWidth}px`}
+          h={`${viewportHeight}px`}
+          bg="rgba(144, 238, 144, 0.5)"
+          onMouseDown={handleDragStart}
+          onMouseMove={handleDrag}
+          onMouseUp={handleDragEnd}
+          onMouseLeave={handleDragEnd}
+        ></Box>
+      ): null}
+    </Box>
+    );
   };
 
   // hooks
@@ -340,6 +498,13 @@ const Project: React.FC<ProjectProps> = ({onHideSidebar,onShowSidebar}) => {
     }
   }, [canvasSize]);
 
+  // useEffect(() => {
+  //   setCanvasSize({
+  //     width: originalCanvasSize.width * scale,
+  //     height: originalCanvasSize.height * scale,
+  //   });
+  // }, [scale]);
+  
   useEffect(() => {
     console.log("Init projectId : ",projectId)
     console.log("projectData : ",projectData)
@@ -358,6 +523,22 @@ const Project: React.FC<ProjectProps> = ({onHideSidebar,onShowSidebar}) => {
       setCtx(context);
     }
   }, [canvasRef]);
+
+  useEffect(() => {
+    const flexContainer = flexContainerRef.current;
+    const imageContainer = imageContainerRef.current;
+    if (flexContainer && imageContainer) {
+      const imageSection = imageContainer.getBoundingClientRect()
+  
+      const isOverflow = flexContainer.offsetWidth < imageSection.width || 
+                         flexContainer.offsetHeight < imageSection.height ;
+  
+      setIsImageOverflow(isOverflow);
+    } else {
+      console.log("flexContainer or imageContainer is null");
+    }
+  
+  }, [scale]);
   
   return (
     <Flex 
@@ -376,19 +557,27 @@ const Project: React.FC<ProjectProps> = ({onHideSidebar,onShowSidebar}) => {
     >
       <ToolBar selectedTool={selectedTool} onToolClick={handleToolClick}/>
       
-      <Flex direction="row" align="center" >
+      <Flex ref={flexContainerRef} direction="row" align="center" overflow="hidden" >
 
-        <Flex align="center" justify="center" 
+        <Flex 
+        align="center" justify="center" 
         height="calc(100vh - 60px)" 
         w="80vw"
         maxW="70vw"
-        overflow="auto"
-         >
+        overflow="hidden"
+        >
         <Box position="relative">
         <HStack>
-            <Box position="relative" marginLeft={8}>
-                <Button variant="ghost" onClick={() => handlePrevNextClick('prev')}
-                style={{transform : calculateButtonPrevPosition(scale)}}
+            <Box position="relative" marginLeft={8} zIndex={2}>
+                <Button 
+                variant="ghost" 
+                onClick={() => handlePrevNextClick('prev')}
+                // style={{transform : calculateButtonPrevPosition(scale)}}
+                style={{
+                  transform: isImageOverflow ? 'none' : calculateButtonPrevPosition(scale),
+                  position: isImageOverflow ? 'fixed' : 'relative',
+                  left: isImageOverflow ? '5vw' : 'unset'
+                }}
                 >
                   <IconBox> 
                     <FontAwesomeIcon 
@@ -399,13 +588,16 @@ const Project: React.FC<ProjectProps> = ({onHideSidebar,onShowSidebar}) => {
                   </IconBox>
                 </Button>
             </Box>
-            <Box position="relative" onWheel={handleScroll} style={{ transform: `scale(${scale})`}}>
+            <Box position="relative" onWheel={handleScroll} style={{ transform: `scale(${scale})`}}
+            >
                 <Image 
+                  ref={imageContainerRef}
                   borderRadius={5} 
                   src={currentImage}
                   onLoad={handleImageLoad} // 이미지 로드 시 handleImageLoad 호출
                   boxShadow={"0 0 8px #3182ce, 0 0 16px #3182ce, 0 0 24px #3182ce, 0 0 32px #3182ce"}
-                  style={{ transform: `scale(${scale})`}}
+                  style={{ transform: `scale(${scale})`         
+                  }}
                 />
                 <canvas 
                   ref={canvasRef}
@@ -424,9 +616,15 @@ const Project: React.FC<ProjectProps> = ({onHideSidebar,onShowSidebar}) => {
                   onMouseUp={handleMouseUp}
                   />
             </Box>
-            <Box position="relative" marginRight={8}>
-                <Button variant="ghost" onClick={() => handlePrevNextClick('next')}
-                style={{transform : calculateButtonNextPosition(scale)}}
+            <Box position="relative" marginRight={8} zIndex={2}>
+                <Button 
+                variant="ghost" 
+                onClick={() => handlePrevNextClick('next')}
+                style={{
+                  transform : isImageOverflow ? 'none' : calculateButtonNextPosition(scale),
+                  position: isImageOverflow ? 'fixed' : 'relative',
+                  right: isImageOverflow ? '25vw' : 'unset'
+                }}
                 >
                 <IconBox> 
                   <FontAwesomeIcon 
@@ -437,8 +635,12 @@ const Project: React.FC<ProjectProps> = ({onHideSidebar,onShowSidebar}) => {
                 </IconBox>
                 </Button>
             </Box>
+            
         </HStack>
         </Box>
+        {isImageOverflow && (
+          <MiniViewer />
+        )}
         </Flex>
       </Flex>
       <UtilityBar 

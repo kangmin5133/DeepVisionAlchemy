@@ -13,7 +13,7 @@ import CardBody from "../Card/CardBody";
 interface Column {
   header: string;
   field: string;
-  render?: (value: any) => JSX.Element;
+  render?: (value: number) => JSX.Element | number | string; 
 }
 
 interface TableProps {
@@ -71,7 +71,7 @@ const Table: React.FC<TableProps> = ({
             cursor="pointer"
             >
                 {columns.map((col, colIndex) => (
-                <Td key={colIndex}>{col.render ? col.render(row[col.field]) : row[col.field]}</Td>
+                  <Td key={colIndex}>{col.render ? col.render(row[col.field]) : row[col.field]}</Td>
                 ))}
                 <Td>
                     <Menu>

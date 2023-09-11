@@ -62,4 +62,50 @@ async def getProjectsByUserIdAndWorkspaceId(workspace_id:int=None,db: Session = 
 
 @router.post("/labeling/oneclick")
 async def oneClickSegmentation(request: dict = None,db: Session = Depends(get_db)):
-    pass
+    print("\nlabeling oneclick segment request : ", request)
+    if request.get("dataset_id") is None:
+        raise HTTPException(status_code=404,detail="dataset_id must required!")
+    
+    if request.get("file_name") is None:
+        raise HTTPException(status_code=404,detail="file_name must required!")
+    
+    # if request.get("x") or request.get("y") is None:
+    #     raise HTTPException(status_code=404,detail="coords must required!")
+    
+    parseData = {"dataset_id" : request.get("dataset_id"), 
+                 "file_name" : request.get("file_name"),
+                 "mode" : "oneclick",
+                 "coords":[request.get("x"),request.get("y")]}
+    print("parseData : ",parseData)
+    response = await project_service.image_labeling(parseData,db)
+    print("labeling oneclick segment response : ",response.json())
+
+
+@router.post("/labeling/bbox")
+async def bboxSegmentation(request: dict = None,db: Session = Depends(get_db)):
+    print("\nlabeling bbox segment request : ", request)
+    if request.get("dataset_id") is None:
+        raise HTTPException(status_code=404,detail="dataset_id must required!")
+    
+    if request.get("file_name") is None:
+        raise HTTPException(status_code=404,detail="file_name must required!")
+    
+    if request.get("startX") or request.get("startY") or request.get("endX") or request.get("endY") is None:
+        raise HTTPException(status_code=404,detail="bbox must required!")
+    
+    parseData = {"dataset_id" : request.get("dataset_id"), 
+                 "file_name" : request.get("file_name"),
+                 "mode" : "bbox",
+                 "bbox":[request.get("startX"), request.get("startY"), request.get("endX"), request.get("endY")]}
+    
+    response = await project_service.image_labeling(parseData,db)
+    print("labeling bbox segment response : ",response)
+
+@router.post("/labeling/global")
+async def bboxSegmentation(request: dict = None,db: Session = Depends(get_db)):
+    print("\nlabeling global segment request : ", request)
+    if request.get("dataset_id") is None:
+        raise HTTPException(status_code=404,detail="dataset_id must required!")
+    
+    if request.get("file_name") is None:
+        raise HTTPException(status_code=404,detail="file_name must required!")
