@@ -15,6 +15,9 @@ import config from "../../conf/config";
 import axios from "axios"; 
 import IconBox from "../components/IconBox";
 
+//libraries
+import styled from 'styled-components';
+
 interface ProjectProps {
   onHideSidebar: () => void; 
   onShowSidebar: () => void;
@@ -84,7 +87,8 @@ const Project: React.FC<ProjectProps> = ({onHideSidebar,onShowSidebar}) => {
   const [isImageOverflow,setIsImageOverflow] = useState(false);
 
   const [originalCanvasSize, setOriginalCanvasSize] = useState({ width: 0, height: 0 });
-  
+  type Mask = number[];
+  type Outline = number[];
 
   // funcs
   const fetchProjectData = async (projectId: number) => {
@@ -135,7 +139,44 @@ const Project: React.FC<ProjectProps> = ({onHideSidebar,onShowSidebar}) => {
     const offset = scale > 1 ? (scale - 1) * ratio : (1 - scale) * -ratio;
     
     return `translateX(${offset}px)`;
+  };  
+
+  const drawSegmentation = (ctx: CanvasRenderingContext2D, masks: Mask[], outlines: Outline[]) : void => {
+    const blue600 = { r: 49, g: 130, b: 206 }; // blue.600
+  
+    // 윤곽선과 그림자 설정
+    ctx.strokeStyle = `rgba(${blue600.r}, ${blue600.g}, ${blue600.b}, 0.1)`;
+    ctx.lineWidth = 2;
+    ctx.shadowColor = `rgba(${blue600.r}, ${blue600.g}, ${blue600.b}, 1)`;
+    ctx.shadowBlur = 8;
+  
+    masks.forEach((mask) => {
+      // 좌표를 x, y로 분리
+      for (let i = 0; i < mask.length; i += 2) {
+        const x = mask[i];
+        const y = mask[i + 1];
+  
+        // 캔버스에 점 찍기
+        ctx.beginPath();
+        ctx.arc(x, y, 1, 0, 2 * Math.PI);
+        ctx.stroke();
+      }
+    });
+    ctx.strokeStyle = `rgba(${blue600.r}, ${blue600.g}, ${blue600.b}, 0.8)`;
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.moveTo(outlines[0][0], outlines[0][1]);
+
+    // 모든 윤곽 좌표를 연결
+    outlines.forEach(([x, y]) => {
+        ctx.lineTo(x, y);
+    });
+
+    // 윤곽선을 닫고 그림
+    ctx.closePath();
+    ctx.stroke();
   };
+  
 
   // handlers
   const handleToolClick = (tool: string) => {
@@ -288,7 +329,16 @@ const Project: React.FC<ProjectProps> = ({onHideSidebar,onShowSidebar}) => {
         console.log("requestData : ",{ ...requestData, x, y })
         axios.post(`${config.serverUrl}/rest/api/project/labeling/oneclick`, { ...requestData, x, y })
           .then(response => {
-            // 성공 시 처리
+            const maskData = response.data
+            console.log("response data : ",response.data)
+            const canvas = canvasRef.current;
+            if (canvas) {
+              const ctx = canvas.getContext('2d');
+              if (ctx) {
+                drawSegmentation(ctx, maskData.masks, maskData.outline);
+              }
+            }
+           
           })
           .catch(error => {
             // 실패 시 처리
@@ -318,6 +368,76 @@ const Project: React.FC<ProjectProps> = ({onHideSidebar,onShowSidebar}) => {
       }
     }
   };
+
+//   const setGuideLine = () => {
+//     const left = document.getElementById("left");
+//     const top = document.getElementById("top");
+//     const right = document.getElementById("right");
+//     const down = document.getElementById("down");
+//     if (left && top && right && down && flexContainerRef){
+//       const flexContainer = flexContainerRef.current
+//       document.getElementById("mainCenterUpper").addEventListener("mousemove", (e) => {
+//         const mouseX = e.clientX;
+//         const mouseY = e.clientY;
+//         left.style.width = mouseX - 2 + "px";
+//         left.style.left = 0 + 'px';
+//         left.style.top = mouseY + 'px';
+//         top.style.height = mouseY - 2 + "px";
+//         top.style.left = mouseX + 'px';
+//         top.style.top = 0 + 'px';
+        
+//         right.style.width = document.body.clientWidth - mouseX - 2 + "px";
+//         right.style.left = mouseX + 2 + 'px';
+//         right.style.top = mouseY + 'px';
+//         down.style.height = document.body.clientHeight - mouseY - 2 + "px";
+//         down.style.left = mouseX + 'px';
+//         down.style.top = mouseY + 2 + 'px';
+//         });
+//     }    
+// };
+
+// const setGuideLine = () => {
+//   useEffect(() => {
+//     const handleMouseMove = (e : MouseEvent) => {
+//       const left = document.getElementById("left");
+//       const top = document.getElementById("top");
+//       const right = document.getElementById("right");
+//       const down = document.getElementById("down");
+
+//       if (left && top && right && down) {
+//         const mouseX = e.clientX;
+//         const mouseY = e.clientY;
+//         left.style.width = mouseX - 2 + "px";
+//         left.style.left = 0 + 'px';
+//         left.style.top = mouseY + 'px';
+//         top.style.height = mouseY - 2 + "px";
+//         top.style.left = mouseX + 'px';
+//         top.style.top = 0 + 'px';
+        
+//         right.style.width = document.body.clientWidth - mouseX - 2 + "px";
+//         right.style.left = mouseX + 2 + 'px';
+//         right.style.top = mouseY + 'px';
+//         down.style.height = document.body.clientHeight - mouseY - 2 + "px";
+//         down.style.left = mouseX + 'px';
+//         down.style.top = mouseY + 2 + 'px';
+        
+//         // ... (나머지 코드는 동일)
+//       }
+//     };
+
+//     // flexContainerRef가 null이 아니라면 이벤트 리스너를 추가합니다.
+//     if (flexContainerRef && flexContainerRef.current) {
+//       flexContainerRef.current.addEventListener('mousemove', handleMouseMove);
+//     }
+
+//     // 컴포넌트가 언마운트될 때 이벤트 리스너를 제거합니다.
+//     return () => {
+//       if (flexContainerRef && flexContainerRef.current) {
+//         flexContainerRef.current.removeEventListener('mousemove', handleMouseMove);
+//       }
+//     };
+//   }, [flexContainerRef]);  // flexContainerRef가 변경될 때마다 이 useEffect가 실행됩니다.
+// };
 
   //components
   const MiniViewer = () => {
@@ -452,6 +572,52 @@ const Project: React.FC<ProjectProps> = ({onHideSidebar,onShowSidebar}) => {
     </Box>
     );
   };
+  const Left = styled.div`
+    width: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 1px;
+    layer-background-color:#ffffff;
+    border: 2px dashed #3182ce;
+  `;
+
+  const Top = styled.div`
+    height: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 1px;
+    layer-background-color:#ffffff;
+    border: 2px dashed #3182ce;
+  `;
+
+  const Right = styled.div`
+    width: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 1px;
+    layer-background-color:#ffffff;
+    border: 2px dashed #3182ce;
+  `;
+
+  const Down = styled.div`
+    height: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 1px;
+    layer-background-color:#ffffff;
+    border: 2px dashed #3182ce;
+  `;
+  const GuideLine = styled.div`
+    top: 60px;
+    left: 5vw;
+    right:25vw;
+    pointer-events: none;
+    z-index: 0;
+  `;
 
   // hooks
   useEffect(() => {
@@ -497,13 +663,6 @@ const Project: React.FC<ProjectProps> = ({onHideSidebar,onShowSidebar}) => {
       }
     }
   }, [canvasSize]);
-
-  // useEffect(() => {
-  //   setCanvasSize({
-  //     width: originalCanvasSize.width * scale,
-  //     height: originalCanvasSize.height * scale,
-  //   });
-  // }, [scale]);
   
   useEffect(() => {
     console.log("Init projectId : ",projectId)
@@ -539,6 +698,45 @@ const Project: React.FC<ProjectProps> = ({onHideSidebar,onShowSidebar}) => {
     }
   
   }, [scale]);
+
+  useEffect(() => {
+    const handleMouseMove = (e : MouseEvent) => {
+      const left = document.getElementById("left");
+      const top = document.getElementById("top");
+      const right = document.getElementById("right");
+      const down = document.getElementById("down");
+
+      if (left && top && right && down && selectedTool === "oneClickSegment") {
+        const mouseX = e.clientX;
+        const mouseY = e.clientY;
+        left.style.width = mouseX - 2 + "px";
+        left.style.left = 0 + 'px';
+        left.style.top = mouseY + 'px';
+        top.style.height = mouseY - 2 + "px";
+        top.style.left = mouseX + 'px';
+        top.style.top = 0 + 'px';
+        
+        right.style.width = document.body.clientWidth - mouseX - 2 + "px";
+        right.style.left = mouseX + 2 + 'px';
+        right.style.top = mouseY + 'px';
+        down.style.height = document.body.clientHeight - mouseY - 2 + "px";
+        down.style.left = mouseX + 'px';
+        down.style.top = mouseY + 2 + 'px';
+      }
+    };
+
+    // flexContainerRef가 null이 아니라면 이벤트 리스너를 추가합니다.
+    if (flexContainerRef && flexContainerRef.current) {
+      flexContainerRef.current.addEventListener('mousemove', handleMouseMove);
+    }
+
+    // 컴포넌트가 언마운트될 때 이벤트 리스너를 제거합니다.
+    return () => {
+      if (flexContainerRef && flexContainerRef.current) {
+        flexContainerRef.current.removeEventListener('mousemove', handleMouseMove);
+      }
+    };
+  }, [flexContainerRef, selectedTool]);
   
   return (
     <Flex 
@@ -607,7 +805,7 @@ const Project: React.FC<ProjectProps> = ({onHideSidebar,onShowSidebar}) => {
                     position: 'absolute', 
                     top: 0, 
                     left: 0,
-                    cursor: selectedTool === 'bbox' ? 'crosshair' : 'default',
+                    cursor: selectedTool === 'bbox' || 'oneClickSegment' ? 'crosshair' : 'default',
                     transform: `scale(${scale})`
                   }}
                   onClick={handleImageClick}
@@ -640,6 +838,14 @@ const Project: React.FC<ProjectProps> = ({onHideSidebar,onShowSidebar}) => {
         </Box>
         {isImageOverflow && (
           <MiniViewer />
+        )}
+        {selectedTool === "oneClickSegment" && (
+          <GuideLine>
+            <Left id={"left"} />
+            <Top id={"top"} />
+            <Right id={"right"} />
+            <Down id={"down"} />
+          </GuideLine>
         )}
         </Flex>
       </Flex>

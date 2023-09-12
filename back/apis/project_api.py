@@ -69,16 +69,22 @@ async def oneClickSegmentation(request: dict = None,db: Session = Depends(get_db
     if request.get("file_name") is None:
         raise HTTPException(status_code=404,detail="file_name must required!")
     
-    # if request.get("x") or request.get("y") is None:
-    #     raise HTTPException(status_code=404,detail="coords must required!")
+    if request.get('x') is None:
+        raise HTTPException(status_code=404,detail="coords must required!")
+    
+    if request.get('y') is None:
+        raise HTTPException(status_code=404,detail="coords must required!")
+
     
     parseData = {"dataset_id" : request.get("dataset_id"), 
                  "file_name" : request.get("file_name"),
                  "mode" : "oneclick",
                  "coords":[request.get("x"),request.get("y")]}
+    
     print("parseData : ",parseData)
     response = await project_service.image_labeling(parseData,db)
-    print("labeling oneclick segment response : ",response.json())
+    print("labeling oneclick segment response status ",response)
+    return JSONResponse(content=response.json())
 
 
 @router.post("/labeling/bbox")

@@ -58,6 +58,7 @@ const Toolbar: React.FC<ToolbarProps> = ({selectedTool, onToolClick}) => {
       display="flex" 
       // position='fixed'
       transition="all 0.5s ease-in-out" 
+      zIndex={10}
       >
         <Box
           bg="rgba(50, 50, 50, 1)"

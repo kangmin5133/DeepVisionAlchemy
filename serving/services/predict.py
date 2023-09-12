@@ -3,7 +3,7 @@ import torch
 import numpy as np
 import cv2
 from config.config import Config
-from utils.mask import mask_to_coco_format
+from utils.mask import mask_to_coco_format, find_contour
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
 coords,labels=[],[]
@@ -30,14 +30,15 @@ async def segment_anything(request : dict):
             )
         best_index = [i for i,score in enumerate(scores) if np.amax(scores) == score]
         mask_coords = mask_to_coco_format(masks[best_index])
+        binary_mask = (masks[best_index] > 0).astype(np.uint8)
+        largest_contour = find_contour(binary_mask[0])
+        response = {"masks": mask_coords, "outline": largest_contour}
     
     elif request.get("bbox"):
         pass
     elif request.get("global"):
         pass
 
-
-    response = {"masks": mask_coords}
     return response
 
     
