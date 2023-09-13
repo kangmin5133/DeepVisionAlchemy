@@ -281,12 +281,12 @@ const Signin: React.FC = () => {
                       Personal
                       
                     </Button>
-                    <Button onClick={() => setRegisterAs('organization')} isActive={registerAs === 'organization'}>
+                    {/* <Button onClick={() => setRegisterAs('organization')} isActive={registerAs === 'organization'}>
                       Organization
-                    </Button>
+                    </Button> */}
                   </HStack>
 
-                  {registerAs === 'organization' && (
+                  {/* {registerAs === 'organization' && (
                     <Box>
                       <FormLabel
                       color={titleColor}
@@ -347,7 +347,7 @@ const Signin: React.FC = () => {
                         {...register("orgEmail")} />
                       </GradientBorder>
                     </Box>
-                  )}
+                  )} */}
 
                   <Button
                     variant='brand'

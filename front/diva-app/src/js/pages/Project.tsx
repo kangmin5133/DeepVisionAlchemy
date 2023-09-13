@@ -46,6 +46,64 @@ interface ImageFile {
   created : string;
 }
 
+// for manage mask
+interface Mask {
+  project_id: number;
+  dataset_id: number;
+  image_id: number;
+  segmentation: number[]; // 마스크의 좌표
+  className: string; 
+  color: string;
+};
+
+// for draw mask
+type Segmentation = number[];
+
+// style components
+const Left = styled.div`
+width: 100%;
+position: absolute;
+top: 0;
+left: 0;
+height: 1px;
+layer-background-color:#ffffff;
+border: 2px dashed #3182ce;
+`;
+const Top = styled.div`
+height: 100%;
+position: absolute;
+top: 0;
+left: 0;
+width: 1px;
+layer-background-color:#ffffff;
+border: 2px dashed #3182ce;
+`;
+const Right = styled.div`
+width: 100%;
+position: absolute;
+top: 0;
+left: 0;
+height: 1px;
+layer-background-color:#ffffff;
+border: 2px dashed #3182ce;
+`;
+const Down = styled.div`
+height: 100%;
+position: absolute;
+top: 0;
+left: 0;
+width: 1px;
+layer-background-color:#ffffff;
+border: 2px dashed #3182ce;
+`;
+const GuideLine = styled.div`
+top: 60px;
+left: 5vw;
+right:25vw;
+pointer-events: none;
+z-index: 0;
+`;
+
 const Project: React.FC<ProjectProps> = ({onHideSidebar,onShowSidebar}) => {
 
   // states
@@ -87,8 +145,10 @@ const Project: React.FC<ProjectProps> = ({onHideSidebar,onShowSidebar}) => {
   const [isImageOverflow,setIsImageOverflow] = useState(false);
 
   const [originalCanvasSize, setOriginalCanvasSize] = useState({ width: 0, height: 0 });
-  type Mask = number[];
-  type Outline = number[];
+
+  // mask object manage
+  const [masksData, setMasksData] = useState<Mask[]>([]);
+  const [selectedMaskIndex, setSelectedMaskIndex] = useState<number | null>(null);
 
   // funcs
   const fetchProjectData = async (projectId: number) => {
@@ -141,43 +201,58 @@ const Project: React.FC<ProjectProps> = ({onHideSidebar,onShowSidebar}) => {
     return `translateX(${offset}px)`;
   };  
 
-  const drawSegmentation = (ctx: CanvasRenderingContext2D, masks: Mask[], outlines: Outline[]) : void => {
+  const drawSegmentation = (ctx: CanvasRenderingContext2D, mask: Segmentation) : void => {
     const blue600 = { r: 49, g: 130, b: 206 }; // blue.600
   
     // 윤곽선과 그림자 설정
-    ctx.strokeStyle = `rgba(${blue600.r}, ${blue600.g}, ${blue600.b}, 0.1)`;
-    ctx.lineWidth = 2;
+    ctx.strokeStyle = `rgba(${blue600.r}, ${blue600.g}, ${blue600.b}, 0.8)`;
+    ctx.lineWidth = 4;
     ctx.shadowColor = `rgba(${blue600.r}, ${blue600.g}, ${blue600.b}, 1)`;
     ctx.shadowBlur = 8;
   
-    masks.forEach((mask) => {
-      // 좌표를 x, y로 분리
-      for (let i = 0; i < mask.length; i += 2) {
-        const x = mask[i];
-        const y = mask[i + 1];
+    // 채워진 영역의 색상 설정
+    ctx.fillStyle = `rgba(${blue600.r}, ${blue600.g}, ${blue600.b}, 0.5)`; // 반투명한 파란색
   
-        // 캔버스에 점 찍기
-        ctx.beginPath();
-        ctx.arc(x, y, 1, 0, 2 * Math.PI);
-        ctx.stroke();
-      }
-    });
-    ctx.strokeStyle = `rgba(${blue600.r}, ${blue600.g}, ${blue600.b}, 0.8)`;
-    ctx.lineWidth = 4;
+    // 연속된 좌표 데이터에서 좌표쌍을 가져와서 선을 그립니다.
     ctx.beginPath();
-    ctx.moveTo(outlines[0][0], outlines[0][1]);
+    // ctx.moveTo(mask.segmentation[0], mask.segmentation[1]);
+    // for (let i = 2; i < mask.segmentation.length; i += 2) {
+    //   ctx.lineTo(mask.segmentation[i], mask.segmentation[i + 1]);
+    // }
 
-    // 모든 윤곽 좌표를 연결
-    outlines.forEach(([x, y]) => {
-        ctx.lineTo(x, y);
-    });
-
+    ctx.moveTo(mask[0], mask[1]);
+    for (let i = 2; i < mask.length; i += 2) {
+      ctx.lineTo(mask[i], mask[i + 1]);
+    }
+  
     // 윤곽선을 닫고 그림
     ctx.closePath();
+    ctx.fill();  // 채워진 영역을 그립니다.
     ctx.stroke();
   };
-  
 
+  const drawMultipleSegmentations = (ctx: CanvasRenderingContext2D, masks: Segmentation[]) : void => {
+    masks.forEach(segmentation => {
+        drawSegmentation(ctx, segmentation);
+    });
+  };
+  
+  const pointInPolygon = (point: [number, number], polygon: Segmentation): boolean => {
+    let isInside = false;
+    // const coords = polygon.segmentation;
+    const coords = polygon;
+    for (let i = 0, j = coords.length - 2; i < coords.length; j = i, i += 2) {
+      const xi = coords[i], yi = coords[i + 1];
+      const xj = coords[j], yj = coords[j + 1];
+  
+      const intersect = ((yi > point[1]) !== (yj > point[1]))
+        && (point[0] < (xj - xi) * (point[1] - yi) / (yj - yi) + xi);
+      if (intersect) isInside = !isInside;
+    }
+  
+    return isInside;
+  };
+  
   // handlers
   const handleToolClick = (tool: string) => {
     if (selectedTool === tool) {
@@ -195,7 +270,15 @@ const Project: React.FC<ProjectProps> = ({onHideSidebar,onShowSidebar}) => {
       };
       axios.post(`${config.serverUrl}/rest/api/project/labeling/global`, { ...requestData})
           .then(response => {
-            // 성공 시 처리
+            const maskData = response.data
+            console.log("response data : ",response.data)
+            const canvas = canvasRef.current;
+            if (canvas) {
+              const ctx = canvas.getContext('2d');
+              if (ctx) {
+                drawMultipleSegmentations(ctx, maskData.masks);
+              }
+            }
           })
           .catch(error => {
             // 실패 시 처리
@@ -283,7 +366,15 @@ const Project: React.FC<ProjectProps> = ({onHideSidebar,onShowSidebar}) => {
         
         axios.post(`${config.serverUrl}/rest/api/project/labeling/bbox`, { ...requestData, ...coordinates})
           .then(response => {
-            // 성공 시 처리
+            const maskData = response.data
+            console.log("response data : ",response.data)
+            const canvas = canvasRef.current;
+            if (canvas) {
+              const ctx = canvas.getContext('2d');
+              if (ctx) {
+                drawSegmentation(ctx, maskData.masks);
+              }
+            }
           })
           .catch(error => {
             // 실패 시 처리
@@ -331,18 +422,40 @@ const Project: React.FC<ProjectProps> = ({onHideSidebar,onShowSidebar}) => {
           .then(response => {
             const maskData = response.data
             console.log("response data : ",response.data)
+
+            //testing...
+            const newMask = {
+              project_id: projectData.project_id,
+              dataset_id: projectData.dataset_id,
+              image_id: imageFiles[currentImageIndex].id, // 이 부분은 실제 이미지의 ID로 수정해야 할 수도 있습니다.
+              segmentation: maskData.masks,
+              className: "", // 기본적으로 빈 문자열로 초기화
+              color: "" // 기본적으로 빈 문자열로 초기화
+          };
+  
+            setMasksData(prevMasks => [...prevMasks, newMask]);
+            // setMasksData(prevMasks => [...prevMasks, maskData.masks]);
+
             const canvas = canvasRef.current;
             if (canvas) {
               const ctx = canvas.getContext('2d');
               if (ctx) {
-                drawSegmentation(ctx, maskData.masks, maskData.outline);
+                
+                drawSegmentation(ctx, maskData.masks);
               }
             }
-           
           })
           .catch(error => {
             // 실패 시 처리
           });
+    } else if(selectedTool === "defaultPointer"){
+      for (let i = 0; i < masksData.length; i++) {
+        const maskPolygon = masksData[i];
+        if (pointInPolygon([x, y], maskPolygon.segmentation)) {
+          setSelectedMaskIndex(i);
+          break;
+        }
+      }
     }
   };
 
@@ -368,76 +481,6 @@ const Project: React.FC<ProjectProps> = ({onHideSidebar,onShowSidebar}) => {
       }
     }
   };
-
-//   const setGuideLine = () => {
-//     const left = document.getElementById("left");
-//     const top = document.getElementById("top");
-//     const right = document.getElementById("right");
-//     const down = document.getElementById("down");
-//     if (left && top && right && down && flexContainerRef){
-//       const flexContainer = flexContainerRef.current
-//       document.getElementById("mainCenterUpper").addEventListener("mousemove", (e) => {
-//         const mouseX = e.clientX;
-//         const mouseY = e.clientY;
-//         left.style.width = mouseX - 2 + "px";
-//         left.style.left = 0 + 'px';
-//         left.style.top = mouseY + 'px';
-//         top.style.height = mouseY - 2 + "px";
-//         top.style.left = mouseX + 'px';
-//         top.style.top = 0 + 'px';
-        
-//         right.style.width = document.body.clientWidth - mouseX - 2 + "px";
-//         right.style.left = mouseX + 2 + 'px';
-//         right.style.top = mouseY + 'px';
-//         down.style.height = document.body.clientHeight - mouseY - 2 + "px";
-//         down.style.left = mouseX + 'px';
-//         down.style.top = mouseY + 2 + 'px';
-//         });
-//     }    
-// };
-
-// const setGuideLine = () => {
-//   useEffect(() => {
-//     const handleMouseMove = (e : MouseEvent) => {
-//       const left = document.getElementById("left");
-//       const top = document.getElementById("top");
-//       const right = document.getElementById("right");
-//       const down = document.getElementById("down");
-
-//       if (left && top && right && down) {
-//         const mouseX = e.clientX;
-//         const mouseY = e.clientY;
-//         left.style.width = mouseX - 2 + "px";
-//         left.style.left = 0 + 'px';
-//         left.style.top = mouseY + 'px';
-//         top.style.height = mouseY - 2 + "px";
-//         top.style.left = mouseX + 'px';
-//         top.style.top = 0 + 'px';
-        
-//         right.style.width = document.body.clientWidth - mouseX - 2 + "px";
-//         right.style.left = mouseX + 2 + 'px';
-//         right.style.top = mouseY + 'px';
-//         down.style.height = document.body.clientHeight - mouseY - 2 + "px";
-//         down.style.left = mouseX + 'px';
-//         down.style.top = mouseY + 2 + 'px';
-        
-//         // ... (나머지 코드는 동일)
-//       }
-//     };
-
-//     // flexContainerRef가 null이 아니라면 이벤트 리스너를 추가합니다.
-//     if (flexContainerRef && flexContainerRef.current) {
-//       flexContainerRef.current.addEventListener('mousemove', handleMouseMove);
-//     }
-
-//     // 컴포넌트가 언마운트될 때 이벤트 리스너를 제거합니다.
-//     return () => {
-//       if (flexContainerRef && flexContainerRef.current) {
-//         flexContainerRef.current.removeEventListener('mousemove', handleMouseMove);
-//       }
-//     };
-//   }, [flexContainerRef]);  // flexContainerRef가 변경될 때마다 이 useEffect가 실행됩니다.
-// };
 
   //components
   const MiniViewer = () => {
@@ -572,52 +615,6 @@ const Project: React.FC<ProjectProps> = ({onHideSidebar,onShowSidebar}) => {
     </Box>
     );
   };
-  const Left = styled.div`
-    width: 100%;
-    position: absolute;
-    top: 0;
-    left: 0;
-    height: 1px;
-    layer-background-color:#ffffff;
-    border: 2px dashed #3182ce;
-  `;
-
-  const Top = styled.div`
-    height: 100%;
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 1px;
-    layer-background-color:#ffffff;
-    border: 2px dashed #3182ce;
-  `;
-
-  const Right = styled.div`
-    width: 100%;
-    position: absolute;
-    top: 0;
-    left: 0;
-    height: 1px;
-    layer-background-color:#ffffff;
-    border: 2px dashed #3182ce;
-  `;
-
-  const Down = styled.div`
-    height: 100%;
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 1px;
-    layer-background-color:#ffffff;
-    border: 2px dashed #3182ce;
-  `;
-  const GuideLine = styled.div`
-    top: 60px;
-    left: 5vw;
-    right:25vw;
-    pointer-events: none;
-    z-index: 0;
-  `;
 
   // hooks
   useEffect(() => {
@@ -737,6 +734,11 @@ const Project: React.FC<ProjectProps> = ({onHideSidebar,onShowSidebar}) => {
       }
     };
   }, [flexContainerRef, selectedTool]);
+
+  useEffect(() => {
+    console.log("selectedMaskIndex : ",selectedMaskIndex)
+    console.log("masksData : ",masksData)
+  }, [selectedMaskIndex, masksData]);
   
   return (
     <Flex 
@@ -805,7 +807,7 @@ const Project: React.FC<ProjectProps> = ({onHideSidebar,onShowSidebar}) => {
                     position: 'absolute', 
                     top: 0, 
                     left: 0,
-                    cursor: selectedTool === 'bbox' || 'oneClickSegment' ? 'crosshair' : 'default',
+                    cursor: (selectedTool === 'bbox' || selectedTool === 'oneClickSegment') ? 'crosshair' : 'default',
                     transform: `scale(${scale})`
                   }}
                   onClick={handleImageClick}

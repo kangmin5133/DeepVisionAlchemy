@@ -69,12 +69,8 @@ async def oneClickSegmentation(request: dict = None,db: Session = Depends(get_db
     if request.get("file_name") is None:
         raise HTTPException(status_code=404,detail="file_name must required!")
     
-    if request.get('x') is None:
+    if request.get('x') is None or request.get('y') is None:
         raise HTTPException(status_code=404,detail="coords must required!")
-    
-    if request.get('y') is None:
-        raise HTTPException(status_code=404,detail="coords must required!")
-
     
     parseData = {"dataset_id" : request.get("dataset_id"), 
                  "file_name" : request.get("file_name"),
@@ -96,7 +92,7 @@ async def bboxSegmentation(request: dict = None,db: Session = Depends(get_db)):
     if request.get("file_name") is None:
         raise HTTPException(status_code=404,detail="file_name must required!")
     
-    if request.get("startX") or request.get("startY") or request.get("endX") or request.get("endY") is None:
+    if request.get("startX") is None or request.get("startY") is None or request.get("endX") is None or request.get("endY") is None:
         raise HTTPException(status_code=404,detail="bbox must required!")
     
     parseData = {"dataset_id" : request.get("dataset_id"), 
@@ -105,7 +101,9 @@ async def bboxSegmentation(request: dict = None,db: Session = Depends(get_db)):
                  "bbox":[request.get("startX"), request.get("startY"), request.get("endX"), request.get("endY")]}
     
     response = await project_service.image_labeling(parseData,db)
-    print("labeling bbox segment response : ",response)
+    print("labeling bbox segment response status : ",response)
+
+    return JSONResponse(content=response.json())
 
 @router.post("/labeling/global")
 async def bboxSegmentation(request: dict = None,db: Session = Depends(get_db)):
@@ -115,3 +113,11 @@ async def bboxSegmentation(request: dict = None,db: Session = Depends(get_db)):
     
     if request.get("file_name") is None:
         raise HTTPException(status_code=404,detail="file_name must required!")
+    
+    parseData = {"dataset_id" : request.get("dataset_id"), 
+                "file_name" : request.get("file_name"),
+                "mode" : "global"}
+    response = await project_service.image_labeling(parseData,db)
+    print("labeling global segment response status : ",response)
+
+    return JSONResponse(content=response.json())

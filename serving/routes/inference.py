@@ -21,7 +21,7 @@ async def sam_predict(request : SamRequest = None):
     request :
         dataset_id[Required] : int
         image_path[Required]: str
-        global[Optional] : boolean = False
+        global_segment[Optional] : boolean = False
         coords[Optional] : [[x1(int),y1(int)],[x1(int),y1(int)],...]
         bbox[Optional] : [x1,y1,x2,y2]
     return :

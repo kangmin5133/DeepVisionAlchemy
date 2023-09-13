@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from "react-router-dom";
 import { 
     Button,Flex,
     Table as ChakraTable,
@@ -9,6 +10,7 @@ import {
 import Card from "../Card/Card";
 import CardHeader from "../Card/CardHeader";
 import CardBody from "../Card/CardBody";
+import { Row } from 'antd';
 
 interface Column {
   header: string;
@@ -32,10 +34,17 @@ const Table: React.FC<TableProps> = ({
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
   const totalPages = Math.ceil(data.length / itemsPerPage);
+  const navigate = useNavigate();
 
   const onPageChange = (page: number) => {
     if ((page < 1) || (page > totalPages)) return;
     setCurrentPage(page);
+  };
+
+  const handleLaunch = (id: number) => {
+    navigate(`/dashboard/workspace-labeling/project`, {
+      state: { projectId: id }
+    });
   };
 
   const startIdx = (currentPage - 1) * itemsPerPage;
@@ -79,8 +88,26 @@ const Table: React.FC<TableProps> = ({
                         •••
                     </MenuButton>
                     <MenuList>
+                    {title === 'Projects' && (
+                      <>
                         <MenuItem onClick={() => {/* Update 로직 */}}>Update</MenuItem>
-                        <MenuItem onClick={() => {/* Delete 로직 */}}>Delete</MenuItem>
+                        <MenuItem onClick={() => {/* Update 로직 */}}>Delete</MenuItem>
+                        <MenuItem onClick={() => handleLaunch(row.project_id)}>Launch</MenuItem>
+                      </>
+                    )}
+                    {title === 'dataset' && (
+                      <>
+                        <MenuItem onClick={() => {/* Update 로직 */}}>Update</MenuItem>
+                        <MenuItem onClick={() => {/* Update 로직 */}}>Delete</MenuItem>
+                        <MenuItem onClick={() => {/* Update 로직 */}}>Go to Validation</MenuItem>
+                      </>
+                    )}
+                    {title  === 'model' && (
+                      <>
+                        <MenuItem onClick={() => {/* Update 로직 */}}>Delete</MenuItem>
+                        <MenuItem onClick={() => {/* Update 로직 */}}>Link project</MenuItem>
+                      </>
+                    )}
                     </MenuList>
                     </Menu>
                 </Td>

@@ -99,7 +99,7 @@ const SelectUserType: React.FC = () => {
           </Flex>
         </Card>
 
-        <Card  onClick={() => handleSelection("Organization")} cursor="pointer">
+        {/* <Card  onClick={() => handleSelection("Organization")} cursor="pointer">
           <Flex direction='column' justify='center' align='center' w='100%' h='100%'>
             <Text 
             textAlign='center'
@@ -122,7 +122,7 @@ const SelectUserType: React.FC = () => {
               </Box>
             )}
           </Flex>
-        </Card>
+        </Card> */}
       </Flex>
     </Flex>
   );

@@ -122,7 +122,7 @@ async def image_labeling(request:dict, db:Session):
         parsed_data["bbox"] = request.get("bbox")
         response = requests.post(URL, json={"dataset_id": dataset_id,"image_path": file_name,"bbox": parsed_data["bbox"]})
 
-    elif mode == "globalSegment":
+    elif mode == "global":
         response = requests.post(URL, json={"dataset_id": dataset_id,"image_path": file_name,"global": True})
 
     return response

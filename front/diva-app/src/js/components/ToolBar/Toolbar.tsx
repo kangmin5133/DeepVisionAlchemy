@@ -156,7 +156,8 @@ const Toolbar: React.FC<ToolbarProps> = ({selectedTool, onToolClick}) => {
                 backgroundColor: 'blue.100',
                 transition: 'background-color 0.2s',
               }}
-              borderColor={selectedTool === 'globalSegment' ? "#00BFFE" : "blue.500"}
+              // borderColor={selectedTool === 'globalSegment' ? "#00BFFE" : "blue.500"}
+              borderColor={"blue.500"}
               borderWidth="0.2rem"
             
             >
