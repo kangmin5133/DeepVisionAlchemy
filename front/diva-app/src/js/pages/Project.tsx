@@ -16,7 +16,7 @@ import axios from "axios";
 import IconBox from "../components/IconBox";
 
 //libraries
-import styled from 'styled-components';
+import styled, { keyframes } from 'styled-components';
 
 interface ProjectProps {
   onHideSidebar: () => void; 
@@ -31,8 +31,8 @@ interface ProjectData {
   dataset_id : number;
   org_id : number | null;
   creator_id : number; 
-  preprocess_processes : string[] | null;
-  classes : string[]
+  preproccess_tags : string[] | null;
+  project_classes : string[]
   created : string;
 }
 
@@ -45,16 +45,32 @@ interface ImageFile {
   license : number;
   created : string;
 }
-
 // for manage mask
 interface Mask {
   project_id: number;
   dataset_id: number;
   image_id: number;
+  annotation_id : number;
   segmentation: number[]; // 마스크의 좌표
   className: string; 
   color: string;
 };
+
+interface currentMask {
+  project_id: number;
+  dataset_id: number;
+  image_id: number;
+  annotation_id : number;
+  segmentation: number[]; // 마스크의 좌표
+  className: string; 
+  color: string;
+};
+
+interface ClassSelectorProps {
+  position: { x: number; y: number } | null;
+  selectedMaskData: Mask; // maskData의 구체적인 타입에 따라 수정 필요
+  onSelect: (selectedClass: string) => void;
+}
 
 // for draw mask
 type Segmentation = number[];
@@ -103,6 +119,63 @@ right:25vw;
 pointer-events: none;
 z-index: 0;
 `;
+const rotateAnimation = keyframes`
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+`;
+const LoadingAnimation = styled.div`
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.5); // 반투명 배경
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  
+  &::before {
+    content: '';
+    width: 50px;
+    height: 50px;
+    border: 5px solid #000;
+    border-top-color: transparent;
+    border-radius: 50%;
+    animation: ${rotateAnimation} 1s linear infinite;
+  }
+`;
+// const ClassTagButton = styled.button`
+//   background-color: rgba(50, 50, 50, 1);
+//   border-radius: 18px;
+//   border: 0.15rem solid white;
+//   margin: 5px;
+//   cursor: pointer;
+//   padding: 5px 10px;
+//   color: white;
+//   transition: background-color 0.3s;
+
+//   &:hover {
+//     background-color: rgba(70, 70, 70, 1);
+//   }
+// `;
+const ClassBox = styled.button`
+  background-color: rgba(50, 50, 50, 1);
+  border-radius: 18px;
+  border: 0.15rem solid white;
+  margin: 5px;
+  cursor: pointer;
+  padding: 5px 10px;
+  color: white;
+  transition: background-color 0.3s;
+
+  &:hover {
+    background-color: rgba(70, 70, 70, 1);
+  }
+`;
 
 const Project: React.FC<ProjectProps> = ({onHideSidebar,onShowSidebar}) => {
 
@@ -117,12 +190,13 @@ const Project: React.FC<ProjectProps> = ({onHideSidebar,onShowSidebar}) => {
     dataset_id : 0,
     org_id : 0,
     creator_id : 0, 
-    preprocess_processes : [],
-    classes : [],
+    project_classes : [],
+    preproccess_tags :[],
     created : ''
   })
   const [imageFiles,setImageFiles] = useState<ImageFile[]>([])
   const [selectedTool, setSelectedTool] = useState<string | null>(null);
+
   // canvas states
   const [canvasSize, setCanvasSize] = useState({ width: 0, height: 0 });
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -148,7 +222,15 @@ const Project: React.FC<ProjectProps> = ({onHideSidebar,onShowSidebar}) => {
 
   // mask object manage
   const [masksData, setMasksData] = useState<Mask[]>([]);
+  const [currentMasksData, setCurrentMasksData] = useState<currentMask[]>([]);
   const [selectedMaskIndex, setSelectedMaskIndex] = useState<number | null>(null);
+
+  // loading animation
+  const [isLoading, setIsLoading] = useState(false);
+
+  // class
+  const [position, setPosition] = useState<{ x: number, y: number } | null>(null);
+  const selectedMaskData = masksData.find(mask => mask.annotation_id === selectedMaskIndex);
 
   // funcs
   const fetchProjectData = async (projectId: number) => {
@@ -201,12 +283,13 @@ const Project: React.FC<ProjectProps> = ({onHideSidebar,onShowSidebar}) => {
     return `translateX(${offset}px)`;
   };  
 
-  const drawSegmentation = (ctx: CanvasRenderingContext2D, mask: Segmentation) : void => {
+  const drawSegmentation = (ctx: CanvasRenderingContext2D, mask: Segmentation, isSelected?: boolean) : void => {
+    // console.log("drawSegmentation start")
     const blue600 = { r: 49, g: 130, b: 206 }; // blue.600
   
     // 윤곽선과 그림자 설정
     ctx.strokeStyle = `rgba(${blue600.r}, ${blue600.g}, ${blue600.b}, 0.8)`;
-    ctx.lineWidth = 4;
+    ctx.lineWidth = isSelected ? 6 : 2; // 선택된 경우 굵게
     ctx.shadowColor = `rgba(${blue600.r}, ${blue600.g}, ${blue600.b}, 1)`;
     ctx.shadowBlur = 8;
   
@@ -229,6 +312,7 @@ const Project: React.FC<ProjectProps> = ({onHideSidebar,onShowSidebar}) => {
     ctx.closePath();
     ctx.fill();  // 채워진 영역을 그립니다.
     ctx.stroke();
+    console.log("drawSegmentation done")
   };
 
   const drawMultipleSegmentations = (ctx: CanvasRenderingContext2D, masks: Segmentation[]) : void => {
@@ -238,6 +322,7 @@ const Project: React.FC<ProjectProps> = ({onHideSidebar,onShowSidebar}) => {
   };
   
   const pointInPolygon = (point: [number, number], polygon: Segmentation): boolean => {
+    // console.log("pointInPolygon start")
     let isInside = false;
     // const coords = polygon.segmentation;
     const coords = polygon;
@@ -252,7 +337,8 @@ const Project: React.FC<ProjectProps> = ({onHideSidebar,onShowSidebar}) => {
   
     return isInside;
   };
-  
+
+
   // handlers
   const handleToolClick = (tool: string) => {
     if (selectedTool === tool) {
@@ -404,8 +490,6 @@ const Project: React.FC<ProjectProps> = ({onHideSidebar,onShowSidebar}) => {
 
   const handleImageClick = (e: React.MouseEvent<HTMLCanvasElement>) => {
     const rect = (e.target as HTMLCanvasElement).getBoundingClientRect();
-    // const x = e.clientX;
-    // const y = e.clientY;
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
     const coords = [x, y];
@@ -416,18 +500,20 @@ const Project: React.FC<ProjectProps> = ({onHideSidebar,onShowSidebar}) => {
       file_name,
     };
     if (selectedTool === "oneClickSegment") {
+      // console.log("oneClickSegment start")
         // oneClickSegment일 때의 동작
-        console.log("requestData : ",{ ...requestData, x, y })
+        // console.log("requestData : ",{ ...requestData, x, y })
         axios.post(`${config.serverUrl}/rest/api/project/labeling/oneclick`, { ...requestData, x, y })
           .then(response => {
             const maskData = response.data
-            console.log("response data : ",response.data)
+            // console.log("response data : ",response.data)
 
             //testing...
             const newMask = {
               project_id: projectData.project_id,
               dataset_id: projectData.dataset_id,
               image_id: imageFiles[currentImageIndex].id, // 이 부분은 실제 이미지의 ID로 수정해야 할 수도 있습니다.
+              annotation_id : masksData.length,
               segmentation: maskData.masks,
               className: "", // 기본적으로 빈 문자열로 초기화
               color: "" // 기본적으로 빈 문자열로 초기화
@@ -435,12 +521,10 @@ const Project: React.FC<ProjectProps> = ({onHideSidebar,onShowSidebar}) => {
   
             setMasksData(prevMasks => [...prevMasks, newMask]);
             // setMasksData(prevMasks => [...prevMasks, maskData.masks]);
-
             const canvas = canvasRef.current;
             if (canvas) {
               const ctx = canvas.getContext('2d');
               if (ctx) {
-                
                 drawSegmentation(ctx, maskData.masks);
               }
             }
@@ -449,10 +533,12 @@ const Project: React.FC<ProjectProps> = ({onHideSidebar,onShowSidebar}) => {
             // 실패 시 처리
           });
     } else if(selectedTool === "defaultPointer"){
+      // console.log("defaultPointer start")
       for (let i = 0; i < masksData.length; i++) {
         const maskPolygon = masksData[i];
-        if (pointInPolygon([x, y], maskPolygon.segmentation)) {
-          setSelectedMaskIndex(i);
+        if ( maskPolygon.image_id === currentImageIndex && pointInPolygon([x, y], maskPolygon.segmentation)) {
+          setSelectedMaskIndex(masksData[i].annotation_id);
+          setPosition({x:x,y:y}) // for class selector components
           break;
         }
       }
@@ -460,10 +546,11 @@ const Project: React.FC<ProjectProps> = ({onHideSidebar,onShowSidebar}) => {
   };
 
   const handleTableRowClick = (index: number) => {
-    setCurrentImageIndex(index);
+    // console.log("handleTableRowClick start")
     const selectedImage = imageFiles[index];
     fetchImages(projectData.dataset_id, selectedImage.id)
       .then((fetchedImage) => {
+        setCurrentImageIndex(index);
         setCurrentImage(fetchedImage.image);
       })
       .catch((error) => {
@@ -472,8 +559,8 @@ const Project: React.FC<ProjectProps> = ({onHideSidebar,onShowSidebar}) => {
   };
 
   const handlePrevNextClick = (direction: 'prev' | 'next') => {
+    // console.log("handlePrevNextClick start")
     if (currentImageIndex !== null) {
-      
       let newIndex = direction === 'prev' ? currentImageIndex - 1 : currentImageIndex + 1;
       if (newIndex >= 0 && newIndex < imageFiles.length) {
         setSelectedRowId(imageFiles[newIndex].id); // 선택된 행의 ID 업데이트
@@ -481,6 +568,12 @@ const Project: React.FC<ProjectProps> = ({onHideSidebar,onShowSidebar}) => {
       }
     }
   };
+
+  const handleClassSelect = (selectedClass : string) => {
+    // 선택된 클래스를 사용하여 선택된 마스크 데이터의 className을 업데이트
+    // 예: setSelectedMaskClassName(selectedClass);
+    console.log("class selected!!!!")
+  }
 
   //components
   const MiniViewer = () => {
@@ -616,6 +709,29 @@ const Project: React.FC<ProjectProps> = ({onHideSidebar,onShowSidebar}) => {
     );
   };
 
+  function ClassSelector({position, selectedMaskData, onSelect}:ClassSelectorProps) {
+    console.log("ClassSelector ON")
+    console.log("project_classes :",projectData.project_classes)
+    if (!projectData.project_classes) return null;
+    console.log("projectData.classes null")
+    if (!position) return null;
+    const handleClassClick = (selectedClass:string) => {
+      onSelect(selectedClass);
+    }
+    
+    return (
+      <Box style={{ position: 'absolute', top: position.y, left: position.x }}>
+        <ClassBox>
+            {projectData.project_classes.map((className :string, index : number) => (
+            <Button key={index} onClick={() => handleClassClick(className)}>
+              {className}
+            </Button>
+          ))}
+        </ClassBox> 
+      </Box>
+    );
+  };
+
   // hooks
   useEffect(() => {
     onHideSidebar();
@@ -736,10 +852,52 @@ const Project: React.FC<ProjectProps> = ({onHideSidebar,onShowSidebar}) => {
   }, [flexContainerRef, selectedTool]);
 
   useEffect(() => {
-    console.log("selectedMaskIndex : ",selectedMaskIndex)
-    console.log("masksData : ",masksData)
-  }, [selectedMaskIndex, masksData]);
-  
+    const canvas = canvasRef.current;
+    if (canvas) {
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+          for (let i = 0; i < masksData.length; i++) {
+              if (masksData[i].image_id === currentImageIndex) {
+                  const mask = masksData[i].segmentation;
+                  const isSelected = masksData[i].annotation_id === selectedMaskIndex; // 현재 마스크가 선택된 마스크인지 확인
+                  drawSegmentation(ctx, mask, isSelected); // 선택 여부에 따라 스타일 적용하여 그리기
+              }
+            } // 모든 마스크 다시 그리기
+        }
+    }
+  }, [selectedMaskIndex, masksData, currentImageIndex]);
+
+  useEffect(() => {
+    let currentmask = [];
+    for (let i = 0; i < masksData.length; i++) {
+        if (masksData[i].image_id === currentImageIndex) {
+          currentmask.push(masksData[i])
+        } 
+    }
+    setCurrentMasksData(currentmask)
+
+    setIsLoading(true);
+    const timeoutId = setTimeout(() => {
+      // 여기에 원하는 코드를 작성합니다.
+      if (currentMasksData.length !== 0){
+         // 로딩 애니메이션 활성화
+        setSelectedMaskIndex(currentMasksData[0].annotation_id);
+        setIsLoading(false);
+      }else{
+        setSelectedMaskIndex(null);
+        setIsLoading(false);
+      }
+    }, 200); // 1000ms = 1초
+    
+
+    return () => {
+      clearTimeout(timeoutId); // 타임아웃 취소
+      
+    };
+    
+  }, [currentImageIndex]);
+
   return (
     <Flex 
     bgColor="gray.500" 
@@ -815,6 +973,11 @@ const Project: React.FC<ProjectProps> = ({onHideSidebar,onShowSidebar}) => {
                   onMouseMove={handleMouseMove}
                   onMouseUp={handleMouseUp}
                   />
+                  {isLoading && <LoadingAnimation />}
+                  {
+                    selectedMaskData && selectedMaskData.className === "" && position &&
+                    <ClassSelector position={position} selectedMaskData={selectedMaskData} onSelect={handleClassSelect}/>
+                  }
             </Box>
             <Box position="relative" marginRight={8} zIndex={2}>
                 <Button 
