@@ -71,6 +71,11 @@ interface WorkspaceProps {
   sideBarVisible : boolean;
 }
 
+type ClassTag = {
+  name: string;
+  color: string;
+};
+
 interface FormValues {
   projectName: string;
   projectDescription: string;
@@ -79,7 +84,7 @@ interface FormValues {
   preprocessing: boolean;
   preprocessTags : string[],
   taskType: string;
-  classTags : string[];
+  classTags : ClassTag[];
 }
 
 interface Dataset {
@@ -102,8 +107,8 @@ interface Project {
   dataset_id : number;
   org_id : number | null;
   creator_id : number; 
-  preprocess_processes : string[] | null;
-  classes : string[]
+  preproccess_tags : string[] | null;
+  project_classes : string[]
   created : string;
 }
 
@@ -139,7 +144,8 @@ const LabelingWorkspace: React.FC<WorkspaceProps> = ({sideBarVisible}) => {
   const { isOpen: isOpenInvite, onOpen: onOpenInvite, onClose: onCloseInvite } = useDisclosure();
   const { isOpen: isOpenProject, onOpen: onOpenProject, onClose: onCloseProject } = useDisclosure();
 
-  const [classTags, setClassTags] = useState<string[]>([]);
+  // const [classTags, setClassTags] = useState<string[]>([]);
+  const [classTags, setClassTags] = useState<{name: string, color: string}[]>([]);
   const [preprocessTags, setPreprocessTags] = useState<string[]>([]);
   const [inputValue, setInputValue] = useState<string>('');
 
@@ -165,6 +171,7 @@ const LabelingWorkspace: React.FC<WorkspaceProps> = ({sideBarVisible}) => {
       values.datasetId = selectedDatasetId || datasets[0].dataset_id;
       values.workspaceId = workspaceId;
       values.preprocessTags = preprocessTags;
+      // values.classTags = classTags;
       values.classTags = classTags;
 
       const payload = {
@@ -228,6 +235,13 @@ const LabelingWorkspace: React.FC<WorkspaceProps> = ({sideBarVisible}) => {
     alignItems: 'center',
     cursor: 'pointer',
   };
+
+  //funcs
+  const generateRandomColor = (): string => {
+    const randomInt = (): number => Math.floor(Math.random() * 256);
+    return `#${randomInt().toString(16).padStart(2, '0')}${randomInt().toString(16).padStart(2, '0')}${randomInt().toString(16).padStart(2, '0')}`;
+  }
+
 
 
   //components
@@ -335,16 +349,27 @@ const LabelingWorkspace: React.FC<WorkspaceProps> = ({sideBarVisible}) => {
     setSelectedDatasetId(Number(event.target.value));
   };
 
+  // const handleAddClassTag = () => {
+  //   if (inputValue && !classTags.includes(inputValue)) {
+  //     setClassTags([...classTags, inputValue]);
+  //   }
+  //   setInputValue('');
+  // };
   const handleAddClassTag = () => {
-    if (inputValue && !classTags.includes(inputValue)) {
-      setClassTags([...classTags, inputValue]);
-    }
+    const newTag = {
+      name: inputValue,
+      color: generateRandomColor()
+    };
+    setClassTags([...classTags, newTag]);
     setInputValue('');
-  };
+};
 
+  // const handleRemoveClassTag = (tagToRemove: string) => {
+  //   setClassTags(classTags.filter((tag) => tag !== tagToRemove));
+  // };
   const handleRemoveClassTag = (tagToRemove: string) => {
-    setClassTags(classTags.filter((tag) => tag !== tagToRemove));
-  };
+    setClassTags(classTags.filter((tag) => tag.name !== tagToRemove));
+};
 
   const handleRemovePreprocessTag = (tagToRemove: string) => {
     setPreprocessTags(preprocessTags.filter((tag) => tag !== tagToRemove));
@@ -502,7 +527,7 @@ const LabelingWorkspace: React.FC<WorkspaceProps> = ({sideBarVisible}) => {
                           
           </ModalContent>
         </Modal>
-        {/* Project Create Model */}
+        {/* Project Create Modal */}
         <Modal isOpen={isOpenProject} onClose={onCloseProject} isCentered>
             <ModalOverlay />
             <ModalContent  bg="rgba(40, 40, 40, 0.9)" as="form" onSubmit={(e: any) => formik.handleSubmit(e)}>
@@ -569,7 +594,7 @@ const LabelingWorkspace: React.FC<WorkspaceProps> = ({sideBarVisible}) => {
                         </>
                       )}
                     </FormControl>
-                    <FormControl>
+                    {/* <FormControl>
                       <FormLabel>Configure Class</FormLabel>
                       <HStack>
                         <Input value={inputValue} onChange={(e) => setInputValue(e.target.value)} />
@@ -583,7 +608,22 @@ const LabelingWorkspace: React.FC<WorkspaceProps> = ({sideBarVisible}) => {
                           </Tag>
                         ))}
                       </Box>
-                    </FormControl>
+                    </FormControl> */}
+                    <FormControl>
+                    <FormLabel>Configure Class</FormLabel>
+                    <HStack>
+                      <Input value={inputValue} onChange={(e) => setInputValue(e.target.value)} />
+                      <Button onClick={handleAddClassTag}>Add</Button>
+                    </HStack>
+                    <Box mt={2}>
+                      {classTags.map(tag => (
+                        <Tag key={tag.name} size="md" variant="solid" style={{backgroundColor: tag.color}} mr={2} mt={2}> 
+                          <TagLabel>{tag.name}</TagLabel>
+                          <TagCloseButton onClick={() => handleRemoveClassTag(tag.name)} />
+                        </Tag>
+                      ))}
+                    </Box>
+                  </FormControl>
                     <FormControl>
                       <FormLabel>Task Type Select</FormLabel>
                       <Select name="taskType" onChange={formik.handleChange} value={formik.values.taskType || 'classification'}>

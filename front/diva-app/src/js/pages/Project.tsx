@@ -23,6 +23,12 @@ interface ProjectProps {
   onShowSidebar: () => void;
 }
 
+type ClassTag = {
+  name: string;
+  color: string;
+};
+
+
 interface ProjectData {
   project_id : number;
   project_name : string;
@@ -32,7 +38,7 @@ interface ProjectData {
   org_id : number | null;
   creator_id : number; 
   preproccess_tags : string[] | null;
-  project_classes : string[]
+  project_classes : ClassTag[]
   created : string;
 }
 
@@ -69,7 +75,7 @@ interface currentMask {
 interface ClassSelectorProps {
   position: { x: number; y: number } | null;
   selectedMaskData: Mask; // maskData의 구체적인 타입에 따라 수정 필요
-  onSelect: (selectedClass: string) => void;
+  onSelect: (selectedClass: ClassTag) => void;
 }
 
 // for draw mask
@@ -148,20 +154,14 @@ const LoadingAnimation = styled.div`
     animation: ${rotateAnimation} 1s linear infinite;
   }
 `;
-// const ClassTagButton = styled.button`
-//   background-color: rgba(50, 50, 50, 1);
-//   border-radius: 18px;
-//   border: 0.15rem solid white;
-//   margin: 5px;
-//   cursor: pointer;
-//   padding: 5px 10px;
-//   color: white;
-//   transition: background-color 0.3s;
 
-//   &:hover {
-//     background-color: rgba(70, 70, 70, 1);
-//   }
-// `;
+const ClassTagButton = styled.button`
+  border-radius: 18px;
+  margin: 5px;
+  cursor: pointer;
+  padding: 5px 10px;
+`;
+
 const ClassBox = styled.button`
   background-color: rgba(50, 50, 50, 1);
   border-radius: 18px;
@@ -569,10 +569,29 @@ const Project: React.FC<ProjectProps> = ({onHideSidebar,onShowSidebar}) => {
     }
   };
 
-  const handleClassSelect = (selectedClass : string) => {
+  const handleClassSelect = (selectedClass : ClassTag) => {
     // 선택된 클래스를 사용하여 선택된 마스크 데이터의 className을 업데이트
-    // 예: setSelectedMaskClassName(selectedClass);
-    console.log("class selected!!!!")
+    if (!selectedMaskData) return; // 선택된 마스크 데이터가 없으면 반환
+
+    // masksData에서 현재 선택된 마스크 데이터의 index 찾기
+    const maskIndex = masksData.findIndex(mask => mask.annotation_id === selectedMaskData.annotation_id);
+    
+    // 찾지 못하면 반환
+    if (maskIndex === -1) return;
+
+    // 선택된 마스크 데이터의 className과 color 업데이트
+    const updatedMask = {
+        ...selectedMaskData,
+        className: selectedClass.name,
+        color: selectedClass.color
+    };
+
+    // masksData 배열 업데이트
+    const updatedMasksData = [...masksData];
+    updatedMasksData[maskIndex] = updatedMask;
+
+    setMasksData(updatedMasksData);
+    setPosition(null);
   }
 
   //components
@@ -715,17 +734,21 @@ const Project: React.FC<ProjectProps> = ({onHideSidebar,onShowSidebar}) => {
     if (!projectData.project_classes) return null;
     console.log("projectData.classes null")
     if (!position) return null;
-    const handleClassClick = (selectedClass:string) => {
+    const handleClassClick = (selectedClass:ClassTag) => {
       onSelect(selectedClass);
     }
     
     return (
       <Box style={{ position: 'absolute', top: position.y, left: position.x }}>
         <ClassBox>
-            {projectData.project_classes.map((className :string, index : number) => (
-            <Button key={index} onClick={() => handleClassClick(className)}>
-              {className}
-            </Button>
+            {projectData.project_classes.map((tag, index) => ( // tag와 index 사용
+            <ClassTagButton 
+              key={index} 
+              onClick={() => handleClassClick(tag)} 
+              style={{backgroundColor: tag.color}} // 색상을 지정
+            >
+              {tag.name}
+            </ClassTagButton>
           ))}
         </ClassBox> 
       </Box>
@@ -782,7 +805,8 @@ const Project: React.FC<ProjectProps> = ({onHideSidebar,onShowSidebar}) => {
     console.log("projectData : ",projectData)
     console.log("Image files : ",imageFiles)
     console.log("currentImageIndex : ",currentImageIndex)
-  }, [projectId,projectData,imageFiles,currentImageIndex]);
+    console.log("masksData : ",masksData)
+  }, [projectId,projectData,imageFiles,currentImageIndex,masksData]);
 
   useEffect(() => {
     console.log("selected Tool : ",selectedTool)
