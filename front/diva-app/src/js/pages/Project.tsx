@@ -283,7 +283,16 @@ const Project: React.FC<ProjectProps> = ({onHideSidebar,onShowSidebar}) => {
     return `translateX(${offset}px)`;
   };  
 
-  const drawSegmentation = (ctx: CanvasRenderingContext2D, mask: Segmentation, isSelected?: boolean) : void => {
+  const drawSegmentation = (ctx: CanvasRenderingContext2D, mask: Segmentation, isSelected?: boolean, color?: string) : void => {
+
+    const parseRGB = (color: string) => {
+      const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(color);
+      return result ? {
+          r: parseInt(result[1], 16),
+          g: parseInt(result[2], 16),
+          b: parseInt(result[3], 16)
+      } : null;
+    };
     // console.log("drawSegmentation start")
     const blue600 = { r: 49, g: 130, b: 206 }; // blue.600
   
@@ -294,7 +303,24 @@ const Project: React.FC<ProjectProps> = ({onHideSidebar,onShowSidebar}) => {
     ctx.shadowBlur = 8;
   
     // 채워진 영역의 색상 설정
-    ctx.fillStyle = `rgba(${blue600.r}, ${blue600.g}, ${blue600.b}, 0.5)`; // 반투명한 파란색
+    if (color) {
+      const rgb = parseRGB(color);
+      if (rgb) {
+          ctx.fillStyle = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.5)`;  // 원하는 투명도(0.5)로 설정
+          ctx.strokeStyle = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.8)`;
+          ctx.lineWidth = isSelected ? 6 : 2; // 선택된 경우 굵게
+          ctx.shadowColor = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 1)`;
+          ctx.shadowBlur = 8;
+      }
+    }
+    else{
+      ctx.fillStyle = `rgba(${blue600.r}, ${blue600.g}, ${blue600.b}, 0.5)`; // 반투명한 파란색
+      ctx.strokeStyle = `rgba(${blue600.r}, ${blue600.g}, ${blue600.b}, 0.8)`;
+      ctx.lineWidth = isSelected ? 6 : 2; // 선택된 경우 굵게
+      ctx.shadowColor = `rgba(${blue600.r}, ${blue600.g}, ${blue600.b}, 1)`;
+      ctx.shadowBlur = 8;
+    }
+    
   
     // 연속된 좌표 데이터에서 좌표쌍을 가져와서 선을 그립니다.
     ctx.beginPath();
@@ -312,7 +338,7 @@ const Project: React.FC<ProjectProps> = ({onHideSidebar,onShowSidebar}) => {
     ctx.closePath();
     ctx.fill();  // 채워진 영역을 그립니다.
     ctx.stroke();
-    console.log("drawSegmentation done")
+    // console.log("drawSegmentation done")
   };
 
   const drawMultipleSegmentations = (ctx: CanvasRenderingContext2D, masks: Segmentation[]) : void => {
@@ -885,7 +911,13 @@ const Project: React.FC<ProjectProps> = ({onHideSidebar,onShowSidebar}) => {
               if (masksData[i].image_id === currentImageIndex) {
                   const mask = masksData[i].segmentation;
                   const isSelected = masksData[i].annotation_id === selectedMaskIndex; // 현재 마스크가 선택된 마스크인지 확인
-                  drawSegmentation(ctx, mask, isSelected); // 선택 여부에 따라 스타일 적용하여 그리기
+                  if (masksData[i].color !== ""){
+                    drawSegmentation(ctx, mask, isSelected, masksData[i].color);
+                  }
+                  else{
+                    drawSegmentation(ctx, mask, isSelected); // 선택 여부에 따라 스타일 적용하여 그리기
+                  }
+                  
               }
             } // 모든 마스크 다시 그리기
         }
