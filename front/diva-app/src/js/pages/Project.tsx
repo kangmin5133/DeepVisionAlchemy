@@ -28,7 +28,6 @@ type ClassTag = {
   color: string;
 };
 
-
 interface ProjectData {
   project_id : number;
   project_name : string;
@@ -154,14 +153,12 @@ const LoadingAnimation = styled.div`
     animation: ${rotateAnimation} 1s linear infinite;
   }
 `;
-
 const ClassTagButton = styled.button`
   border-radius: 18px;
   margin: 5px;
   cursor: pointer;
   padding: 5px 10px;
 `;
-
 const ClassBox = styled.button`
   background-color: rgba(50, 50, 50, 1);
   border-radius: 18px;
@@ -479,6 +476,17 @@ const Project: React.FC<ProjectProps> = ({onHideSidebar,onShowSidebar}) => {
         axios.post(`${config.serverUrl}/rest/api/project/labeling/bbox`, { ...requestData, ...coordinates})
           .then(response => {
             const maskData = response.data
+            const newMask = {
+              project_id: projectData.project_id,
+              dataset_id: projectData.dataset_id,
+              image_id: imageFiles[currentImageIndex].id, // 이 부분은 실제 이미지의 ID로 수정해야 할 수도 있습니다.
+              annotation_id : masksData.length,
+              segmentation: maskData.masks,
+              className: "", // 기본적으로 빈 문자열로 초기화
+              color: "" // 기본적으로 빈 문자열로 초기화
+            };
+  
+            setMasksData(prevMasks => [...prevMasks, newMask]);
             console.log("response data : ",response.data)
             const canvas = canvasRef.current;
             if (canvas) {
@@ -562,10 +570,13 @@ const Project: React.FC<ProjectProps> = ({onHideSidebar,onShowSidebar}) => {
       // console.log("defaultPointer start")
       for (let i = 0; i < masksData.length; i++) {
         const maskPolygon = masksData[i];
-        if ( maskPolygon.image_id === currentImageIndex && pointInPolygon([x, y], maskPolygon.segmentation)) {
+        if ( maskPolygon.image_id === currentImageIndex && pointInPolygon([x, y], maskPolygon.segmentation) && maskPolygon.className==="") {
           setSelectedMaskIndex(masksData[i].annotation_id);
           setPosition({x:x,y:y}) // for class selector components
           break;
+        }
+        else if (maskPolygon.image_id === currentImageIndex && pointInPolygon([x, y], maskPolygon.segmentation) && maskPolygon.className!==""){
+          setSelectedMaskIndex(masksData[i].annotation_id);
         }
       }
     }

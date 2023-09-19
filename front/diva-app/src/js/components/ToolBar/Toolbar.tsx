@@ -6,6 +6,7 @@ import {
   Flex,
   Link,
   HStack,
+  VStack,
   Stack,
   Text,
   Button,
@@ -16,7 +17,7 @@ import Separator from "../Separator";
 import IconBox from "../IconBox";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faKeyboard } from '@fortawesome/free-regular-svg-icons';
-import { faMousePointer, faHand, faGlobe, faBullseye, faSquare, faPaintBrush, faDrawPolygon, faCog, faArrowsAltH } from '@fortawesome/free-solid-svg-icons';
+import { faMousePointer, faHand, faGlobe, faBullseye, faSquare, faPaintBrush, faDrawPolygon, faCog, faArrowsAltH, faCircle } from '@fortawesome/free-solid-svg-icons';
 
 interface ToolbarProps {
     selectedTool: string | null;
@@ -32,6 +33,17 @@ const Toolbar: React.FC<ToolbarProps> = ({selectedTool, onToolClick}) => {
   const [sidebarBg, setSidebarBg] = useState(
     "linear-gradient(127.09deg, rgba(6, 11, 40, 0.94) 19.41%, rgba(10, 14, 35, 0.49) 76.65%)"
   );
+
+  const FIX_BALL_SIZES = ['S', 'M', 'L', 'X'];
+  const [selectedFixBallSize, setSelectedFixBallSize] = useState('s');
+  const [fixBallDropdownVisible, setFixBallDropdownVisible] = useState(false); 
+
+  const iconSizeMapping: Record<string,  "xs" | "sm" | "lg" | "2x"> = {
+    S: "xs",
+    M: "sm",
+    L: "lg",
+    X: "2x",
+  };
 
   const handleClick = () => {
     setIsActive(!isActive);
@@ -74,12 +86,12 @@ const Toolbar: React.FC<ToolbarProps> = ({selectedTool, onToolClick}) => {
             <FontAwesomeIcon icon={faArrowsAltH} />
           </Button>
           <Box mt="1rem">{title}</Box>
-          <Text align="center" fontSize='medium' letterSpacing='3px' mb={4} mt={4}>
+          <Text align="center" fontSize='medium' letterSpacing='3px' mb={2} mt={2}>
           Basic
           </Text>
           <Separator></Separator>
-          <Flex mt={4} justify="center" align="center">
-          <Stack direction='column' mb={10}>
+          <Flex mt={2} justify="center" align="center">
+          <Stack direction='column' mb={5}>
           <HStack spacing={6}>
                 <Button 
                 w="3rem" h="3rem"
@@ -140,7 +152,7 @@ const Toolbar: React.FC<ToolbarProps> = ({selectedTool, onToolClick}) => {
             </HStack>
         </Stack>
          </Flex>
-         <Text align="center" fontSize='medium' letterSpacing='3px' mb={4} mt={4}>
+         <Text align="center" fontSize='medium' letterSpacing='3px' mb={2} mt={2}>
           Labeling
           </Text>
           <Separator></Separator>
@@ -243,8 +255,83 @@ const Toolbar: React.FC<ToolbarProps> = ({selectedTool, onToolClick}) => {
             </Button>
             {isExpanded && <Text ml={2}>Lasso Tool</Text>}
             </HStack>
+
+            {/* fix ball */}
+            <HStack spacing={6}>
+            <Button 
+            w="3rem" h="3rem"
+            onClick={() => {
+              // onToolClick('fixBall');
+              setFixBallDropdownVisible(!fixBallDropdownVisible);
+            }}
+            backgroundColor="blue.500"
+            _hover={{ 
+                cursor: "pointer",
+                backgroundColor: 'blue.100',
+                transition: 'background-color 0.2s',
+              }}
+              borderColor={selectedTool && ['fixBallS', 'fixBallM', 'fixBallL', 'fixBallX'].includes(selectedTool) ? "#00BFFE" : "blue.500"}
+              borderWidth="0.2rem"
+            >
+                <IconBox>
+                    <FontAwesomeIcon icon={faCircle}/>
+                </IconBox>
+            </Button>
+            {isExpanded && <Text ml={2}>Fix Ball</Text>}
+            {fixBallDropdownVisible && (
+              <HStack
+                position="absolute"
+                left={isExpanded ? '95%' : '85%'} // 이 부분은 툴바의 너비에 따라 조정이 필요할 수 있습니다.
+                spacing={2}
+                align="center"
+                bg="rgba(50, 50, 50, 1)"
+                boxShadow="xl"
+                p={2}
+                borderRadius="0.5rem"
+                _before={{
+                  content: '""',
+                  position: 'absolute',
+                  top: '50%',
+                  left: 0,
+                  transform: 'translate(-100%, -50%)',
+                  width: 0,
+                  height: 0,
+                  borderStyle: 'solid',
+                  borderWidth: '10px 10px 10px 0',
+                  borderColor: 'transparent rgba(50, 50, 50, 1) transparent transparent',
+                }}
+              >
+                {FIX_BALL_SIZES.map((size) => (
+                  <Button
+                    key={size}
+                    variant={selectedFixBallSize === size ? 'solid' : 'outline'}
+                    onClick={() => {
+                      onToolClick('fixBall'+size);
+                      setSelectedFixBallSize(size);
+                      setFixBallDropdownVisible(!fixBallDropdownVisible);
+                    }}
+                    backgroundColor="blue.500"
+                    _hover={{ 
+                        cursor: "pointer",
+                        backgroundColor: 'blue.100',
+                        transition: 'background-color 0.2s',
+                      }}
+                      borderColor={selectedTool === 'fixBall'+size ? "#00BFFE" : "blue.500"}
+                      borderWidth="0.2rem"
+                  >
+                    <IconBox>
+                        <FontAwesomeIcon icon={faCircle} size={iconSizeMapping[size] as any}/>
+                    </IconBox>
+                    {/* size에 따라 다른 크기의 faCircle 아이콘을 넣어줘야 합니다. */}
+                    {/* {size.toUpperCase()} */}
+                  </Button>
+                ))}
+              </HStack>
+            )}
+            </HStack>
             </Stack>
          </Flex>
+         
          <Text align="center" fontSize='medium' letterSpacing='3px' mb={4} mt={4}>
           Manage
           </Text>
